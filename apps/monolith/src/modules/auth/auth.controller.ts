@@ -268,7 +268,8 @@ export class AuthController {
         returnTo,
       });
       res.redirect(`${frontendUrl}/auth/social-callback?${params.toString()}`);
-    } catch {
+    } catch (error) {
+      console.error('Google OAuth callback error:', error);
       const frontendUrl = process.env.FRONTEND_URL || 'https://nettapu-demo.tunasoft.tech';
       res.redirect(`${frontendUrl}/login?error=google_auth_failed`);
     }
