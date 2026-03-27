@@ -86,9 +86,9 @@ function RegisterContent() {
   };
 
   return (
-    <div className="min-h-screen flex" data-testid="register-page">
+    <div className="min-h-screen flex font-[Outfit,system-ui,sans-serif]" data-testid="register-page">
       {/* Left Side - Register Form */}
-      <div className="flex-1 flex items-center justify-center px-6 py-12 lg:px-12 bg-white overflow-y-auto">
+      <div className="flex-1 flex items-center justify-center px-6 py-12 lg:px-12 bg-gradient-to-br from-white to-slate-50 overflow-y-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -102,11 +102,11 @@ function RegisterContent() {
                 NT
               </div>
               <div className="flex flex-col leading-tight text-left">
-                <span className="text-xl font-bold font-heading text-slate-900 tracking-tight">NetTapu</span>
+                <span className="text-xl font-extrabold text-slate-900 tracking-tight">NetTapu</span>
                 <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Arsa Platformu</span>
               </div>
             </Link>
-            <h1 className="text-3xl font-bold font-heading text-slate-900 mb-2">Hesap Oluşturun</h1>
+            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 mb-2">Hesap Oluşturun</h1>
             <p className="text-slate-500">Ücretsiz üye olun, fırsatları kaçırmayın</p>
           </div>
 
@@ -329,7 +329,7 @@ function RegisterContent() {
       </div>
 
       {/* Right Side - Hero Section */}
-      <div className="hidden lg:flex flex-1 items-center justify-center bg-slate-900 p-12 relative overflow-hidden">
+      <div className="hidden lg:flex flex-1 items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 p-12 relative overflow-hidden">
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.015)_1px,transparent_1px)] bg-[size:60px_60px]"></div>
         
         <div className="absolute top-20 right-20 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl"></div>
@@ -341,7 +341,7 @@ function RegisterContent() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="relative z-10 max-w-xl text-center"
         >
-          <h2 className="text-4xl lg:text-5xl font-bold font-heading text-white mb-6 leading-tight">
+          <h2 className="text-4xl lg:text-5xl font-extrabold text-white mb-6 leading-[1.1] tracking-tight">
             Yatırımınıza{' '}
             <span className="text-emerald-400">
               Bugün Başlayın

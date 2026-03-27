@@ -73,9 +73,9 @@ function LoginContent() {
   };
 
   return (
-    <div className="min-h-screen flex" data-testid="login-page">
+    <div className="min-h-screen flex font-[Outfit,system-ui,sans-serif]" data-testid="login-page">
       {/* Left Side - Login Form */}
-      <div className="flex-1 flex items-center justify-center px-6 py-12 lg:px-12 bg-white">
+      <div className="flex-1 flex items-center justify-center px-6 py-12 lg:px-12 bg-gradient-to-br from-white to-slate-50">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -89,12 +89,12 @@ function LoginContent() {
                 NT
               </div>
               <div className="flex flex-col leading-tight text-left">
-                <span className="text-xl font-bold font-heading text-slate-900 tracking-tight">NetTapu</span>
-                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Arsa Platformu</span>
+                <span className="text-xl font-extrabold text-slate-900 tracking-tight">NetTapu</span>
+                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em]">Arsa Platformu</span>
               </div>
             </Link>
-            <h1 className="text-3xl font-bold font-heading text-slate-900 mb-2">Hoş Geldiniz</h1>
-            <p className="text-slate-500">Hesabınıza giriş yapın</p>
+            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 mb-2">Hoş Geldiniz</h1>
+            <p className="text-slate-500 text-base">Hesabınıza giriş yapın</p>
           </div>
 
           {/* Social Login */}
@@ -208,7 +208,7 @@ function LoginContent() {
             <button
               type="submit"
               disabled={isSubmitting || isLimited}
-              className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-emerald hover:shadow-emerald-lg transition-all duration-200"
+              className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-bold rounded-xl hover:from-emerald-700 hover:to-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30 transition-all duration-300 transform hover:-translate-y-0.5"
               data-testid="login-submit-btn"
             >
               {isSubmitting ? (
@@ -236,13 +236,14 @@ function LoginContent() {
       </div>
 
       {/* Right Side - Hero Section */}
-      <div className="hidden lg:flex flex-1 items-center justify-center bg-slate-900 p-12 relative overflow-hidden">
+      <div className="hidden lg:flex flex-1 items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 p-12 relative overflow-hidden">
         {/* Subtle grid pattern */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.015)_1px,transparent_1px)] bg-[size:60px_60px]"></div>
-        
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.03)_1px,transparent_1px)] bg-[size:60px_60px]"></div>
+
         {/* Glowing orbs */}
-        <div className="absolute top-20 right-20 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 left-20 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute top-20 right-20 w-96 h-96 bg-emerald-500/15 rounded-full blur-[100px] animate-pulse"></div>
+        <div className="absolute bottom-20 left-20 w-80 h-80 bg-emerald-400/10 rounded-full blur-[80px]"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-[120px]"></div>
 
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
@@ -250,13 +251,19 @@ function LoginContent() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="relative z-10 max-w-xl text-center"
         >
-          <h2 className="text-4xl lg:text-5xl font-bold font-heading text-white mb-6 leading-tight">
-            Türkiye'nin En Güvenilir{' '}
-            <span className="text-emerald-400">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 mb-8">
+            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+            <span className="text-sm font-medium text-emerald-300">Güvenilir Platform</span>
+          </div>
+
+          <h2 className="text-4xl lg:text-5xl font-extrabold text-white mb-6 leading-[1.1] tracking-tight">
+            Türkiye&apos;nin En Güvenilir{' '}
+            <span className="bg-gradient-to-r from-emerald-400 to-emerald-300 bg-clip-text text-transparent">
               Arsa Platformu
             </span>
           </h2>
-          <p className="text-lg text-slate-400 mb-12 leading-relaxed">
+          <p className="text-lg text-slate-400 mb-12 leading-relaxed max-w-md mx-auto">
             Binlerce doğrulanmış arsa ilanı, canlı açık artırmalar ve güvenli ödeme sistemiyle hayalinizdeki arsaya kolayca sahip olun.
           </p>
 
