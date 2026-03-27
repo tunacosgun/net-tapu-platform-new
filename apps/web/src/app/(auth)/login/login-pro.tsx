@@ -69,8 +69,7 @@ function LoginContent() {
   };
 
   const handleGoogleLogin = () => {
-    const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
-    window.location.href = `/api/auth/social/google?redirect=${encodeURIComponent(currentUrl)}`;
+    window.location.href = `/api/v1/auth/google`;
   };
 
   return (

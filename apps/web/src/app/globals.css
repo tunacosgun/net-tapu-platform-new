@@ -30,8 +30,8 @@
     --color-danger: 239 68 68;
   }
 
-  * {
-    border-color: rgb(241 245 249);
+  *, ::before, ::after {
+    border-color: transparent;
   }
 
   body {

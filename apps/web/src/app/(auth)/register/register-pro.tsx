@@ -82,7 +82,7 @@ function RegisterContent() {
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = `/api/auth/social/google`;
+    window.location.href = `/api/v1/auth/google`;
   };
 
   return (
