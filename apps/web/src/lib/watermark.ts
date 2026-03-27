@@ -10,7 +10,7 @@ export function burnWatermark(
   watermarkText: string,
   options?: { opacity?: number; fontSize?: number; gap?: number },
 ): Promise<string> {
-  const { opacity = 0.06, fontSize = 28, gap = 200 } = options || {};
+  const { opacity = 0.03, fontSize = 24, gap = 300 } = options || {};
 
   return new Promise((resolve) => {
     // Fetch the image as blob to avoid CORS canvas tainting
@@ -40,11 +40,8 @@ export function burnWatermark(
 
           for (let wy = -diagonal; wy < diagonal * 2; wy += gap) {
             for (let wx = -diagonal; wx < diagonal * 2; wx += textSpacing) {
-              // Dark shadow for light backgrounds
-              ctx.fillStyle = 'rgba(0,0,0,0.6)';
-              ctx.fillText(watermarkText, wx + 1, wy + 1);
-              // White text for dark backgrounds
-              ctx.fillStyle = 'rgba(255,255,255,0.9)';
+              // Subtle single-color watermark
+              ctx.fillStyle = 'rgba(255,255,255,0.7)';
               ctx.fillText(watermarkText, wx, wy);
             }
           }

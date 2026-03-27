@@ -370,7 +370,7 @@ export default function AuctionDetailPage() {
           {parcelImages.length > 0 && (
             <div className="relative h-[120px] bg-gray-100 dark:bg-gray-800 flex items-center">
               <img
-                src={coverImage?.watermarkedUrl || coverImage?.originalUrl}
+                src={coverImage?.originalUrl || coverImage?.thumbnailUrl}
                 alt={parcel.title}
                 className="h-full w-full object-cover opacity-40"
               />
