@@ -28,7 +28,7 @@ import { PublicContentController } from './controllers/public-content.controller
 import { AdminAnalyticsController } from './controllers/admin-analytics.controller';
 import { AdminNotificationController } from './controllers/admin-notification.controller';
 import { AdminTestimonialController, PublicTestimonialController } from './controllers/admin-testimonial.controller';
-import { AdminDealerController } from './controllers/admin-dealer.controller';
+// AdminDealerController removed - replaced by CRM DealerController
 
 @Module({
   imports: [
@@ -54,7 +54,7 @@ import { AdminDealerController } from './controllers/admin-dealer.controller';
     AdminNotificationController,
     AdminTestimonialController,
     PublicTestimonialController,
-    AdminDealerController,
+    // AdminDealerController removed
   ],
   providers: [
     PageService,
