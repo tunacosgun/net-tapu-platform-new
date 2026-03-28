@@ -7,16 +7,19 @@ import { OfferResponse } from './entities/offer-response.entity';
 import { NotificationQueue } from './entities/notification-queue.entity';
 import { NotificationLog } from './entities/notification-log.entity';
 import { UserActivityLog } from './entities/user-activity-log.entity';
+import { Dealer } from './entities/dealer.entity';
 
 import { ContactRequestService } from './services/contact-request.service';
 import { AppointmentService } from './services/appointment.service';
 import { OfferService } from './services/offer.service';
 import { ActivityTrackingService } from './services/activity-tracking.service';
+import { DealerService } from './services/dealer.service';
 
 import { ContactRequestController } from './controllers/contact-request.controller';
 import { AppointmentController } from './controllers/appointment.controller';
 import { OfferController } from './controllers/offer.controller';
 import { ActivityController } from './controllers/activity.controller';
+import { DealerController } from './controllers/dealer.controller';
 
 @Module({
   imports: [
@@ -28,6 +31,7 @@ import { ActivityController } from './controllers/activity.controller';
       NotificationQueue,
       NotificationLog,
       UserActivityLog,
+      Dealer,
     ]),
   ],
   controllers: [
@@ -35,13 +39,15 @@ import { ActivityController } from './controllers/activity.controller';
     AppointmentController,
     OfferController,
     ActivityController,
+    DealerController,
   ],
   providers: [
     ContactRequestService,
     AppointmentService,
     OfferService,
     ActivityTrackingService,
+    DealerService,
   ],
-  exports: [TypeOrmModule, ContactRequestService, AppointmentService, OfferService, ActivityTrackingService],
+  exports: [TypeOrmModule, ContactRequestService, AppointmentService, OfferService, ActivityTrackingService, DealerService],
 })
 export class CrmModule {}

@@ -240,8 +240,8 @@ function AddDealerModal({
         commissionRate: commissionRate ? parseFloat(commissionRate) : null,
       });
       onSuccess();
-    } catch {
-      alert('Danışman sistemi henüz aktif değil. Yakında hizmetinize sunulacaktır.');
+    } catch (err) {
+      showApiError(err);
     } finally {
       setSaving(false);
     }

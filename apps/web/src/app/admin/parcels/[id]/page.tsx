@@ -68,6 +68,7 @@ export default function AdminEditParcelPage() {
         if (!cancelled) {
           setParcel(parcelData);
           setParcelImages(imagesData || []);
+          if (parcelData.assignedConsultant) setSelectedConsultant(parcelData.assignedConsultant);
           reset({
             title: parcelData.title,
             city: parcelData.city,
@@ -101,6 +102,15 @@ export default function AdminEditParcelPage() {
   }, [params.id, reset]);
 
   // ── TKGM Lookup ─────────────────────────────────────────────────────
+  const [dealers, setDealers] = useState<{ id: string; userId: string | null; firstName: string | null; lastName: string | null; email: string }[]>([]);
+  const [selectedConsultant, setSelectedConsultant] = useState<string>('');
+
+  useEffect(() => {
+    apiClient.get('/admin/dealers').then(({ data: res }) => {
+      setDealers(res.data || []);
+    }).catch(() => { /* ignore */ });
+  }, []);
+
   const [tkgmLoading, setTkgmLoading] = useState(false);
   const [tkgmResult, setTkgmResult] = useState<string | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -152,6 +162,7 @@ export default function AdminEditParcelPage() {
       parsel: data.parsel || undefined,
       description: data.description || undefined,
       show_listing_date: showListingDate,
+      assigned_consultant: selectedConsultant || null,
     };
 
     try {
@@ -303,6 +314,23 @@ export default function AdminEditParcelPage() {
               {tkgmResult}
             </span>
           )}
+        </div>
+
+        {/* Consultant Assignment */}
+        <div>
+          <label className="block text-sm font-medium text-slate-700">Danışman Ata</label>
+          <select
+            value={selectedConsultant}
+            onChange={(e) => setSelectedConsultant(e.target.value)}
+            className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
+          >
+            <option value="">Danışman Seçiniz</option>
+            {dealers.map((d) => (
+              <option key={d.id} value={d.userId || d.id}>
+                {[d.firstName, d.lastName].filter(Boolean).join(' ') || d.email}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="flex gap-6">
