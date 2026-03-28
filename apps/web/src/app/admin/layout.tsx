@@ -118,51 +118,39 @@ export default function AdminLayout({
   // Close sidebar on route change (mobile)
   useEffect(() => { setSidebarOpen(false); }, [pathname]);
 
-  const SidebarContent = () => (
-    <>
-      <div className="flex items-center gap-2 px-3 py-2">
-        <div className="flex h-7 w-7 items-center justify-center rounded bg-brand-500">
-          <span className="text-xs font-bold text-white">NT</span>
-        </div>
-        <span className="text-sm font-bold text-brand-500">Admin Panel</span>
+  const sidebarNav = navSections.map((section, i) => (
+    <div key={i}>
+      {section.title && (
+        <p className="px-3 text-xs font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">
+          {section.title}
+        </p>
+      )}
+      <div className="mt-1 space-y-0.5">
+        {section.items.map((item) => {
+          const Icon = item.icon;
+          const isActive =
+            item.href === '/admin'
+              ? pathname === '/admin'
+              : pathname.startsWith(item.href);
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={() => setSidebarOpen(false)}
+              className={`flex items-center gap-2.5 rounded-md px-3 py-2 text-sm cursor-pointer transition-colors duration-150 ${
+                isActive
+                  ? 'bg-brand-50 text-brand-700 font-medium dark:bg-brand-950/20 dark:text-brand-400'
+                  : 'text-[var(--foreground)] hover:bg-[var(--background)]'
+              }`}
+            >
+              <Icon className="h-4 w-4 shrink-0" />
+              {item.label}
+            </Link>
+          );
+        })}
       </div>
-      <nav className="mt-4 space-y-4">
-        {navSections.map((section, i) => (
-          <div key={i}>
-            {section.title && (
-              <p className="px-3 text-xs font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">
-                {section.title}
-              </p>
-            )}
-            <div className="mt-1 space-y-0.5">
-              {section.items.map((item) => {
-                const Icon = item.icon;
-                const isActive =
-                  item.href === '/admin'
-                    ? pathname === '/admin'
-                    : pathname.startsWith(item.href);
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setSidebarOpen(false)}
-                    className={`flex items-center gap-2.5 rounded-md px-3 py-2 text-sm cursor-pointer transition-colors duration-150 ${
-                      isActive
-                        ? 'bg-brand-50 text-brand-700 font-medium dark:bg-brand-950/20 dark:text-brand-400'
-                        : 'text-[var(--foreground)] hover:bg-[var(--background)]'
-                    }`}
-                  >
-                    <Icon className="h-4 w-4 shrink-0" />
-                    {item.label}
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-      </nav>
-    </>
-  );
+    </div>
+  ));
 
   return (
     <div className="flex flex-1">
@@ -182,14 +170,20 @@ export default function AdminLayout({
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <SidebarContent />
+            <nav className="space-y-4">{sidebarNav}</nav>
           </aside>
         </div>
       )}
 
       {/* Desktop sidebar */}
       <aside className="hidden w-64 shrink-0 border-r border-[var(--border)] bg-[var(--muted)] p-4 lg:block overflow-y-auto">
-        <SidebarContent />
+        <div className="flex items-center gap-2 px-3 py-2">
+          <div className="flex h-7 w-7 items-center justify-center rounded bg-brand-500">
+            <span className="text-xs font-bold text-white">NT</span>
+          </div>
+          <span className="text-sm font-bold text-brand-500">Admin Panel</span>
+        </div>
+        <nav className="mt-4 space-y-4">{sidebarNav}</nav>
       </aside>
 
       {/* Main content */}
