@@ -139,8 +139,9 @@ export default function AdminEditParcelPage() {
   }
 
   async function onSubmit(data: ParcelFormData) {
+    const { showListingDate, ...rest } = data;
     const body: Record<string, unknown> = {
-      ...data,
+      ...rest,
       neighborhood: data.neighborhood || undefined,
       address: data.address || undefined,
       latitude: data.latitude || undefined,
@@ -150,6 +151,7 @@ export default function AdminEditParcelPage() {
       ada: data.ada || undefined,
       parsel: data.parsel || undefined,
       description: data.description || undefined,
+      show_listing_date: showListingDate,
     };
 
     try {
