@@ -96,10 +96,10 @@ async function generatePDF(parcel: Parcel, images: ParcelImage[], siteSettings: 
     doc.setFontSize(6.5);
     doc.setFont(fontFamily, 'normal');
     doc.setTextColor(...light);
-    doc.text(`Bu belge ${siteName} platformu taraf\u0131ndan otomatik olarak olu\u015Fturulmu\u015Ftur. Bilgilendirme ama\u00E7l\u0131d\u0131r, hukuki ba\u011Flay\u0131c\u0131l\u0131\u011F\u0131 yoktur.`, margin, 284);
+    doc.text(`Bu belge ${siteName} platformu tarafından otomatik olarak oluşturulmuştur. Bilgilendirme amaçlıdır, hukuki bağlayıcılığı yoktur.`, margin, 284);
     const phone = siteSettings.contact_phone || '0850 XXX XX XX';
     const email = siteSettings.contact_email || '';
-    doc.text([phone, email].filter(Boolean).join('  \u00B7  '), margin, 288);
+    doc.text([phone, email].filter(Boolean).join('  ·  '), margin, 288);
     doc.text(`Sayfa ${pageNum} / ${totalPages}`, pw - margin, 288, { align: 'right' });
   }
 
@@ -145,19 +145,19 @@ async function generatePDF(parcel: Parcel, images: ParcelImage[], siteSettings: 
   doc.setFontSize(7.5);
   doc.setFont(fontFamily, 'normal');
   doc.setTextColor(...medium);
-  doc.text('SATI\u015E F\u0130YATI', margin, y);
+  doc.text('SATIŞ FİYATI', margin, y);
   y += 8;
   doc.setFontSize(20);
   doc.setFont(fontFamily, 'bold');
   doc.setTextColor(...brand);
-  doc.text(formatPrice(parcel.price) || 'Fiyat Belirtilmemi\u015F', margin, y);
+  doc.text(formatPrice(parcel.price) || 'Fiyat Belirtilmemiş', margin, y);
   y += 6;
   if (parcel.price && parcel.areaM2) {
     const ppm2 = Math.round(parseFloat(parcel.price) / parseFloat(parcel.areaM2));
     doc.setFontSize(9);
     doc.setFont(fontFamily, 'normal');
     doc.setTextColor(...medium);
-    doc.text(`m\u00B2 Fiyat\u0131: ${formatPrice(String(ppm2))} / m\u00B2`, margin, y);
+    doc.text(`m² Fiyatı: ${formatPrice(String(ppm2))} / m²`, margin, y);
     y += 5;
   }
   y += 4;
@@ -173,18 +173,18 @@ async function generatePDF(parcel: Parcel, images: ParcelImage[], siteSettings: 
   y += 7;
 
   const details: [string, string][] = [];
-  if (parcel.areaM2) details.push(['Alan', `${Number(parcel.areaM2).toLocaleString('tr-TR')} m\u00B2`]);
+  if (parcel.areaM2) details.push(['Alan', `${Number(parcel.areaM2).toLocaleString('tr-TR')} m²`]);
   if (parcel.ada) details.push(['Ada No', parcel.ada]);
   if (parcel.parsel) details.push(['Parsel No', parcel.parsel]);
-  if (parcel.zoningStatus) details.push(['\u0130mar Durumu', parcel.zoningStatus]);
-  if (parcel.landType) details.push(['Arazi T\u00FCr\u00FC', parcel.landType]);
-  details.push(['\u0130l', parcel.city || '']);
-  details.push(['\u0130l\u00E7e', parcel.district || '']);
+  if (parcel.zoningStatus) details.push(['İmar Durumu', parcel.zoningStatus]);
+  if (parcel.landType) details.push(['Arazi Türü', parcel.landType]);
+  details.push(['İl', parcel.city || '']);
+  details.push(['İlçe', parcel.district || '']);
   if (parcel.neighborhood) details.push(['Mahalle', parcel.neighborhood]);
   if (parcel.address) details.push(['Adres', parcel.address]);
-  details.push(['Durum', parcel.status === 'active' ? 'Sat\u0131\u015Fta' : parcel.status === 'sold' ? 'Sat\u0131ld\u0131' : parcel.status === 'draft' ? 'Taslak' : parcel.status]);
-  if (parcel.isAuctionEligible) details.push(['A\u00E7\u0131k Art\u0131rma', 'Uygun']);
-  if (parcel.isFeatured) details.push(['\u00D6ne \u00C7\u0131kan', 'Evet']);
+  details.push(['Durum', parcel.status === 'active' ? 'Satışta' : parcel.status === 'sold' ? 'Satıldı' : parcel.status === 'draft' ? 'Taslak' : parcel.status]);
+  if (parcel.isAuctionEligible) details.push(['Açık Artırma', 'Uygun']);
+  if (parcel.isFeatured) details.push(['Öne Çıkan', 'Evet']);
 
   const colW = cw / 2;
   for (let i = 0; i < details.length; i += 2) {
@@ -215,7 +215,7 @@ async function generatePDF(parcel: Parcel, images: ParcelImage[], siteSettings: 
     doc.setTextColor(...dark);
     doc.setFontSize(11);
     doc.setFont(fontFamily, 'bold');
-    doc.text('A\u00E7\u0131klama', margin, y);
+    doc.text('Açıklama', margin, y);
     y += 6;
     doc.setFontSize(8.5);
     doc.setFont(fontFamily, 'normal');
@@ -253,7 +253,7 @@ async function generatePDF(parcel: Parcel, images: ParcelImage[], siteSettings: 
         doc.setTextColor(...dark);
         doc.setFontSize(11);
         doc.setFont(fontFamily, 'bold');
-        doc.text('G\u00F6rseller', margin, y);
+        doc.text('Görseller', margin, y);
         y += 5;
       }
 
@@ -337,7 +337,7 @@ export default function ParcelDetailClient() {
           }
         }
       } catch {
-        if (!cancelled) { setError('Arsa bilgisi y\u00FCklenemedi.'); setLoading(false); }
+        if (!cancelled) { setError('Arsa bilgisi yüklenemedi.'); setLoading(false); }
       }
     }
     fetchData();
@@ -349,7 +349,8 @@ export default function ParcelDetailClient() {
     let cancelled = false;
     images.forEach((img, idx) => {
       const url = resolveImageUrl(img);
-      getWatermarkedUrl(url, siteName).then((wmUrl) => {
+      const listingNum = parcel?.listingId?.replace(/\D/g, '').padStart(10, '0').slice(0, 10) || String(parcel?.id || '').replace(/\D/g, '').padStart(10, '0').slice(0, 10);
+      getWatermarkedUrl(url, siteName, listingNum).then((wmUrl) => {
         if (!cancelled) setWmImages((prev) => ({ ...prev, [idx]: wmUrl }));
       });
     });
@@ -405,7 +406,7 @@ export default function ParcelDetailClient() {
       await generatePDF(parcel, images, siteSettings as unknown as Record<string, string>);
     } catch (e) {
       console.error('PDF generation error:', e);
-      alert('PDF olu\u015Fturulurken bir hata olu\u015Ftu.');
+      alert('PDF oluşturulurken bir hata oluştu.');
     } finally {
       setPdfLoading(false);
     }
@@ -420,12 +421,12 @@ export default function ParcelDetailClient() {
         amount: offerAmount.replace(/\./g, '').replace(',', '.'),
         message: offerMessage || undefined,
       });
-      alert('Teklifiniz ba\u015Far\u0131yla g\u00F6nderildi!');
+      alert('Teklifiniz başarıyla gönderildi!');
       setShowOffer(false);
       setOfferAmount('');
       setOfferMessage('');
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Teklif g\u00F6nderilemedi. L\u00FCtfen giri\u015F yap\u0131n.';
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Teklif gönderilemedi. Lütfen giriş yapın.';
       alert(msg);
     } finally {
       setOfferSubmitting(false);
@@ -433,21 +434,21 @@ export default function ParcelDetailClient() {
   };
 
   if (loading) return <div className="flex min-h-[400px] items-center justify-center"><LoadingState centered={false} /></div>;
-  if (error || !parcel) return <div className="flex min-h-[400px] flex-col items-center justify-center gap-4"><p className="text-red-600">{error || 'Arsa bulunamad\u0131.'}</p><Link href="/parcels" className="text-sm text-brand-500 hover:underline">Arsalara d\u00F6n</Link></div>;
+  if (error || !parcel) return <div className="flex min-h-[400px] flex-col items-center justify-center gap-4"><p className="text-red-600">{error || 'Arsa bulunamadı.'}</p><Link href="/parcels" className="text-sm text-brand-500 hover:underline">Arsalara dön</Link></div>;
 
   const status = parcelStatusConfig(parcel.status);
   const whatsappNumber = siteSettings.whatsapp_number || '905000000000';
   const parcelUrl = `https://nettapu-demo.tunasoft.tech/parcels/${parcel.id}`;
   const wpLines: string[] = [];
   wpLines.push('Merhaba,');
-  wpLines.push('A\u015Fa\u011F\u0131daki ilan hakk\u0131nda detayl\u0131 bilgi almak istiyorum.');
+  wpLines.push('Aşağıdaki ilan hakkında detaylı bilgi almak istiyorum.');
   wpLines.push('');
   wpLines.push('\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500');
-  if (parcel.listingId) wpLines.push('\u0130lan No: ' + parcel.listingId);
+  if (parcel.listingId) wpLines.push('İlan No: ' + parcel.listingId);
   wpLines.push(parcel.title);
   if (parcel.city && parcel.district) wpLines.push('Konum: ' + parcel.city + ', ' + parcel.district);
   if (parcel.ada && parcel.parsel) wpLines.push('Ada / Parsel: ' + parcel.ada + ' / ' + parcel.parsel);
-  if (parcel.areaM2) wpLines.push('Alan: ' + Number(parcel.areaM2).toLocaleString('tr-TR') + ' m\u00B2');
+  if (parcel.areaM2) wpLines.push('Alan: ' + Number(parcel.areaM2).toLocaleString('tr-TR') + ' m²');
   if (parcel.price) wpLines.push('Fiyat: ' + parseFloat(parcel.price).toLocaleString('tr-TR') + ' \u20BA');
   wpLines.push('\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500');
   wpLines.push('');
@@ -461,17 +462,17 @@ export default function ParcelDetailClient() {
 
   /* ─── Detail rows for the info table ─── */
   const detailRows: { label: string; value: string }[] = [];
-  if (parcel.listingId) detailRows.push({ label: '\u0130lan No', value: parcel.listingId });
-  if (parcel.listedAt && parcel.showListingDate !== false) detailRows.push({ label: '\u0130lan Tarihi', value: new Date(parcel.listedAt).toLocaleDateString('tr-TR', { day: '2-digit', month: 'long', year: 'numeric' }) });
-  detailRows.push({ label: 'Emlak Tipi', value: 'Sat\u0131l\u0131k Arsa' });
-  if (parcel.zoningStatus) detailRows.push({ label: '\u0130mar Durumu', value: parcel.zoningStatus });
-  if (parcel.areaM2) detailRows.push({ label: 'm\u00B2', value: Number(parcel.areaM2).toLocaleString('tr-TR') });
-  if (pricePerM2) detailRows.push({ label: 'm\u00B2 Fiyat\u0131', value: formatPrice(String(pricePerM2)) });
+  if (parcel.listingId) detailRows.push({ label: 'İlan No', value: parcel.listingId });
+  if (parcel.listedAt && parcel.showListingDate !== false) detailRows.push({ label: 'İlan Tarihi', value: new Date(parcel.listedAt).toLocaleDateString('tr-TR', { day: '2-digit', month: 'long', year: 'numeric' }) });
+  detailRows.push({ label: 'Emlak Tipi', value: 'Satılık Arsa' });
+  if (parcel.zoningStatus) detailRows.push({ label: 'İmar Durumu', value: parcel.zoningStatus });
+  if (parcel.areaM2) detailRows.push({ label: 'm²', value: Number(parcel.areaM2).toLocaleString('tr-TR') });
+  if (pricePerM2) detailRows.push({ label: 'm² Fiyatı', value: formatPrice(String(pricePerM2)) });
   if (parcel.ada) detailRows.push({ label: 'Ada No', value: parcel.ada });
   if (parcel.parsel) detailRows.push({ label: 'Parsel No', value: parcel.parsel });
-  if (parcel.landType) detailRows.push({ label: 'Arazi T\u00FCr\u00FC', value: parcel.landType });
-  if (parcel.isAuctionEligible) detailRows.push({ label: 'A\u00E7\u0131k Art\u0131rma', value: 'Uygun' });
-  if (parcel.isFeatured) detailRows.push({ label: '\u00D6ne \u00C7\u0131kan', value: 'Evet' });
+  if (parcel.landType) detailRows.push({ label: 'Arazi Türü', value: parcel.landType });
+  if (parcel.isAuctionEligible) detailRows.push({ label: 'Açık Artırma', value: 'Uygun' });
+  if (parcel.isFeatured) detailRows.push({ label: 'Öne Çıkan', value: 'Evet' });
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-4 print:px-0 print:py-0">
@@ -514,19 +515,18 @@ export default function ParcelDetailClient() {
           {images.length > 0 ? (
             <div>
               <div
-                className="relative cursor-pointer overflow-hidden rounded-lg border border-slate-200 bg-slate-100"
-                style={{ height: '440px' }}
+                className="relative cursor-pointer overflow-hidden rounded-lg border border-slate-200 bg-white h-[300px] md:h-[500px]"
                 onClick={() => { setSelectedImage(wmImages[selectedIdx] || resolveImageUrl(images[selectedIdx])); }}
               >
                 <img
                   src={wmImages[selectedIdx] || resolveImageUrl(images[selectedIdx])}
                   alt={parcel.title}
-                  className="h-full w-full object-cover"
+                  className="h-full w-full object-contain"
                 />
                 <Badge variant={status.variant} className="absolute top-3 left-3 text-xs px-2.5 py-1 shadow">{status.label}</Badge>
                 <div className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-lg bg-black/60 px-3 py-1.5 text-white text-xs backdrop-blur-sm cursor-pointer">
                   <SearchIcon className="h-3.5 w-3.5" />
-                  B\u00FCy\u00FCk Foto\u011Fraf
+                  Büyük Fotoğraf
                 </div>
                 {/* Image counter */}
                 <div className="absolute bottom-3 left-3 flex items-center gap-1.5 rounded-lg bg-black/60 px-3 py-1.5 text-white text-xs backdrop-blur-sm">
@@ -541,19 +541,19 @@ export default function ParcelDetailClient() {
                     <button
                       key={img.id}
                       onClick={() => setSelectedIdx(idx)}
-                      className={`shrink-0 h-16 w-20 rounded overflow-hidden border-2 transition-all ${selectedIdx === idx ? 'border-emerald-500 shadow-sm' : 'border-slate-200 opacity-70 hover:opacity-100'}`}
+                      className={`shrink-0 h-20 w-28 rounded overflow-hidden border-2 transition-all ${selectedIdx === idx ? 'border-emerald-500 shadow-sm' : 'border-slate-200 opacity-70 hover:opacity-100'}`}
                     >
-                      <img src={wmImages[idx] || resolveImageUrl(img)} alt="" className="h-full w-full object-cover" />
+                      <img src={wmImages[idx] || resolveImageUrl(img)} alt="" className="h-full w-full object-contain bg-white" />
                     </button>
                   ))}
                 </div>
               )}
             </div>
           ) : (
-            <div className="flex items-center justify-center rounded-lg border border-slate-200 bg-slate-50" style={{ height: '440px' }}>
+            <div className="flex items-center justify-center rounded-lg border border-slate-200 bg-white h-[300px] md:h-[500px]">
               <div className="text-center">
                 <ImageIcon className="mx-auto h-12 w-12 text-slate-300" />
-                <p className="mt-2 text-sm text-slate-500">Hen\u00FCz foto\u011Fraf eklenmemi\u015F</p>
+                <p className="mt-2 text-sm text-slate-500">Henüz fotoğraf eklenmemiş</p>
               </div>
             </div>
           )}
@@ -567,7 +567,7 @@ export default function ParcelDetailClient() {
               <div>
                 <p className="text-2xl font-bold text-emerald-600">{formatPrice(parcel.price)}</p>
                 {pricePerM2 && (
-                  <p className="text-sm text-slate-500 mt-0.5">m\u00B2 fiyat\u0131: <span className="font-semibold text-slate-700">{formatPrice(String(pricePerM2))} / m\u00B2</span></p>
+                  <p className="text-sm text-slate-500 mt-0.5">m² fiyatı: <span className="font-semibold text-slate-700">{formatPrice(String(pricePerM2))} / m²</span></p>
                 )}
               </div>
               <div className="flex items-center gap-1.5 shrink-0 print:hidden">
@@ -578,7 +578,7 @@ export default function ParcelDetailClient() {
                     <Heart className="h-4 w-4" fill={isFavorited ? 'currentColor' : 'none'} />
                   </button>
                 )}
-                <button onClick={handlePDF} disabled={pdfLoading} title="Yazd\u0131r / PDF"
+                <button onClick={handlePDF} disabled={pdfLoading} title="Yazdır / PDF"
                   className="flex items-center justify-center h-9 w-9 rounded-lg border border-slate-200 text-slate-400 hover:text-slate-900 transition-colors disabled:opacity-50"
                 >
                   {pdfLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Printer className="h-4 w-4" />}
@@ -601,7 +601,7 @@ export default function ParcelDetailClient() {
                 {liveViewerCount > 0 && (
                   <span className="flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-1 text-blue-600 font-medium">
                     <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" /><span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" /></span>
-                    {liveViewerCount} ki\u015Fi bak\u0131yor
+                    {liveViewerCount} kişi bakıyor
                   </span>
                 )}
               </div>
@@ -611,7 +611,7 @@ export default function ParcelDetailClient() {
           {/* Info Table - sahibinden style alternating rows */}
           <div className="border-x border-slate-200 bg-white overflow-hidden">
             <div className="bg-slate-100 border-y border-slate-200 px-4 py-2">
-              <h2 className="text-sm font-bold text-slate-800">\u0130lan Bilgileri</h2>
+              <h2 className="text-sm font-bold text-slate-800">İlan Bilgileri</h2>
             </div>
             <table className="w-full text-sm">
               <tbody>
@@ -648,7 +648,7 @@ export default function ParcelDetailClient() {
                   TKGM Parsel Sorgu
                 </a>
                 {parcel.city && (
-                  <a href={`https://kentrehberi.${parcel.city.toLocaleLowerCase('tr').replace(/\u0131/g,'i').replace(/\u00F6/g,'o').replace(/\u00FC/g,'u').replace(/\u015F/g,'s').replace(/\u00E7/g,'c').replace(/\u011F/g,'g')}.bel.tr`} target="_blank" rel="noopener noreferrer"
+                  <a href={`https://kentrehberi.${parcel.city.toLocaleLowerCase('tr').replace(/ı/g,'i').replace(/ö/g,'o').replace(/ü/g,'u').replace(/ş/g,'s').replace(/ç/g,'c').replace(/ğ/g,'g')}.bel.tr`} target="_blank" rel="noopener noreferrer"
                     className="flex items-center gap-1.5 rounded-lg bg-white border border-slate-200 px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50 transition-all duration-150 cursor-pointer"
                   >
                     <ExternalLink className="h-3.5 w-3.5" />
@@ -657,7 +657,7 @@ export default function ParcelDetailClient() {
                 )}
               </div>
               {parcel.ada && parcel.parsel && (
-                <p className="mt-1.5 text-[10px] text-slate-400">TKGM sitesinde \u0130dari sekmesinden il/il\u00E7e/mahalle se\u00E7ip yukar\u0131daki ada ve parsel numaralar\u0131n\u0131 girin.</p>
+                <p className="mt-1.5 text-[10px] text-slate-400">TKGM sitesinde İdari sekmesinden il/ilçe/mahalle seçip yukarıdaki ada ve parsel numaralarını girin.</p>
               )}
             </div>
           )}
@@ -669,7 +669,7 @@ export default function ParcelDetailClient() {
               <div>
                 <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 uppercase tracking-wider mb-3">
                   <Building2 className="h-3.5 w-3.5" />
-                  Dan\u0131\u015Fman
+                  Danışman
                 </div>
                 <div className="flex items-center gap-3 mb-4">
                   {consultant.avatarUrl ? (
@@ -681,7 +681,7 @@ export default function ParcelDetailClient() {
                   )}
                   <div>
                     <p className="font-semibold text-slate-900">{consultant.firstName} {consultant.lastName}</p>
-                    <p className="text-xs text-slate-500">Gayrimenkul Dan\u0131\u015Fman\u0131</p>
+                    <p className="text-xs text-slate-500">Gayrimenkul Danışmanı</p>
                   </div>
                 </div>
                 {consultant.phone && (
@@ -697,13 +697,13 @@ export default function ParcelDetailClient() {
                   className="flex w-full items-center justify-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors mb-2"
                 >
                   <MessageCircle className="h-4 w-4" />
-                  Mesaj G\u00F6nder
+                  Mesaj Gönder
                 </button>
                 <Link
                   href={`/parcels?consultant=${consultant.id}`}
                   className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors"
                 >
-                  T\u00FCm \u0130lanlar\u0131
+                  Tüm İlanları
                 </Link>
               </div>
             ) : (
@@ -738,7 +738,7 @@ export default function ParcelDetailClient() {
                   className="flex w-full items-center justify-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors mb-2"
                 >
                   <Phone className="h-4 w-4" />
-                  Sizi Arayal\u0131m
+                  Sizi Arayalım
                 </button>
               </div>
             )}
@@ -755,7 +755,7 @@ export default function ParcelDetailClient() {
 
               {parcel.status === 'active' && (
                 <button
-                  onClick={() => isAuthenticated ? setShowOffer(true) : alert('Teklif vermek i\u00E7in giri\u015F yapman\u0131z gerekiyor.')}
+                  onClick={() => isAuthenticated ? setShowOffer(true) : alert('Teklif vermek için giriş yapmanız gerekiyor.')}
                   className="flex w-full items-center justify-center gap-2 rounded-lg bg-amber-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-amber-600 transition-colors shadow-sm"
                 >
                   <Tag className="h-4 w-4" />
@@ -767,15 +767,15 @@ export default function ParcelDetailClient() {
                 className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#25D366] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#1fb855] transition-colors shadow-sm"
               >
                 <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" /></svg>
-                WhatsApp ile \u0130leti\u015Fim
+                WhatsApp ile İletişim
               </a>
 
               {parcel.status === 'active' && (
-                <button onClick={async () => { try { await apiClient.post(`/parcels/${parcel.id}/price-alert`, {}); alert('Fiyat d\u00FC\u015F\u00FC\u015F bildirimi aktif edildi!'); } catch { alert('Giri\u015F yapman\u0131z gerekiyor.'); } }}
+                <button onClick={async () => { try { await apiClient.post(`/parcels/${parcel.id}/price-alert`, {}); alert('Fiyat düşüş bildirimi aktif edildi!'); } catch { alert('Giriş yapmanız gerekiyor.'); } }}
                   className="flex w-full items-center gap-2 justify-center rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors"
                 >
                   <Bell className="h-3.5 w-3.5 text-amber-500" />
-                  Fiyat D\u00FC\u015F\u00FCnce Haber Ver
+                  Fiyat Düşünce Haber Ver
                 </button>
               )}
             </div>
@@ -789,7 +789,7 @@ export default function ParcelDetailClient() {
         {parcel.description && (
           <div className="rounded-lg border border-slate-200 bg-white overflow-hidden">
             <div className="bg-slate-100 border-b border-slate-200 px-5 py-3">
-              <h2 className="text-sm font-bold text-slate-800">A\u00E7\u0131klama</h2>
+              <h2 className="text-sm font-bold text-slate-800">Açıklama</h2>
             </div>
             <div className="p-5">
               <p className="text-sm leading-relaxed text-slate-600 whitespace-pre-wrap">{parcel.description}</p>
@@ -802,12 +802,12 @@ export default function ParcelDetailClient() {
           <div className="flex gap-2 flex-wrap">
             {parcel.isAuctionEligible && (
               <span className="flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-4 py-2 text-sm font-medium text-emerald-700">
-                A\u00E7\u0131k Art\u0131rmaya Uygun
+                Açık Artırmaya Uygun
               </span>
             )}
             {parcel.isFeatured && (
               <span className="flex items-center gap-1.5 rounded-full bg-yellow-50 border border-yellow-200 px-4 py-2 text-sm font-medium text-yellow-700">
-                \u00D6ne \u00C7\u0131kan \u0130lan
+                Öne Çıkan İlan
               </span>
             )}
           </div>
@@ -822,7 +822,7 @@ export default function ParcelDetailClient() {
             extraInfo={[
               parcel.city && parcel.district ? `${parcel.city}, ${parcel.district}` : '',
               parcel.ada && parcel.parsel ? `Ada: ${parcel.ada} / Parsel: ${parcel.parsel}` : '',
-              parcel.areaM2 ? `Alan: ${Number(parcel.areaM2).toLocaleString('tr-TR')} m\u00B2` : '',
+              parcel.areaM2 ? `Alan: ${Number(parcel.areaM2).toLocaleString('tr-TR')} m²` : '',
               parcel.price ? `Fiyat: ${formatPrice(parcel.price)}` : '',
             ].filter(Boolean).join('\n')}
           />
@@ -854,23 +854,23 @@ export default function ParcelDetailClient() {
             </p>
             {parcel.price && (
               <p className="text-sm text-slate-500 mb-4">
-                \u0130lan fiyat\u0131: <span className="font-bold text-emerald-600">{formatPrice(parcel.price)}</span>
+                İlan fiyatı: <span className="font-bold text-emerald-600">{formatPrice(parcel.price)}</span>
               </p>
             )}
 
             <div className="space-y-4">
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-900">Teklif Tutar\u0131 (TL) *</label>
+                <label className="mb-1.5 block text-sm font-medium text-slate-900">Teklif Tutarı (TL) *</label>
                 <input
                   type="text"
                   value={offerAmount}
                   onChange={(e) => setOfferAmount(e.target.value.replace(/[^0-9.,]/g, ''))}
-                  placeholder="\u00D6rn: 5000000"
+                  placeholder="Örn: 5000000"
                   className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-900">Mesaj\u0131n\u0131z (opsiyonel)</label>
+                <label className="mb-1.5 block text-sm font-medium text-slate-900">Mesajınız (opsiyonel)</label>
                 <textarea
                   value={offerMessage}
                   onChange={(e) => setOfferMessage(e.target.value)}
@@ -887,16 +887,16 @@ export default function ParcelDetailClient() {
                 {offerSubmitting ? (
                   <span className="flex items-center gap-2">
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    G\u00F6nderiliyor...
+                    Gönderiliyor...
                   </span>
                 ) : (
-                  'Teklif G\u00F6nder'
+                  'Teklif Gönder'
                 )}
               </button>
             </div>
 
             <p className="mt-3 text-[10px] text-center text-slate-400">
-              Teklifiniz de\u011Ferlendirilecek ve size en k\u0131sa s\u00FCrede d\u00F6n\u00FC\u015F yap\u0131lacakt\u0131r.
+              Teklifiniz değerlendirilecek ve size en kısa sürede dönüş yapılacaktır.
             </p>
           </div>
         </div>

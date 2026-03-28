@@ -1,19 +1,17 @@
 /**
- * Burns a repeating diagonal watermark text into an image using canvas.
+ * Burns a single centered watermark text into an image using canvas.
+ * Also adds the listing number in the top-left corner.
  * Returns a data URL with the watermark permanently rendered on the image.
- * This ensures the watermark persists even when someone right-clicks + "Open in new tab".
- *
- * Uses fetch→blob→createObjectURL to avoid CORS issues with crossOrigin on <img>.
  */
 export function burnWatermark(
   imageUrl: string,
   watermarkText: string,
-  options?: { opacity?: number; fontSize?: number; gap?: number },
+  options?: { opacity?: number; fontSize?: number; listingNumber?: string },
 ): Promise<string> {
-  const { opacity = 0.03, fontSize = 24, gap = 300 } = options || {};
+  const { opacity = 0.15, fontSize = 48 } = options || {};
+  const listingNumber = options?.listingNumber;
 
   return new Promise((resolve) => {
-    // Fetch the image as blob to avoid CORS canvas tainting
     fetch(imageUrl)
       .then((res) => res.blob())
       .then((blob) => {
@@ -29,23 +27,42 @@ export function burnWatermark(
           // Draw original image
           ctx.drawImage(img, 0, 0);
 
-          // Draw watermark — white text with shadow for visibility on any background
+          // Draw single centered watermark
           ctx.save();
           ctx.globalAlpha = opacity;
-          ctx.font = `bold ${fontSize}px Arial, sans-serif`;
-          ctx.rotate(-25 * Math.PI / 180);
-
-          const diagonal = Math.sqrt(canvas.width ** 2 + canvas.height ** 2);
-          const textSpacing = watermarkText.length * fontSize * 0.6 + gap;
-
-          for (let wy = -diagonal; wy < diagonal * 2; wy += gap) {
-            for (let wx = -diagonal; wx < diagonal * 2; wx += textSpacing) {
-              // Subtle single-color watermark
-              ctx.fillStyle = 'rgba(255,255,255,0.7)';
-              ctx.fillText(watermarkText, wx, wy);
-            }
-          }
+          const scaledFontSize = Math.max(fontSize, Math.min(canvas.width, canvas.height) * 0.06);
+          ctx.font = `bold ${scaledFontSize}px Arial, sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillStyle = 'rgba(255,255,255,0.8)';
+          ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+          ctx.lineWidth = 2;
+          const cx = canvas.width / 2;
+          const cy = canvas.height / 2;
+          ctx.strokeText(watermarkText, cx, cy);
+          ctx.fillText(watermarkText, cx, cy);
           ctx.restore();
+
+          // Draw listing number in top-left corner
+          if (listingNumber) {
+            ctx.save();
+            const lnFontSize = Math.max(16, Math.min(canvas.width, canvas.height) * 0.025);
+            ctx.font = `bold ${lnFontSize}px Arial, sans-serif`;
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
+            const text = `#${listingNumber}`;
+            const metrics = ctx.measureText(text);
+            const padX = 10;
+            const padY = 6;
+            // Semi-transparent background
+            ctx.fillStyle = 'rgba(0,0,0,0.5)';
+            ctx.fillRect(8, 8, metrics.width + padX * 2, lnFontSize + padY * 2);
+            // White text
+            ctx.fillStyle = '#ffffff';
+            ctx.globalAlpha = 0.9;
+            ctx.fillText(text, 8 + padX, 8 + padY);
+            ctx.restore();
+          }
 
           URL.revokeObjectURL(blobUrl);
           try {
@@ -69,10 +86,11 @@ const wmCache = new Map<string, string>();
 export async function getWatermarkedUrl(
   imageUrl: string,
   watermarkText: string,
+  listingNumber?: string,
 ): Promise<string> {
-  const key = `${imageUrl}::${watermarkText}`;
+  const key = `${imageUrl}::${watermarkText}::${listingNumber || ''}`;
   if (wmCache.has(key)) return wmCache.get(key)!;
-  const result = await burnWatermark(imageUrl, watermarkText);
+  const result = await burnWatermark(imageUrl, watermarkText, { listingNumber });
   wmCache.set(key, result);
   return result;
 }
