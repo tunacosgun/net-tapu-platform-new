@@ -79,6 +79,25 @@ export default function AuctionDetailPage() {
   const [galleryIndex, setGalleryIndex] = useState(0);
   const [showGallery, setShowGallery] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const { setTimeRemaining } = useAuctionStore();
+
+  // Fallback timer: calculate from REST API data when WS not connected
+  useEffect(() => {
+    if (timeRemainingMs !== null && timeRemainingMs > 0) return; // WS is providing time
+    if (!auctionDetail) return;
+    const endTime = auctionDetail.extendedUntil || auctionDetail.scheduledEnd;
+    if (!endTime) return;
+    const st = auctionDetail.status;
+    if (st !== 'live' && st !== 'ending' && st !== 'scheduled' && st !== 'deposit_open') return;
+
+    const calc = () => {
+      const remaining = new Date(endTime).getTime() - Date.now();
+      setTimeRemaining(Math.max(0, remaining));
+    };
+    calc();
+    const iv = setInterval(calc, 1000);
+    return () => clearInterval(iv);
+  }, [auctionDetail, timeRemainingMs, setTimeRemaining]);
 
   // Anonymous participant label & color mapping
   const participantLabelMap = useRef<Record<string, { label: string; color: string }>>({});
