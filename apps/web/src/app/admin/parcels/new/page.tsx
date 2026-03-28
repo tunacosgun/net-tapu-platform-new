@@ -24,7 +24,7 @@ export default function AdminNewParcelPage() {
     formState: { errors, isSubmitting },
   } = useForm<ParcelFormData>({
     resolver: zodResolver(parcelSchema),
-    defaultValues: { isAuctionEligible: false, isFeatured: false, latitude: '', longitude: '' },
+    defaultValues: { isAuctionEligible: false, isFeatured: false, showListingDate: true, latitude: '', longitude: '' },
   });
 
   const selectedCity = watch('city');
@@ -330,6 +330,7 @@ export default function AdminNewParcelPage() {
             {...register('isAuctionEligible')}
           />
           <FormCheckbox label="Öne Çıkan" {...register('isFeatured')} />
+          <FormCheckbox label="İlan Tarihini Göster" {...register('showListingDate')} />
         </div>
         <FormTextarea
           label="Açıklama"
