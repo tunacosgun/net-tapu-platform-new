@@ -166,7 +166,7 @@ export default function AdminParcelsPage() {
         <div className="flex items-center gap-3">
           {p.images && p.images.length > 0 ? (
             <img
-              src={typeof p.images[0] === 'string' ? p.images[0] : p.images[0].url}
+              src={typeof p.images[0] === 'string' ? p.images[0] : (p.images[0].thumbnailUrl || p.images[0].watermarkedUrl || p.images[0].originalUrl || p.images[0].url)}
               alt=""
               className="h-10 w-14 rounded object-cover shrink-0 bg-gray-100"
             />
