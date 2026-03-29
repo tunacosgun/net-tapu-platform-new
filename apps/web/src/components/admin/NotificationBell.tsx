@@ -45,8 +45,14 @@ export default function NotificationBell() {
   }
 
   useEffect(() => {
-    fetchNotifications();
-    const interval = setInterval(fetchNotifications, 30000); // Poll every 30s
+    let interval: NodeJS.Timeout | null = null;
+    fetchNotifications().then(() => {
+      // Only start polling if first fetch didn't 404
+      if (notifications.length > 0 || unreadCount > 0) {
+        interval = setInterval(fetchNotifications, 60000);
+      }
+    });
+    // @ts-ignore
     return () => clearInterval(interval);
   }, []);
 

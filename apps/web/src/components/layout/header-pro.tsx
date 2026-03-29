@@ -30,22 +30,33 @@ export function HeaderPro() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [notifOpen, setNotifOpen] = useState(false);
 
-  // Fetch real notification count
+  // Fetch real notification count (only if endpoint exists)
   useEffect(() => {
     if (!isAuthenticated) return;
+    let cancelled = false;
     const fetchNotifs = async () => {
       try {
         const { default: apiClient } = await import('@/lib/api-client');
         const { data } = await apiClient.get('/notifications', { params: { limit: 10, unreadOnly: true } });
+        if (cancelled) return;
         const items = data?.data || data || [];
         setNotifications(Array.isArray(items) ? items : []);
         const unread = Array.isArray(items) ? items.filter((n: any) => !n.isRead).length : 0;
         setNotificationCount(unread);
-      } catch { setNotificationCount(0); }
+        return true; // success
+      } catch {
+        if (!cancelled) setNotificationCount(0);
+        return false; // endpoint not available
+      }
     };
-    fetchNotifs();
-    const iv = setInterval(fetchNotifs, 30000);
-    return () => clearInterval(iv);
+    fetchNotifs().then((ok) => {
+      // Only poll if first fetch succeeded
+      if (ok && !cancelled) {
+        const iv = setInterval(fetchNotifs, 60000);
+        return () => clearInterval(iv);
+      }
+    });
+    return () => { cancelled = true; };
   }, [isAuthenticated]);
 
   useEffect(() => {
