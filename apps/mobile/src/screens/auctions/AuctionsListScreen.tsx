@@ -99,8 +99,8 @@ export default function AuctionsListScreen() {
   const onRefresh = async () => { setRefreshing(true); await fetchAuctions(); setRefreshing(false); };
 
   const tabItems: { key: TabKey; label: string; icon: string }[] = [
-    { key: 'active', label: 'Canl\u0131', icon: 'flash' },
-    { key: 'upcoming', label: 'Yakla\u015Fan', icon: 'time-outline' },
+    { key: 'active', label: 'Canlı', icon: 'flash' },
+    { key: 'upcoming', label: 'Yaklaşan', icon: 'time-outline' },
     { key: 'ended', label: 'Biten', icon: 'checkmark-circle-outline' },
   ];
 
@@ -159,7 +159,7 @@ export default function AuctionsListScreen() {
           {/* Content */}
           <View style={styles.cardContent}>
             <Text style={[styles.cardTitle, { color: c.text }]} numberOfLines={2}>
-              {item.parcel?.title || item.title || `\u0130hale #${item.id.slice(0, 8)}`}
+              {item.parcel?.title || item.title || `İhale #${item.id.slice(0, 8)}`}
             </Text>
 
             {item.parcel?.city && (
@@ -174,7 +174,7 @@ export default function AuctionsListScreen() {
             <View style={styles.cardFooter}>
               <View>
                 <Text style={[styles.priceLabel, { color: c.textMuted }]}>
-                  {isLive ? 'G\u00FCncel Fiyat' : tab === 'upcoming' ? 'Ba\u015Flang\u0131\u00E7' : 'Son Fiyat'}
+                  {isLive ? 'Güncel Fiyat' : tab === 'upcoming' ? 'Başlangıç' : 'Son Fiyat'}
                 </Text>
                 <Text style={[styles.priceVal, { color: c.primary }]}>
                   {formatPrice(item.currentPrice || item.startingPrice)}
@@ -203,7 +203,7 @@ export default function AuctionsListScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: c.background }]} edges={['top']}>
       <View style={styles.titleBar}>
         <Text style={[styles.screenTitle, { color: c.text }]}>
-          \u0130haleler
+          İhaleler
         </Text>
       </View>
 
@@ -243,10 +243,10 @@ export default function AuctionsListScreen() {
                 <Ionicons name="flash-outline" size={36} color={c.textMuted} />
               </View>
               <Text style={[styles.emptyTitle, { color: c.text }]}>
-                {tab === 'active' ? 'Aktif ihale yok' : tab === 'upcoming' ? 'Yakla\u015Fan ihale yok' : 'Biten ihale yok'}
+                {tab === 'active' ? 'Aktif ihale yok' : tab === 'upcoming' ? 'Yaklaşan ihale yok' : 'Biten ihale yok'}
               </Text>
               <Text style={{ fontSize: 14, color: c.textSecondary, textAlign: 'center', lineHeight: 20 }}>
-                {tab === 'active' ? '\u015Eu an aktif bir ihale bulunmuyor' : tab === 'upcoming' ? 'Yakla\u015Fan ihale planland\u0131\u011F\u0131nda burada g\u00F6r\u00FCnecek' : 'Hen\u00FCz tamamlanm\u0131\u015F ihale yok'}
+                {tab === 'active' ? 'Şu an aktif bir ihale bulunmuyor' : tab === 'upcoming' ? 'Yaklaşan ihale planlandığında burada görünecek' : 'Henüz tamamlanmış ihale yok'}
               </Text>
             </View>
           )}

@@ -29,9 +29,9 @@ export default function ProfileScreen() {
   }, [isAuthenticated]);
 
   const handleLogout = () => {
-    Alert.alert('\u00C7\u0131k\u0131\u015F Yap', 'Hesab\u0131n\u0131zdan \u00E7\u0131kmak istedi\u011Finize emin misiniz?', [
-      { text: 'Vazge\u00E7', style: 'cancel' },
-      { text: '\u00C7\u0131k\u0131\u015F Yap', style: 'destructive', onPress: () => clearTokens() },
+    Alert.alert('Çıkış Yap', 'Hesabınızdan çıkmak istediğinize emin misiniz?', [
+      { text: 'Vazgeç', style: 'cancel' },
+      { text: 'Çıkış Yap', style: 'destructive', onPress: () => clearTokens() },
     ]);
   };
 
@@ -42,16 +42,16 @@ export default function ProfileScreen() {
           <View style={[styles.loginIconWrap, { backgroundColor: isDark ? c.surface : c.primaryBg }]}>
             <Ionicons name="person-outline" size={40} color={c.primary} />
           </View>
-          <Text style={[styles.loginTitle, { color: c.text }]}>Hesab\u0131n\u0131za giri\u015F yap\u0131n</Text>
+          <Text style={[styles.loginTitle, { color: c.text }]}>Hesabınıza giriş yapın</Text>
           <Text style={{ fontSize: 14, color: c.textSecondary, textAlign: 'center', lineHeight: 20 }}>
-            \u0130lanlar\u0131 favorileyin, ihalelere kat\u0131l\u0131n ve daha fazlas\u0131
+            İlanları favorileyin, ihalelere katılın ve daha fazlası
           </Text>
           <TouchableOpacity
             onPress={() => navigation.navigate('Login')}
             activeOpacity={0.85}
             style={[styles.loginBtn, { backgroundColor: c.primary }]}
           >
-            <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>Giri\u015F Yap</Text>
+            <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>Giriş Yap</Text>
             <Ionicons name="arrow-forward" size={16} color="#fff" />
           </TouchableOpacity>
         </View>
@@ -61,25 +61,25 @@ export default function ProfileScreen() {
 
   const displayName = profile
     ? `${profile.firstName || ''} ${profile.lastName || ''}`.trim()
-    : user?.name || 'Kullan\u0131c\u0131';
+    : user?.name || 'Kullanıcı';
   const initial = (displayName || user?.email || '?')[0].toUpperCase();
 
   const menuSections = [
     {
-      title: 'Hesab\u0131m',
+      title: 'Hesabım',
       items: [
         { icon: 'heart-outline', label: 'Favorilerim', screen: 'Favorites', color: c.error },
         { icon: 'document-text-outline', label: 'Tekliflerim', screen: 'Offers', color: c.warning },
-        { icon: 'flash-outline', label: '\u0130hale Ge\u00E7mi\u015Fim', screen: 'Offers', color: c.primary },
-        { icon: 'card-outline', label: '\u00D6deme Ge\u00E7mi\u015Fim', screen: 'Payments', color: c.success },
+        { icon: 'flash-outline', label: 'İhale Geçmişim', screen: 'Offers', color: c.primary },
+        { icon: 'card-outline', label: 'Ödeme Geçmişim', screen: 'Payments', color: c.success },
       ],
     },
     {
       title: 'Ayarlar',
       items: [
-        { icon: 'search-outline', label: 'Kay\u0131tl\u0131 Aramalar', screen: 'Settings', color: c.info },
-        { icon: 'notifications-outline', label: 'Bildirim Ayarlar\u0131', screen: 'Notifications', color: c.warning },
-        { icon: 'shield-checkmark-outline', label: 'G\u00FCvenlik', screen: 'Settings', color: c.primary },
+        { icon: 'search-outline', label: 'Kayıtlı Aramalar', screen: 'Settings', color: c.info },
+        { icon: 'notifications-outline', label: 'Bildirim Ayarları', screen: 'Notifications', color: c.warning },
+        { icon: 'shield-checkmark-outline', label: 'Güvenlik', screen: 'Settings', color: c.primary },
       ],
     },
   ];
@@ -151,7 +151,7 @@ export default function ProfileScreen() {
           activeOpacity={0.7}
         >
           <Ionicons name="log-out-outline" size={18} color={c.error} />
-          <Text style={{ fontWeight: '600', fontSize: 15, color: c.error }}>\u00C7\u0131k\u0131\u015F Yap</Text>
+          <Text style={{ fontWeight: '600', fontSize: 15, color: c.error }}>Çıkış Yap</Text>
         </TouchableOpacity>
 
         <Text style={{ textAlign: 'center', fontSize: 12, marginTop: 20, color: c.textMuted }}>NetTapu v1.0.0</Text>

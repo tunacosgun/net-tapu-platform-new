@@ -81,7 +81,7 @@ export default function ParcelDetailScreen() {
     if (!parcel) return;
     try {
       await Share.share({
-        message: `${parcel.title}\n${parcel.city}, ${parcel.district}\n${formatPrice(parcel.price)}\n\nNetTapu'da g\u00F6r\u00FCnt\u00FCle`,
+        message: `${parcel.title}\n${parcel.city}, ${parcel.district}\n${formatPrice(parcel.price)}\n\nNetTapu'da görüntüle`,
       });
     } catch { /* silently fail */ }
   }
@@ -90,21 +90,21 @@ export default function ParcelDetailScreen() {
     if (!parcel) return;
     const phone = consultant?.phone || '';
     const message = encodeURIComponent(
-      `Merhaba, NetTapu'daki ${parcel.title} (${parcel.listingId}) ilan\u0131 hakk\u0131nda bilgi almak istiyorum.`
+      `Merhaba, NetTapu'daki ${parcel.title} (${parcel.listingId}) ilanı hakkında bilgi almak istiyorum.`
     );
     const url = phone
       ? `https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${message}`
       : `https://wa.me/?text=${message}`;
-    Linking.openURL(url).catch(() => Alert.alert('Hata', 'WhatsApp a\u00E7\u0131lamad\u0131.'));
+    Linking.openURL(url).catch(() => Alert.alert('Hata', 'WhatsApp açılamadı.'));
   }
 
   function handleCall() {
     const phone = consultant?.phone || '';
     if (!phone) {
-      Alert.alert('Bilgi', 'Dan\u0131\u015Fman telefon numaras\u0131 bulunamad\u0131.');
+      Alert.alert('Bilgi', 'Danışman telefon numarası bulunamadı.');
       return;
     }
-    Linking.openURL(`tel:${phone}`).catch(() => Alert.alert('Hata', 'Arama ba\u015Flat\u0131lamad\u0131.'));
+    Linking.openURL(`tel:${phone}`).catch(() => Alert.alert('Hata', 'Arama başlatılamadı.'));
   }
 
   if (!parcel) return (
@@ -123,11 +123,11 @@ export default function ParcelDetailScreen() {
   );
 
   const infoRows: { label: string; value: string; icon: string }[] = [
-    { label: '\u0130lan No', value: parcel.listingId, icon: 'barcode-outline' },
-    { label: '\u0130lan Tarihi', value: parcel.listedAt ? formatDate(parcel.listedAt, 'date') : '\u2014', icon: 'calendar-outline' },
+    { label: 'İlan No', value: parcel.listingId, icon: 'barcode-outline' },
+    { label: 'İlan Tarihi', value: parcel.listedAt ? formatDate(parcel.listedAt, 'date') : '\u2014', icon: 'calendar-outline' },
     { label: 'Emlak Tipi', value: parcel.landType || '\u2014', icon: 'layers-outline' },
-    { label: '\u0130mar Durumu', value: parcel.zoningStatus || '\u2014', icon: 'construct-outline' },
-    { label: 'Alan (m\u00B2)', value: formatArea(parcel.areaM2), icon: 'resize-outline' },
+    { label: 'İmar Durumu', value: parcel.zoningStatus || '\u2014', icon: 'construct-outline' },
+    { label: 'Alan (m²)', value: formatArea(parcel.areaM2), icon: 'resize-outline' },
     { label: 'Ada', value: parcel.ada || '\u2014', icon: 'grid-outline' },
     { label: 'Parsel', value: parcel.parsel || '\u2014', icon: 'grid-outline' },
   ];
@@ -149,7 +149,7 @@ export default function ParcelDetailScreen() {
             </Text>
           </View>
           <TouchableOpacity
-            onPress={() => Alert.alert('Teklif', 'Teklif formu yak\u0131nda aktif olacak.')}
+            onPress={() => Alert.alert('Teklif', 'Teklif formu yakında aktif olacak.')}
             style={{ backgroundColor: c.primary, paddingHorizontal: 20, paddingVertical: 10, borderRadius: br.sm }}
             activeOpacity={0.85}
           >
@@ -240,12 +240,12 @@ export default function ParcelDetailScreen() {
             }]}
           >
             <View>
-              <Text style={{ fontSize: 11, fontWeight: '600', letterSpacing: 0.5, marginBottom: 4, color: c.textMuted }}>F\u0130YAT</Text>
+              <Text style={{ fontSize: 11, fontWeight: '600', letterSpacing: 0.5, marginBottom: 4, color: c.textMuted }}>FİYAT</Text>
               <Text style={{ fontSize: 30, fontWeight: '800', letterSpacing: -0.5, color: c.primary }}>{formatPrice(parcel.price)}</Text>
             </View>
             {parcel.pricePerM2 && (
               <View>
-                <Text style={{ fontSize: 11, fontWeight: '600', letterSpacing: 0.5, marginBottom: 4, color: c.textMuted }}>m\u00B2 B\u0130R\u0130M</Text>
+                <Text style={{ fontSize: 11, fontWeight: '600', letterSpacing: 0.5, marginBottom: 4, color: c.textMuted }}>m² BİRİM</Text>
                 <Text style={{ fontSize: 18, fontWeight: '700', letterSpacing: -0.3, color: c.text }}>{formatPrice(parcel.pricePerM2)}</Text>
               </View>
             )}
@@ -253,7 +253,7 @@ export default function ParcelDetailScreen() {
 
           {/* Info Table (sahibinden style) */}
           <View style={[styles.detailsCard, { backgroundColor: c.card, borderColor: isDark ? c.borderLight : c.border }, shadows.sm]}>
-            <Text style={[styles.sectionTitle, { color: c.text }]}>\u0130lan Bilgileri</Text>
+            <Text style={[styles.sectionTitle, { color: c.text }]}>İlan Bilgileri</Text>
             {infoRows.map((row, i, arr) => (
               <View key={row.label} style={[
                 styles.detailRow,
@@ -272,7 +272,7 @@ export default function ParcelDetailScreen() {
           {/* Consultant Card */}
           {consultant && (
             <View style={[styles.consultantCard, { backgroundColor: c.card, borderColor: isDark ? c.borderLight : c.border }, shadows.sm]}>
-              <Text style={[styles.sectionTitle, { color: c.text }]}>Dan\u0131\u015Fman</Text>
+              <Text style={[styles.sectionTitle, { color: c.text }]}>Danışman</Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
                 <View style={{
                   width: 50, height: 50, borderRadius: 16,
@@ -316,7 +316,7 @@ export default function ParcelDetailScreen() {
           {/* Description */}
           {parcel.description && (
             <View style={[styles.detailsCard, { backgroundColor: c.card, borderColor: isDark ? c.borderLight : c.border }, shadows.sm]}>
-              <Text style={[styles.sectionTitle, { color: c.text }]}>A\u00E7\u0131klama</Text>
+              <Text style={[styles.sectionTitle, { color: c.text }]}>Açıklama</Text>
               <Text style={{ fontSize: 15, lineHeight: 24, color: c.textSecondary }}>{parcel.description}</Text>
             </View>
           )}
@@ -324,7 +324,7 @@ export default function ParcelDetailScreen() {
           {/* CTA Buttons */}
           <View style={{ marginTop: 8, gap: 10, paddingBottom: 40 }}>
             <TouchableOpacity
-              onPress={() => Alert.alert('Teklif', 'Teklif formu yak\u0131nda aktif olacak.')}
+              onPress={() => Alert.alert('Teklif', 'Teklif formu yakında aktif olacak.')}
               style={[styles.ctaBtn, { backgroundColor: c.primary }]}
               activeOpacity={0.85}
             >
@@ -337,7 +337,7 @@ export default function ParcelDetailScreen() {
               activeOpacity={0.85}
             >
               <Ionicons name="call-outline" size={18} color={c.primary} />
-              <Text style={[styles.ctaBtnText, { color: c.text }]}>Sizi Arayal\u0131m</Text>
+              <Text style={[styles.ctaBtnText, { color: c.text }]}>Sizi Arayalım</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={handleWhatsApp}
@@ -345,7 +345,7 @@ export default function ParcelDetailScreen() {
               activeOpacity={0.7}
             >
               <Ionicons name="logo-whatsapp" size={18} color="#25d366" />
-              <Text style={{ fontSize: 16, fontWeight: '600', color: c.text }}>WhatsApp ile \u0130leti\u015Fim</Text>
+              <Text style={{ fontSize: 16, fontWeight: '600', color: c.text }}>WhatsApp ile İletişim</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={handleShare}
@@ -353,7 +353,7 @@ export default function ParcelDetailScreen() {
               activeOpacity={0.7}
             >
               <Ionicons name="share-social-outline" size={18} color={c.info} />
-              <Text style={{ fontSize: 15, fontWeight: '600', color: c.textSecondary }}>Payla\u015F</Text>
+              <Text style={{ fontSize: 15, fontWeight: '600', color: c.textSecondary }}>Paylaş</Text>
             </TouchableOpacity>
           </View>
         </View>

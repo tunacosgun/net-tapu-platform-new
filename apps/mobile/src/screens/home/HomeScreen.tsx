@@ -145,7 +145,7 @@ function LiveAuctionCard({ auction, onPress }: { auction: Auction; onPress: () =
         {/* Content */}
         <View style={{ padding: 14, gap: 6 }}>
           <Text style={{ color: c.text, fontSize: 15, fontWeight: '700', letterSpacing: -0.2 }} numberOfLines={1}>
-            {auction.parcel?.title || auction.title || `\u0130hale #${auction.id.slice(0, 8)}`}
+            {auction.parcel?.title || auction.title || `İhale #${auction.id.slice(0, 8)}`}
           </Text>
           {auction.parcel?.city && (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
@@ -158,7 +158,7 @@ function LiveAuctionCard({ auction, onPress }: { auction: Auction; onPress: () =
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 4 }}>
             <View>
               <Text style={{ color: c.textMuted, fontSize: 10, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                {isLive ? 'G\u00FCncel Fiyat' : 'Ba\u015Flang\u0131\u00E7'}
+                {isLive ? 'Güncel Fiyat' : 'Başlangıç'}
               </Text>
               <Text style={{ color: c.primary, fontSize: 20, fontWeight: '800', letterSpacing: -0.4 }}>
                 {formatPrice(auction.currentPrice || auction.startingPrice)}
@@ -197,7 +197,7 @@ function SectionHeader({ title, desc, onSeeAll, live }: {
       {onSeeAll && (
         <TouchableOpacity onPress={onSeeAll} activeOpacity={0.7} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
-            <Text style={{ fontSize: 13, fontWeight: '700', color: c.primary }}>T\u00FCm\u00FCn\u00FC G\u00F6r</Text>
+            <Text style={{ fontSize: 13, fontWeight: '700', color: c.primary }}>Tümünü Gör</Text>
             <Ionicons name="chevron-forward" size={13} color={c.primary} />
           </View>
         </TouchableOpacity>
@@ -270,14 +270,14 @@ export default function HomeScreen() {
 
   const userName = profile?.firstName
     ? `${profile.firstName} ${profile.lastName || ''}`.trim()
-    : user?.email?.split('@')[0] || 'Kullan\u0131c\u0131';
+    : user?.email?.split('@')[0] || 'Kullanıcı';
 
   const getGreeting = () => {
     const h = new Date().getHours();
-    if (h < 6) return '\u0130yi geceler';
-    if (h < 12) return 'G\u00FCnayd\u0131n';
-    if (h < 18) return '\u0130yi g\u00FCnler';
-    return '\u0130yi ak\u015Famlar';
+    if (h < 6) return 'İyi geceler';
+    if (h < 12) return 'Günaydın';
+    if (h < 18) return 'İyi günler';
+    return 'İyi akşamlar';
   };
 
   return (
@@ -332,7 +332,7 @@ export default function HomeScreen() {
             >
               <Ionicons name="search" size={18} color="rgba(255,255,255,0.6)" />
               <Text style={{ flex: 1, color: 'rgba(255,255,255,0.5)', fontSize: 14 }}>
-                \u0130l, il\u00E7e veya ada/parsel ara...
+                İl, ilçe veya ada/parsel ara...
               </Text>
               <View style={{
                 width: 34, height: 34, borderRadius: br.xs,
@@ -352,19 +352,19 @@ export default function HomeScreen() {
               }}>
                 <View style={{ width: 5, height: 5, borderRadius: 2.5, backgroundColor: c.primaryLight }} />
                 <Text style={{ fontSize: 10, fontWeight: '700', letterSpacing: 0.8, textTransform: 'uppercase', color: 'rgba(255,255,255,0.8)' }}>
-                  T\u00FCrkiye'nin Arsa Platformu
+                  Türkiye'nin Arsa Platformu
                 </Text>
               </View>
               <Text style={{
                 fontSize: 30, fontWeight: '800', letterSpacing: -0.8, lineHeight: 36,
                 color: c.textInverse, marginBottom: 8,
               }}>
-                Hayalinizdeki{'\n'}arsay\u0131 bulun.
+                Hayalinizdeki{'\n'}arsayı bulun.
               </Text>
               <Text style={{ fontSize: 13, fontWeight: '500', color: 'rgba(255,255,255,0.6)', lineHeight: 18 }}>
                 {stats.parcels > 0
-                  ? `${stats.parcels} aktif ilan \u00B7 ${stats.cities > 0 ? `${stats.cities} \u015Fehir` : 'T\u00FCrkiye geneli'}`
-                  : 'G\u00FCvenilir emlak yat\u0131r\u0131mlar\u0131'}
+                  ? `${stats.parcels} aktif ilan · ${stats.cities > 0 ? `${stats.cities} şehir` : 'Türkiye geneli'}`
+                  : 'Güvenilir emlak yatırımları'}
               </Text>
             </View>
           </LinearGradient>
@@ -376,8 +376,8 @@ export default function HomeScreen() {
           {/* Quick Actions */}
           <View style={S.actionsRow}>
             {([
-              { label: '\u0130lanlar', icon: 'layers-outline' as const, onPress: () => navigation.navigate('Main', { screen: 'Parcels' } as any), bgColor: isDark ? c.primaryBg : c.primaryBg },
-              { label: '\u0130haleler', icon: 'flash-outline' as const, onPress: () => navigation.navigate('Main', { screen: 'Auctions' } as any), bgColor: isDark ? c.warningBg : c.warningBg },
+              { label: 'İlanlar', icon: 'layers-outline' as const, onPress: () => navigation.navigate('Main', { screen: 'Parcels' } as any), bgColor: isDark ? c.primaryBg : c.primaryBg },
+              { label: 'İhaleler', icon: 'flash-outline' as const, onPress: () => navigation.navigate('Main', { screen: 'Auctions' } as any), bgColor: isDark ? c.warningBg : c.warningBg },
               { label: 'Favoriler', icon: 'heart-outline' as const, onPress: () => navigation.navigate('Favorites'), bgColor: isDark ? c.errorBg : c.errorBg },
               { label: 'Harita', icon: 'map-outline' as const, onPress: () => navigation.navigate('ParcelMap'), bgColor: isDark ? c.infoBg : c.infoBg },
             ]).map((item) => (
@@ -392,8 +392,8 @@ export default function HomeScreen() {
                     name={item.icon}
                     size={22}
                     color={
-                      item.label === '\u0130lanlar' ? c.primary :
-                      item.label === '\u0130haleler' ? c.warning :
+                      item.label === 'İlanlar' ? c.primary :
+                      item.label === 'İhaleler' ? c.warning :
                       item.label === 'Favoriler' ? c.error :
                       c.info
                     }
@@ -407,9 +407,9 @@ export default function HomeScreen() {
           {/* Stats Bar */}
           <View style={[S.statsBar, { backgroundColor: c.card, borderColor: c.border }, shadows.sm]}>
             {([
-              { label: 'Aktif \u0130lan', value: stats.parcels, icon: 'layers-outline' as const, color: c.primary },
-              { label: 'Canl\u0131 \u0130hale', value: stats.auctions, icon: 'flash-outline' as const, color: c.warning },
-              { label: 'Farkl\u0131 \u0130l', value: stats.cities, icon: 'location-outline' as const, color: c.info },
+              { label: 'Aktif İlan', value: stats.parcels, icon: 'layers-outline' as const, color: c.primary },
+              { label: 'Canlı İhale', value: stats.auctions, icon: 'flash-outline' as const, color: c.warning },
+              { label: 'Farklı İl', value: stats.cities, icon: 'location-outline' as const, color: c.info },
             ]).map((s, i, arr) => (
               <View key={s.label} style={[S.statItem, i < arr.length - 1 && { borderRightWidth: 1, borderRightColor: c.borderLight }]}>
                 <Ionicons name={s.icon} size={16} color={s.color} />
@@ -419,7 +419,7 @@ export default function HomeScreen() {
             ))}
           </View>
 
-          {/* ── Canl\u0131 \u0130haleler ── */}
+          {/* ── Canlı İhaleler ── */}
           {loading ? (
             <View style={{ paddingHorizontal: sp.screenPadding, marginBottom: sp.sectionGap }}>
               <SkeletonAuctionCard />
@@ -427,8 +427,8 @@ export default function HomeScreen() {
           ) : auctions.length > 0 ? (
             <View style={{ marginBottom: sp.sectionGap }}>
               <SectionHeader
-                title="Canl\u0131 \u0130haleler"
-                desc="Aktif a\u00E7\u0131k art\u0131rmalar"
+                title="Canlı İhaleler"
+                desc="Aktif açık artırmalar"
                 live
                 onSeeAll={() => navigation.navigate('Main', { screen: 'Auctions' } as any)}
               />
@@ -451,7 +451,7 @@ export default function HomeScreen() {
             </View>
           ) : null}
 
-          {/* ── \u00D6ne \u00C7\u0131kan Arsalar ── */}
+          {/* ── Öne Çıkan Arsalar ── */}
           {loading ? (
             <View style={{ paddingHorizontal: sp.screenPadding, marginBottom: sp.sectionGap }}>
               <SkeletonParcelCard />
@@ -459,8 +459,8 @@ export default function HomeScreen() {
           ) : featured.length > 0 ? (
             <View style={{ marginBottom: sp.sectionGap }}>
               <SectionHeader
-                title="\u00D6ne \u00C7\u0131kan Arsalar"
-                desc="Edit\u00F6r se\u00E7imi premium araziler"
+                title="Öne Çıkan Arsalar"
+                desc="Editör seçimi premium araziler"
                 onSeeAll={() => navigation.navigate('Main', { screen: 'Parcels' } as any)}
               />
               <ScrollView
@@ -488,7 +488,7 @@ export default function HomeScreen() {
             </View>
           ) : latest.length > 0 ? (
             <View style={{ marginBottom: sp.sectionGap }}>
-              <SectionHeader title="Son Eklenen Arsalar" desc="Yeni eklenen arazi ilanlar\u0131" />
+              <SectionHeader title="Son Eklenen Arsalar" desc="Yeni eklenen arazi ilanları" />
               <View style={{ paddingHorizontal: sp.screenPadding }}>
                 {latest.map((p) => (
                   <ParcelCard key={p.id} parcel={p} onPress={() => navigation.navigate('ParcelDetail', { id: p.id })} compact />
@@ -500,7 +500,7 @@ export default function HomeScreen() {
           {/* ── Trust Strip ── */}
           <View style={[S.trustStrip, { borderTopColor: c.border }]}>
             {([
-              { icon: 'shield-checkmark-outline' as const, label: 'G\u00FCvenli \u00D6deme' },
+              { icon: 'shield-checkmark-outline' as const, label: 'Güvenli Ödeme' },
               { icon: 'document-text-outline' as const, label: 'Resmi Tapu' },
               { icon: 'headset-outline' as const, label: '7/24 Destek' },
             ]).map((item) => (
