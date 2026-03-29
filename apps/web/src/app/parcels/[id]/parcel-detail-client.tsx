@@ -349,7 +349,7 @@ export default function ParcelDetailClient() {
     let cancelled = false;
     images.forEach((img, idx) => {
       const url = resolveImageUrl(img);
-      const listingNum = parcel?.listingId?.replace(/\D/g, '').padStart(10, '0').slice(0, 10) || String(parcel?.id || '').replace(/\D/g, '').padStart(10, '0').slice(0, 10);
+      const pid = parcel?.id || ''; const hashVal = pid.split('').reduce((a: number, c: string) => ((a * 31 + c.charCodeAt(0)) >>> 0), 5381); const listingNum = String(hashVal % 9000000000 + 1000000000);
       getWatermarkedUrl(url, siteName, listingNum).then((wmUrl) => {
         if (!cancelled) setWmImages((prev) => ({ ...prev, [idx]: wmUrl }));
       });
@@ -462,7 +462,8 @@ export default function ParcelDetailClient() {
 
   /* ─── Detail rows for the info table ─── */
   const detailRows: { label: string; value: string }[] = [];
-  if (parcel.listingId) detailRows.push({ label: 'İlan No', value: parcel.listingId });
+  const ilanNo = (() => { const id = parcel.id || ''; const hash = id.split('').reduce((a: number, c: string) => ((a * 31 + c.charCodeAt(0)) >>> 0), 5381); return String(hash % 9000000000 + 1000000000); })();
+  detailRows.push({ label: 'İlan No', value: ilanNo });
   if (parcel.listedAt && parcel.showListingDate !== false) detailRows.push({ label: 'İlan Tarihi', value: new Date(parcel.listedAt).toLocaleDateString('tr-TR', { day: '2-digit', month: 'long', year: 'numeric' }) });
   detailRows.push({ label: 'Emlak Tipi', value: 'Satılık Arsa' });
   if (parcel.zoningStatus) detailRows.push({ label: 'İmar Durumu', value: parcel.zoningStatus });
@@ -524,7 +525,7 @@ export default function ParcelDetailClient() {
                   className="max-h-full max-w-full object-contain"
                 />
                 {/* Listing number - top left like sahibinden */}
-                <span className="absolute top-2 left-2 text-[11px] text-slate-500 font-mono z-10">#{(parcel.listingId || parcel.id).replace(/\D/g, '').padStart(10, '0').slice(0, 10)}</span>
+                <span className="absolute top-2 left-2 text-[11px] text-slate-500 font-mono z-10">#{(() => { const id = parcel.id || ''; const hash = id.split('').reduce((a, c) => ((a * 31 + c.charCodeAt(0)) >>> 0), 5381); return String(hash % 9000000000 + 1000000000); })()}</span>
                 <Badge variant={status.variant} className="absolute top-2 left-28 text-xs px-2.5 py-1 shadow">{status.label}</Badge>
                 <div className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-lg bg-black/60 px-3 py-1.5 text-white text-xs backdrop-blur-sm cursor-pointer">
                   <SearchIcon className="h-3.5 w-3.5" />
