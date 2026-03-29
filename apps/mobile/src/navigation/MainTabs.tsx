@@ -8,6 +8,7 @@ import {
   Platform,
   Animated,
   Dimensions,
+  Alert,
 } from 'react-native';
 import { BlurView } from '@react-native-community/blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -23,8 +24,7 @@ const Tab = createBottomTabNavigator();
 
 const TAB_CONFIG = [
   { name: 'Home', label: 'Ana Sayfa', icon: 'home', iconOutline: 'home-outline' },
-  { name: 'Parcels', label: 'İlanlar', icon: 'map', iconOutline: 'map-outline' },
-  { name: 'Auctions', label: 'İhaleler', icon: 'flash', iconOutline: 'flash-outline' },
+  { name: 'Parcels', label: 'Keşfet', icon: 'compass', iconOutline: 'compass-outline' },
   { name: 'Profile', label: 'Profil', icon: 'person', iconOutline: 'person-outline' },
 ];
 
@@ -35,151 +35,153 @@ const SCREEN_MAP: Record<string, React.ComponentType<any>> = {
   Profile: ProfileScreen,
 };
 
-/* ─── Custom Glass Tab Bar ─── */
-function GlassTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+/* ─── FabBar Style Glass Tab Bar ─── */
+function FabTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const { colors: c, isDark } = useTheme();
   const insets = useSafeAreaInsets();
-  const tabCount = state.routes.length;
 
   // Animated bubble position
   const bubbleAnim = useRef(new Animated.Value(state.index)).current;
+  const fabScale = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     Animated.spring(bubbleAnim, {
       toValue: state.index,
       useNativeDriver: true,
-      damping: 18,
-      stiffness: 200,
-      mass: 0.8,
+      damping: 20,
+      stiffness: 220,
+      mass: 0.7,
     }).start();
   }, [state.index]);
 
   const screenWidth = Dimensions.get('window').width;
-  const barHorizontalMargin = 20;
-  const barWidth = screenWidth - barHorizontalMargin * 2;
-  const tabWidth = barWidth / tabCount;
-  const bubblePadding = 8;
-  const bubbleWidth = tabWidth - bubblePadding * 2;
+  const barMargin = 16;
+  const fabSize = 56;
+  const fabSpacing = 10;
+  const segmentWidth = screenWidth - barMargin * 2 - fabSize - fabSpacing;
+  const barHeight = 56;
+  const bottomMargin = Platform.OS === 'ios' ? Math.max(insets.bottom - 4, 12) : 16;
+
+  // Only 3 tabs in segment (Home, Explore, Profile) — Auctions is FAB
+  const segmentTabs = state.routes.filter(r => r.name !== 'Auctions');
+  const segmentTabWidth = segmentWidth / segmentTabs.length;
+  const bubblePadding = 6;
+  const bubbleW = segmentTabWidth - bubblePadding * 2;
+
+  const segmentIndex = segmentTabs.findIndex(r => r.name === state.routes[state.index]?.name);
+  const isAuctionActive = state.routes[state.index]?.name === 'Auctions';
+
+  useEffect(() => {
+    if (segmentIndex >= 0) {
+      Animated.spring(bubbleAnim, {
+        toValue: segmentIndex,
+        useNativeDriver: true,
+        damping: 20,
+        stiffness: 220,
+        mass: 0.7,
+      }).start();
+    }
+  }, [segmentIndex]);
 
   const translateX = bubbleAnim.interpolate({
-    inputRange: Array.from({ length: tabCount }, (_, i) => i),
-    outputRange: Array.from({ length: tabCount }, (_, i) => i * tabWidth + bubblePadding),
+    inputRange: segmentTabs.map((_, i) => i),
+    outputRange: segmentTabs.map((_, i) => i * segmentTabWidth + bubblePadding),
+    extrapolate: 'clamp',
   });
 
-  const barHeight = Platform.OS === 'ios' ? 64 : 60;
-  const bottomMargin = Platform.OS === 'ios' ? Math.max(insets.bottom - 8, 8) : 12;
+  const onFabPress = () => {
+    Animated.sequence([
+      Animated.spring(fabScale, { toValue: 0.85, useNativeDriver: true, speed: 50 }),
+      Animated.spring(fabScale, { toValue: 1, useNativeDriver: true, damping: 12 }),
+    ]).start();
+
+    const auctionRoute = state.routes.find(r => r.name === 'Auctions');
+    if (auctionRoute) {
+      navigation.navigate('Auctions');
+    }
+  };
 
   return (
-    <View
-      style={[
-        styles.barContainer,
-        {
-          bottom: bottomMargin,
-          left: barHorizontalMargin,
-          right: barHorizontalMargin,
-          height: barHeight,
-        },
-      ]}
-    >
-      {/* Glass background */}
-      <View style={styles.blurContainer}>
+    <View style={[styles.fabBarContainer, { bottom: bottomMargin }]}>
+      {/* ─── Segment Control (Glass) ─── */}
+      <View style={[styles.segmentContainer, { width: segmentWidth, height: barHeight }]}>
         <BlurView
           style={StyleSheet.absoluteFill}
-          blurType={
-            Platform.OS === 'ios'
-              ? isDark ? 'thinMaterialDark' : 'thinMaterial'
-              : isDark ? 'dark' : 'light'
+          blurType={Platform.OS === 'ios'
+            ? isDark ? 'chromeMaterialDark' : 'chromeMaterial'
+            : isDark ? 'dark' : 'light'
           }
-          blurAmount={Platform.OS === 'ios' ? 50 : 32}
-          reducedTransparencyFallbackColor={
-            isDark ? 'rgba(30,30,30,0.9)' : 'rgba(255,255,255,0.9)'
-          }
+          blurAmount={Platform.OS === 'ios' ? 80 : 32}
+          reducedTransparencyFallbackColor={isDark ? 'rgba(30,30,30,0.95)' : 'rgba(255,255,255,0.95)'}
         />
-        {/* Light tint overlay for glass look */}
-        <View
-          style={[
-            StyleSheet.absoluteFill,
-            {
-              backgroundColor: isDark
-                ? 'rgba(40,40,40,0.3)'
-                : 'rgba(255,255,255,0.45)',
-            },
-          ]}
-        />
-        {/* Subtle top border for glass edge */}
-        <View
-          style={[
-            styles.topBorder,
-            {
-              backgroundColor: isDark
-                ? 'rgba(255,255,255,0.08)'
-                : 'rgba(255,255,255,0.7)',
-            },
-          ]}
-        />
-      </View>
+        {/* Tint overlay */}
+        <View style={[StyleSheet.absoluteFill, {
+          backgroundColor: isDark ? 'rgba(40,40,40,0.25)' : 'rgba(255,255,255,0.5)',
+        }]} />
 
-      {/* Animated selection bubble */}
-      <Animated.View
-        style={[
-          styles.bubble,
-          {
-            width: bubbleWidth,
-            height: barHeight - 16,
-            transform: [{ translateX }],
-            backgroundColor: isDark
-              ? 'rgba(255,255,255,0.12)'
-              : 'rgba(0,0,0,0.06)',
-          },
-        ]}
-      />
+        {/* Animated selection bubble */}
+        {segmentIndex >= 0 && (
+          <Animated.View
+            style={[
+              styles.segmentBubble,
+              {
+                width: bubbleW,
+                height: barHeight - 12,
+                transform: [{ translateX }],
+                backgroundColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.07)',
+              },
+            ]}
+          />
+        )}
 
-      {/* Tab items */}
-      <View style={styles.tabRow}>
-        {state.routes.map((route, index) => {
-          const isFocused = state.index === index;
-          const config = TAB_CONFIG.find(t => t.name === route.name) || TAB_CONFIG[0];
+        {/* Tab items */}
+        <View style={styles.segmentRow}>
+          {segmentTabs.map((route) => {
+            const isFocused = state.routes[state.index]?.name === route.name;
+            const config = TAB_CONFIG.find(t => t.name === route.name) || TAB_CONFIG[0];
+            const iconName = isFocused ? config.icon : config.iconOutline;
+            const color = isFocused
+              ? (isDark ? '#ffffff' : '#000000')
+              : (isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.3)');
 
-          const iconName = isFocused ? config.icon : config.iconOutline;
-          const color = isFocused
-            ? (isDark ? '#ffffff' : '#000000')
-            : (isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.35)');
-
-          const onPress = () => {
-            const event = navigation.emit({
-              type: 'tabPress',
-              target: route.key,
-              canPreventDefault: true,
-            });
-            if (!isFocused && !event.defaultPrevented) {
-              navigation.navigate(route.name);
-            }
-          };
-
-          return (
-            <TouchableOpacity
-              key={route.key}
-              onPress={onPress}
-              activeOpacity={0.7}
-              style={styles.tabItem}
-            >
-              <Ionicons name={iconName} size={22} color={color} />
-              <Text
-                style={[
-                  styles.tabLabel,
-                  {
-                    color,
-                    fontWeight: isFocused ? '600' : '400',
-                  },
-                ]}
-                numberOfLines={1}
+            return (
+              <TouchableOpacity
+                key={route.key}
+                onPress={() => {
+                  const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
+                  if (!isFocused && !event.defaultPrevented) navigation.navigate(route.name);
+                }}
+                activeOpacity={0.7}
+                style={styles.segmentItem}
               >
-                {config.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
+                <Ionicons name={iconName} size={22} color={color} />
+                <Text style={[styles.segmentLabel, { color, fontWeight: isFocused ? '600' : '400' }]} numberOfLines={1}>
+                  {config.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
       </View>
+
+      {/* ─── FAB Button (Auctions / İhaleler) ─── */}
+      <Animated.View style={[styles.fabOuter, { transform: [{ scale: fabScale }] }]}>
+        <TouchableOpacity
+          onPress={onFabPress}
+          activeOpacity={0.8}
+          style={[styles.fabButton, {
+            width: fabSize,
+            height: fabSize,
+            backgroundColor: isAuctionActive ? c.primary : '#2563eb',
+          }]}
+        >
+          <Ionicons
+            name={isAuctionActive ? 'flash' : 'flash-outline'}
+            size={26}
+            color="#ffffff"
+          />
+        </TouchableOpacity>
+      </Animated.View>
     </View>
   );
 }
@@ -188,71 +190,79 @@ function GlassTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
 export default function MainTabs() {
   return (
     <Tab.Navigator
-      tabBar={(props) => <GlassTabBar {...props} />}
+      tabBar={(props) => <FabTabBar {...props} />}
       screenOptions={{ headerShown: false }}
     >
-      {TAB_CONFIG.map((tab) => (
-        <Tab.Screen
-          key={tab.name}
-          name={tab.name}
-          component={SCREEN_MAP[tab.name]}
-        />
-      ))}
+      <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="Parcels" component={ParcelsListScreen} />
+      <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen name="Auctions" component={AuctionsListScreen} />
     </Tab.Navigator>
   );
 }
 
 const styles = StyleSheet.create({
-  barContainer: {
+  fabBarContainer: {
     position: 'absolute',
-    borderRadius: 32,
+    left: 16,
+    right: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  segmentContainer: {
+    borderRadius: 28,
     overflow: 'hidden',
-    // Shadow
     ...Platform.select({
       ios: {
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.15,
-        shadowRadius: 20,
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.12,
+        shadowRadius: 16,
       },
       android: {
-        elevation: 16,
+        elevation: 12,
       },
     }),
   },
-  blurContainer: {
-    ...StyleSheet.absoluteFillObject,
-    borderRadius: 32,
-    overflow: 'hidden',
-  },
-  topBorder: {
+  segmentBubble: {
     position: 'absolute',
-    top: 0,
+    top: 6,
     left: 0,
-    right: 0,
-    height: StyleSheet.hairlineWidth,
+    borderRadius: 20,
   },
-  bubble: {
-    position: 'absolute',
-    top: 8,
-    left: 0,
-    borderRadius: 22,
-  },
-  tabRow: {
+  segmentRow: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-around',
   },
-  tabItem: {
+  segmentItem: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 4,
   },
-  tabLabel: {
+  segmentLabel: {
     fontSize: 10,
-    marginTop: 3,
+    marginTop: 2,
     letterSpacing: 0.1,
+  },
+  fabOuter: {
+    ...Platform.select({
+      ios: {
+        shadowColor: '#2563eb',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.35,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 12,
+      },
+    }),
+  },
+  fabButton: {
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
