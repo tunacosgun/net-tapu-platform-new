@@ -172,7 +172,7 @@ export default function AdminNewParcelPage() {
       ada: data.ada || undefined,
       parsel: data.parsel || undefined,
       description: data.description || undefined,
-      show_listing_date: showListingDate,
+      showListingDate: showListingDate,
     };
 
     try {
