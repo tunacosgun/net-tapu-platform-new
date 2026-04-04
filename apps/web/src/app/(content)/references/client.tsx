@@ -4,6 +4,45 @@ import { useRef } from 'react';
 import Link from 'next/link';
 import { motion, useInView } from 'framer-motion';
 import { Building2, ArrowRight, Star, TrendingUp, Globe, ShieldCheck } from 'lucide-react';
+import { usePageContent } from '@/hooks/use-page-content';
+
+/* ─── helpers ──────────────────────────────────────────── */
+
+function parseArray<T>(val: unknown, defaults: T[]): T[] {
+  if (Array.isArray(val)) return val;
+  if (typeof val === 'string') {
+    try { return JSON.parse(val); } catch {}
+  }
+  return defaults;
+}
+
+/* ─── defaults ────────────────────────────────────────── */
+
+const DEFAULT_CONTENT = {
+  hero_title: 'Güvenilir Markalar Bize Güveniyor',
+  hero_subtitle: 'Referanslar',
+  hero_description: "Türkiye'nin önde gelen finans, teknoloji ve gayrimenkul markalarıyla güçlü iş birlikleri kuruyoruz.",
+  partners: [
+    { name: 'Emlakjet', sector: 'Gayrimenkul' },
+    { name: 'Sahibinden', sector: 'İlan Platformu' },
+    { name: 'Halkbank', sector: 'Bankacılık' },
+    { name: 'Ziraat Bankası', sector: 'Bankacılık' },
+    { name: 'Garanti BBVA', sector: 'Bankacılık' },
+    { name: 'Yapı Kredi', sector: 'Bankacılık' },
+    { name: 'İş Bankası', sector: 'Bankacılık' },
+    { name: 'QNB Finansbank', sector: 'Bankacılık' },
+    { name: 'Albaraka', sector: 'Bankacılık' },
+    { name: 'TEB', sector: 'Bankacılık' },
+    { name: 'Kuveyt Türk', sector: 'Bankacılık' },
+    { name: 'Vakıfbank', sector: 'Bankacılık' },
+    { name: 'Hepsiburada', sector: 'E-Ticaret' },
+    { name: 'Trendyol', sector: 'E-Ticaret' },
+    { name: 'n11', sector: 'E-Ticaret' },
+    { name: 'Gittigidiyor', sector: 'E-Ticaret' },
+    { name: 'Amazon TR', sector: 'E-Ticaret' },
+    { name: 'TKGM', sector: 'Kamu' },
+  ],
+};
 
 const COMPANIES_ROW_A = [
   { name: 'Emlakjet', sector: 'Gayrimenkul' },
@@ -143,6 +182,11 @@ function MarqueeRow({
 export function ReferencesContent() {
   const statsRef = useRef<HTMLDivElement>(null);
   const statsInView = useInView(statsRef, { once: true });
+  const content = usePageContent('page_content_references', DEFAULT_CONTENT);
+  const partnersRaw = parseArray(content.partners, DEFAULT_CONTENT.partners);
+  const midpoint = Math.ceil(partnersRaw.length / 2);
+  const dynamicRowA = partnersRaw.slice(0, midpoint);
+  const dynamicRowB = partnersRaw.slice(midpoint);
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -162,7 +206,7 @@ export function ReferencesContent() {
           >
             <Star className="h-3.5 w-3.5 text-white" />
             <span className="text-xs font-semibold uppercase tracking-widest text-white">
-              Referanslar
+              {content.hero_subtitle}
             </span>
           </motion.div>
 
@@ -172,10 +216,7 @@ export function ReferencesContent() {
             transition={{ duration: 0.7, delay: 0.1 }}
             className="text-4xl font-extrabold leading-tight tracking-tight text-white lg:text-5xl"
           >
-            Güvenilir Markalar{' '}
-            <span className="text-emerald-200">
-              Bize Güveniyor
-            </span>
+            {content.hero_title}
           </motion.h1>
 
           <motion.p
@@ -184,7 +225,7 @@ export function ReferencesContent() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="mt-4 text-base text-white/80"
           >
-            Türkiye'nin önde gelen finans, teknoloji ve gayrimenkul markalarıyla güçlü iş birlikleri kuruyoruz.
+            {content.hero_description}
           </motion.p>
         </div>
       </div>
@@ -231,8 +272,8 @@ export function ReferencesContent() {
         </div>
 
         <div className="space-y-4">
-          <MarqueeRow companies={COMPANIES_ROW_A} direction="left" />
-          <MarqueeRow companies={COMPANIES_ROW_B} direction="right" />
+          <MarqueeRow companies={dynamicRowA} direction="left" />
+          <MarqueeRow companies={dynamicRowB} direction="right" />
         </div>
       </div>
 
@@ -249,7 +290,7 @@ export function ReferencesContent() {
             Tüm Ortaklarımız
           </motion.h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-            {ALL_COMPANIES.map((company, i) => (
+            {partnersRaw.map((company, i) => (
               <LogoBox key={company.name} company={company} delay={i * 0.03} />
             ))}
           </div>

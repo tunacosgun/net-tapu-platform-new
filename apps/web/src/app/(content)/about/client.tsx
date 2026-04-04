@@ -2,6 +2,7 @@
 
 import { motion, useInView, AnimatePresence } from 'framer-motion';
 import { useRef, useState, useEffect } from 'react';
+import { usePageContent } from '@/hooks/use-page-content';
 import Link from 'next/link';
 import {
   Shield,
@@ -139,56 +140,73 @@ function TeamCard({
   );
 }
 
+/* ─── helpers ──────────────────────────────────────────── */
+
+function parseArray<T>(val: unknown, defaults: T[]): T[] {
+  if (Array.isArray(val)) return val;
+  if (typeof val === 'string') {
+    try { return JSON.parse(val); } catch {}
+  }
+  return defaults;
+}
+
+/* ─── defaults ────────────────────────────────────────── */
+
+const DEFAULT_CONTENT = {
+  hero_title: "Türkiye'nin en güvenilir gayrimenkul platformu",
+  hero_subtitle: 'Hakkımızda',
+  hero_description:
+    'NetTapu, teknolojiyi ve şeffaflığı bir araya getirerek gayrimenkul alım-satımında yeni bir dönem başlatıyor. Canlı ihale sistemi, harita tabanlı arayüz ve güvenli ödeme altyapısı ile yatırımcıların yanındayız.',
+  story_title: 'Hikayemiz',
+  story_text:
+    'NetTapu, 2023 yılında Türkiye\'nin gayrimenkul piyasasındaki en büyük sorunu çözmek için kuruldu: güven eksikliği ve bilgi asimetrisi. Geleneksel yöntemlerle yürütülen arazi satışları, hem alıcı hem satıcı için belirsizlik yaratıyordu.\n\nBugün 81 ilde aktif olan platformumuz, canlı ihale motoru, harita tabanlı arayüz ve yasal güvenceli tapu süreci ile Türkiye\'nin en şeffaf gayrimenkul ekosistemini sunuyor.',
+  stats: [
+    { value: '10.000+', label: 'Kayıtlı Kullanıcı' },
+    { value: '5.000+', label: 'Aktif İlan' },
+    { value: '1.200+', label: 'Başarılı Satış' },
+    { value: '81', label: 'İl Kapsamı' },
+  ],
+  values: [
+    { title: 'Güvenilirlik', description: 'Tüm işlemler yasal çerçevede, tam şeffaflıkla yürütülür. Notere dayalı tapu garantisi ile her adımda güvendeyiz.' },
+    { title: 'Teknoloji', description: 'Canlı ihale motoru, harita tabanlı arayüz ve gerçek zamanlı teklif sistemi ile sektörü dijital çağa taşıyoruz.' },
+    { title: 'Erişilebilirlik', description: 'Web, iOS ve Android — her cihazdan sorunsuz erişim. Türkiye\'nin her köşesinden piyasaya ulaşın.' },
+    { title: 'Destek', description: '7/24 uzman danışman desteği ve rehberlik hizmeti. Sorularınız için her zaman yanınızdayız.' },
+  ],
+  team: [
+    { name: 'Ahmet Yılmaz', role: 'Kurucu & CEO', initials: 'AY' },
+    { name: 'Elif Kaya', role: 'CTO', initials: 'EK' },
+    { name: 'Mehmet Demir', role: 'Hukuk Direktörü', initials: 'MD' },
+    { name: 'Zeynep Arslan', role: 'Ürün Yöneticisi', initials: 'ZA' },
+  ],
+};
+
+/* ─── icon maps ───────────────────────────────────────── */
+
+const VALUE_ICONS = [Shield, Cpu, Smartphone, Headphones];
+const VALUE_GRADIENTS = [
+  'from-emerald-500 to-emerald-700',
+  'from-blue-500 to-blue-700',
+  'from-emerald-500 to-teal-600',
+  'from-amber-500 to-orange-600',
+];
+const TEAM_GRADIENTS = [
+  'from-emerald-500 to-emerald-700',
+  'from-blue-500 to-blue-700',
+  'from-emerald-500 to-teal-600',
+  'from-rose-500 to-pink-600',
+];
+
 /* ─── main ────────────────────────────────────────────── */
 
 export function AboutPageContent() {
   const storyRef = useRef(null);
   const storyInView = useInView(storyRef, { once: true });
 
-  const stats = [
-    { value: '10.000+', label: 'Kayıtlı Kullanıcı' },
-    { value: '5.000+', label: 'Aktif İlan' },
-    { value: '1.200+', label: 'Başarılı Satış' },
-    { value: '81', label: 'İl Kapsamı' },
-  ];
+  const content = usePageContent('page_content_about', DEFAULT_CONTENT);
 
-  const values = [
-    {
-      icon: Shield,
-      title: 'Güvenilirlik',
-      description:
-        'Tüm işlemler yasal çerçevede, tam şeffaflıkla yürütülür. Notere dayalı tapu garantisi ile her adımda güvendeyiz.',
-      gradient: 'from-emerald-500 to-emerald-700',
-    },
-    {
-      icon: Cpu,
-      title: 'Teknoloji',
-      description:
-        'Canlı ihale motoru, harita tabanlı arayüz ve gerçek zamanlı teklif sistemi ile sektörü dijital çağa taşıyoruz.',
-      gradient: 'from-blue-500 to-blue-700',
-    },
-    {
-      icon: Smartphone,
-      title: 'Erişilebilirlik',
-      description:
-        'Web, iOS ve Android — her cihazdan sorunsuz erişim. Türkiye\'nin her köşesinden piyasaya ulaşın.',
-      gradient: 'from-emerald-500 to-teal-600',
-    },
-    {
-      icon: Headphones,
-      title: 'Destek',
-      description:
-        '7/24 uzman danışman desteği ve rehberlik hizmeti. Sorularınız için her zaman yanınızdayız.',
-      gradient: 'from-amber-500 to-orange-600',
-    },
-  ];
-
-  const team = [
-    { name: 'Ahmet Yılmaz', role: 'Kurucu & CEO', initials: 'AY', gradient: 'from-emerald-500 to-emerald-700' },
-    { name: 'Elif Kaya', role: 'CTO', initials: 'EK', gradient: 'from-blue-500 to-blue-700' },
-    { name: 'Mehmet Demir', role: 'Hukuk Direktörü', initials: 'MD', gradient: 'from-emerald-500 to-teal-600' },
-    { name: 'Zeynep Arslan', role: 'Ürün Yöneticisi', initials: 'ZA', gradient: 'from-rose-500 to-pink-600' },
-  ];
+  const stats = parseArray(content.stats, DEFAULT_CONTENT.stats);
+  const values = parseArray(content.values, DEFAULT_CONTENT.values);
+  const team = parseArray(content.team, DEFAULT_CONTENT.team);
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
@@ -204,18 +222,13 @@ export function AboutPageContent() {
         <div className="relative">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-sm font-medium">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-200" />
-            Hakkımızda
+            {content.hero_subtitle}
           </div>
           <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl">
-            Türkiye&apos;nin{' '}
-            <span className="text-emerald-200">en güvenilir</span>
-            <br />
-            gayrimenkul platformu
+            {content.hero_title}
           </h1>
           <p className="mt-4 max-w-2xl text-lg leading-relaxed text-white/80">
-            NetTapu, teknolojiyi ve şeffaflığı bir araya getirerek gayrimenkul alım-satımında
-            yeni bir dönem başlatıyor. Canlı ihale sistemi, harita tabanlı arayüz ve güvenli
-            ödeme altyapısı ile yatırımcıların yanındayız.
+            {content.hero_description}
           </p>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <Link
@@ -308,7 +321,7 @@ export function AboutPageContent() {
 
         <div className="grid gap-4 sm:grid-cols-2">
           {values.map((v, i) => (
-            <ValueCard key={v.title} {...v} index={i} />
+            <ValueCard key={v.title} icon={VALUE_ICONS[i % VALUE_ICONS.length]} gradient={VALUE_GRADIENTS[i % VALUE_GRADIENTS.length]} title={v.title} description={v.description} index={i} />
           ))}
         </div>
       </section>
@@ -343,7 +356,7 @@ export function AboutPageContent() {
 
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           {team.map((member, i) => (
-            <TeamCard key={member.name} {...member} index={i} />
+            <TeamCard key={member.name} name={member.name} role={member.role} initials={member.initials} gradient={TEAM_GRADIENTS[i % TEAM_GRADIENTS.length]} index={i} />
           ))}
         </div>
       </section>

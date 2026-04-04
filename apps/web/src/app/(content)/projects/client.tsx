@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { usePageContent } from '@/hooks/use-page-content';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import {
   X,
@@ -13,6 +14,25 @@ import {
   BarChart3,
 } from 'lucide-react';
 import Link from 'next/link';
+
+/* ─── helpers ──────────────────────────────────────────── */
+
+function parseArray<T>(val: unknown, defaults: T[]): T[] {
+  if (Array.isArray(val)) return val;
+  if (typeof val === 'string') {
+    try { return JSON.parse(val); } catch {}
+  }
+  return defaults;
+}
+
+/* ─── defaults ────────────────────────────────────────── */
+
+const DEFAULT_CONTENT = {
+  hero_title: 'Projelerimiz',
+  hero_subtitle: 'Tamamlanan Projeler',
+  hero_description: 'NetTapu aracılığıyla gerçekleştirilen başarılı arsa satışları ve ihale projeleri.',
+  projects: [] as { title: string; location: string; area: string; value: string; year: string }[],
+};
 
 type Category = 'Tümü' | 'İhale' | 'Arsa Satışı' | 'Kentsel Dönüşüm' | 'Tarım Arazisi';
 type Status = 'Tamamlandı' | 'Devam Ediyor';
@@ -301,6 +321,7 @@ function ProjectModal({ project, onClose }: { project: Project; onClose: () => v
 }
 
 export function ProjectsContent() {
+  const content = usePageContent('page_content_projects', DEFAULT_CONTENT);
   const [activeCategory, setActiveCategory] = useState<Category>('Tümü');
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
@@ -331,11 +352,11 @@ export function ProjectsContent() {
             </span>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white mb-4">
               <span className="text-emerald-200">
-                Projelerimiz
+                {content.hero_title}
               </span>
             </h1>
             <p className="max-w-xl mx-auto text-base text-white/80">
-              NetTapu aracılığıyla gerçekleştirilen başarılı arsa satışları ve ihale projeleri.
+              {content.hero_description}
             </p>
           </motion.div>
 

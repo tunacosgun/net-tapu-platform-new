@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { usePageContent } from '@/hooks/use-page-content';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search,
@@ -19,6 +20,25 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import Link from 'next/link';
+
+/* ─── helpers ──────────────────────────────────────────── */
+
+function parseArray<T>(val: unknown, defaults: T[]): T[] {
+  if (Array.isArray(val)) return val;
+  if (typeof val === 'string') {
+    try { return JSON.parse(val); } catch {}
+  }
+  return defaults;
+}
+
+/* ─── defaults ────────────────────────────────────────── */
+
+const DEFAULT_CONTENT = {
+  hero_title: 'Gayrimenkul Rehberi',
+  hero_subtitle: 'Gayrimenkul Rehberi',
+  hero_description: 'Arsa yatırımı, tapu işlemleri, ihale rehberi ve daha fazlası. Bilinçli bir yatırımcı olmak için ihtiyacınız olan tüm bilgiler.',
+  sections: [] as { title: string; content: string }[],
+};
 
 interface Article {
   id: number;
@@ -332,6 +352,7 @@ function ArticleModal({ article, onClose }: { article: Article; onClose: () => v
 }
 
 export function RealEstateGuideContent() {
+  const content = usePageContent('page_content_real_estate_guide', DEFAULT_CONTENT);
   const [query, setQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
@@ -365,7 +386,7 @@ export function RealEstateGuideContent() {
             className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/20 px-4 py-1.5 text-sm font-medium text-white"
           >
             <BookOpen className="h-3.5 w-3.5" />
-            Gayrimenkul Rehberi
+            {content.hero_subtitle}
           </motion.div>
           <motion.h1
             initial={{ opacity: 0, y: 24 }}
@@ -373,10 +394,7 @@ export function RealEstateGuideContent() {
             transition={{ duration: 0.7, delay: 0.1 }}
             className="text-4xl font-extrabold leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl"
           >
-            Gayrimenkul{' '}
-            <span className="text-emerald-200">
-              Rehberi
-            </span>
+            {content.hero_title}
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -384,8 +402,7 @@ export function RealEstateGuideContent() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="mt-4 text-base text-white/80 sm:text-lg"
           >
-            Arsa yatırımı, tapu işlemleri, ihale rehberi ve daha fazlası. Bilinçli bir yatırımcı
-            olmak için ihtiyacınız olan tüm bilgiler.
+            {content.hero_description}
           </motion.p>
 
           {/* Search bar */}

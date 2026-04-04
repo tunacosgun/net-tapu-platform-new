@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { usePageContent } from '@/hooks/use-page-content';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   AlertTriangle,
@@ -16,6 +17,15 @@ import {
   Info,
 } from 'lucide-react';
 import Link from 'next/link';
+
+/* ─── defaults ────────────────────────────────────────── */
+
+const DEFAULT_CONTENT = {
+  hero_title: 'Cayma Hakkı',
+  hero_description:
+    '6502 sayılı Tüketicinin Korunması Hakkında Kanun kapsamındaki cayma hakkı bilgileri ve NetTapu\'ya özgü uygulama koşulları.',
+  content: '',
+};
 
 interface Section {
   id: string;
@@ -199,6 +209,7 @@ function SectionHeading({ id, title }: { id: string; title: string }) {
 }
 
 export function WithdrawalRightsContent() {
+  const pageContent = usePageContent('page_content_withdrawal', DEFAULT_CONTENT);
   const sectionIds = SECTIONS.map((s) => s.id);
   const activeSection = useActiveSection(sectionIds);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
@@ -215,11 +226,10 @@ export function WithdrawalRightsContent() {
             Tüketici Hakları
           </div>
           <h1 className="text-3xl font-extrabold leading-tight text-white sm:text-4xl">
-            Cayma Hakkı
+            {pageContent.hero_title}
           </h1>
           <p className="mt-2 max-w-xl text-sm leading-relaxed text-white/80 sm:text-base">
-            6502 sayılı Tüketicinin Korunması Hakkında Kanun kapsamındaki cayma hakkı
-            bilgileri ve NetTapu&apos;ya özgü uygulama koşulları.
+            {pageContent.hero_description}
           </p>
           <p className="mt-3 text-xs text-white/60">
             Son güncelleme: Ocak 2025 &nbsp;·&nbsp; Yürürlük tarihi: 01.01.2025

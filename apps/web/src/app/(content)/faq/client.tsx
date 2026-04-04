@@ -1,9 +1,20 @@
 'use client';
 
 import { useState, useMemo, useRef } from 'react';
+import { usePageContent } from '@/hooks/use-page-content';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, ChevronDown, HelpCircle, MessageSquare } from 'lucide-react';
 import Link from 'next/link';
+
+/* ─── helpers ──────────────────────────────────────────── */
+
+function parseArray<T>(val: unknown, defaults: T[]): T[] {
+  if (Array.isArray(val)) return val;
+  if (typeof val === 'string') {
+    try { return JSON.parse(val); } catch {}
+  }
+  return defaults;
+}
 
 const CATEGORIES = [
   { id: 'all', label: 'Tümü' },
@@ -130,6 +141,14 @@ const FAQ_DATA = [
   },
 ];
 
+/* ─── defaults ────────────────────────────────────────── */
+
+const DEFAULT_CONTENT = {
+  hero_title: 'Sıkça Sorulan Sorular',
+  hero_subtitle: 'Yardım Merkezi',
+  faqs: FAQ_DATA as { category: string; question: string; answer: string }[],
+};
+
 function FAQItem({
   item,
   isOpen,
@@ -188,8 +207,12 @@ export function FaqContent() {
   const [openId, setOpenId] = useState<number | null>(1);
   const searchRef = useRef<HTMLInputElement>(null);
 
+  const content = usePageContent('page_content_faq', DEFAULT_CONTENT);
+  const faqsRaw = parseArray(content.faqs, DEFAULT_CONTENT.faqs);
+  const faqItems = faqsRaw.map((f, i) => ({ id: i + 1, category: f.category ?? 'genel', question: f.question, answer: f.answer }));
+
   const filtered = useMemo(() => {
-    return FAQ_DATA.filter((f) => {
+    return faqItems.filter((f) => {
       const matchCat = activeCategory === 'all' || f.category === activeCategory;
       const q = query.toLowerCase();
       const matchQ =
@@ -220,7 +243,7 @@ export function FaqContent() {
           >
             <HelpCircle className="h-3.5 w-3.5 text-emerald-200" />
             <span className="text-xs font-semibold uppercase tracking-widest text-emerald-100">
-              Yardım Merkezi
+              {content.hero_subtitle}
             </span>
           </motion.div>
 
@@ -230,8 +253,7 @@ export function FaqContent() {
             transition={{ duration: 0.7, delay: 0.1 }}
             className="text-4xl font-extrabold leading-tight tracking-tight lg:text-5xl"
           >
-            Sıkça Sorulan{' '}
-            <span className="text-emerald-200">Sorular</span>
+            {content.hero_title}
           </motion.h1>
 
           <motion.p
@@ -240,7 +262,7 @@ export function FaqContent() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="mt-4 text-base text-white/80"
           >
-            {FAQ_DATA.length} soru arasında arayın veya kategori seçerek filtreleyin
+            {faqItems.length} soru arasında arayın veya kategori seçerek filtreleyin
           </motion.p>
 
           {/* Search bar */}
@@ -342,6 +364,7 @@ export function FaqContent() {
             {filtered.length} soru gösteriliyor
           </p>
         )}
+
       </div>
 
       {/* CTA */}

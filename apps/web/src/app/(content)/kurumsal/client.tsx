@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState, useEffect } from 'react';
+import { usePageContent } from '@/hooks/use-page-content';
 import { motion, useInView } from 'framer-motion';
 import {
   ArrowRight,
@@ -18,6 +19,31 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import Link from 'next/link';
+
+/* ─── helpers ──────────────────────────────────────────── */
+
+function parseArray<T>(val: unknown, defaults: T[]): T[] {
+  if (Array.isArray(val)) return val;
+  if (typeof val === 'string') {
+    try { return JSON.parse(val); } catch {}
+  }
+  return defaults;
+}
+
+/* ─── defaults ────────────────────────────────────────── */
+
+const DEFAULT_CONTENT = {
+  hero_title: 'Gayrimenkulde Geleceği Bugün Yaşatıyoruz',
+  hero_subtitle: "Türkiye'nin En Hızlı Büyüyen PropTech Firması",
+  hero_description:
+    "NetTapu, canlı ihale motoru, harita tabanlı arama ve güvenli ödeme altyapısıyla Türkiye'nin gayrimenkul ekosistemini yeniden tanımlıyor. Binlerce yatırımcının güvendiği platform.",
+  stats: [
+    { value: '24', label: 'İşlem Hacmi' },
+    { value: '10000', label: 'Aktif Kullanıcı' },
+    { value: '500', label: 'Tamamlanan İhale' },
+    { value: '99', label: 'Sistem Uptime' },
+  ],
+};
 
 function useCountUp(target: number, duration = 2200, start = false) {
   const [count, setCount] = useState(0);
@@ -168,13 +194,16 @@ function CorporateLinkCard({
 
 export function KurumsalContent() {
   const heroRef = useRef(null);
-
-  const metrics = [
-    { prefix: '₺', value: 24, suffix: 'M+', label: 'İşlem Hacmi' },
-    { prefix: '', value: 10000, suffix: '+', label: 'Aktif Kullanıcı' },
-    { prefix: '', value: 500, suffix: '+', label: 'Tamamlanan İhale' },
-    { prefix: '', value: 99, suffix: '.9%', label: 'Sistem Uptime' },
-  ];
+  const content = usePageContent('page_content_kurumsal', DEFAULT_CONTENT);
+  const statsRaw = parseArray(content.stats, DEFAULT_CONTENT.stats);
+  const METRIC_PREFIXES = ['₺', '', '', ''];
+  const METRIC_SUFFIXES = ['M+', '+', '+', '.9%'];
+  const metrics = statsRaw.map((s, i) => ({
+    prefix: METRIC_PREFIXES[i] ?? '',
+    value: parseInt(String(s.value).replace(/\D/g, ''), 10) || 0,
+    suffix: METRIC_SUFFIXES[i] ?? '',
+    label: s.label,
+  }));
 
   const bentoItems = [
     {
@@ -301,7 +330,7 @@ export function KurumsalContent() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
             </span>
-            {"Türkiye'nin En Hızlı Büyüyen PropTech Firması"}
+            {content.hero_subtitle}
           </motion.div>
 
           {/* H1 */}
@@ -311,12 +340,7 @@ export function KurumsalContent() {
             transition={{ duration: 0.8, delay: 0.1 }}
             className="text-5xl font-black leading-tight tracking-tight text-white sm:text-6xl lg:text-7xl"
           >
-            Gayrimenkulde{' '}
-            <span className="text-emerald-200">
-              Geleceği
-            </span>
-            <br />
-            Bugün Yaşatıyoruz
+            {content.hero_title}
           </motion.h1>
 
           <motion.p
@@ -325,9 +349,7 @@ export function KurumsalContent() {
             transition={{ duration: 0.7, delay: 0.22 }}
             className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/80"
           >
-            NetTapu, canlı ihale motoru, harita tabanlı arama ve güvenli ödeme altyapısıyla
-            Türkiye&apos;nin gayrimenkul ekosistemini yeniden tanımlıyor. Binlerce yatırımcının
-            güvendiği platform.
+            {content.hero_description}
           </motion.p>
 
           {/* CTA buttons */}

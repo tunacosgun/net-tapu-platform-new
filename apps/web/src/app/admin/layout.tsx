@@ -9,7 +9,7 @@ import {
   LayoutDashboard, BarChart3, Users, ShieldBan, Map, Gavel,
   CreditCard, Landmark, ClipboardList, Phone, CalendarDays,
   HandCoins, FileText, HelpCircle, Trophy, MessageSquare,
-  Target, Handshake, Settings, Bell, Menu, X,
+  Target, Handshake, Settings, Bell, Menu, X, LayoutTemplate,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -43,6 +43,7 @@ const navSections: Array<{
   ]},
   { title: 'İçerik', items: [
     { href: '/admin/pages', label: 'Sayfalar', icon: FileText },
+    { href: '/admin/pages/content', label: 'Sayfa İçerikleri', icon: LayoutTemplate },
     { href: '/admin/faq', label: 'S.S.S.', icon: HelpCircle },
     { href: '/admin/references', label: 'Referanslar', icon: Trophy },
     { href: '/admin/testimonials', label: 'Yorumlar', icon: MessageSquare },

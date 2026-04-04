@@ -183,7 +183,14 @@ export function HeaderPro() {
     try {
       const parsed = JSON.parse(s.corporate_nav_items as string);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        corporateItems = parsed;
+        // Merge icon from DEFAULT_CORPORATE_ITEMS by matching href when icon is missing
+        corporateItems = parsed.map((item: NavDropdownItem) => {
+          if (!item.icon) {
+            const def = DEFAULT_CORPORATE_ITEMS.find(d => d.href === item.href);
+            if (def?.icon) return { ...item, icon: def.icon };
+          }
+          return item;
+        });
       }
     } catch {}
   }

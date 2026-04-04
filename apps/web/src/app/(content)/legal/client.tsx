@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { usePageContent } from '@/hooks/use-page-content';
 import { motion } from 'framer-motion';
 import { Scale, Shield, Cookie, UserCheck, ChevronRight, Info } from 'lucide-react';
 
@@ -239,7 +240,14 @@ const SECTIONS: Section[] = [
   },
 ];
 
+const DEFAULT_CONTENT = {
+  hero_title: 'Yasal Bilgiler',
+  content: '',
+  kvkk_text: '',
+};
+
 export function LegalContent() {
+  const pageContent = usePageContent('page_content_legal', DEFAULT_CONTENT);
   const [activeId, setActiveId] = useState<string>(SECTIONS[0].id);
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
 
@@ -284,7 +292,7 @@ export function LegalContent() {
             <Scale className="h-3 w-3" />
             Yasal Bilgiler
           </span>
-          <h1 className="text-3xl sm:text-4xl font-bold mb-3">Yasal Bilgiler</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold mb-3">{pageContent.hero_title}</h1>
           <p className="text-sm text-white/70 max-w-md mx-auto">
             Kullanım şartları, gizlilik politikası, çerez politikası ve KVKK aydınlatma metni.
           </p>

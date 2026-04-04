@@ -3,6 +3,17 @@
 import { motion } from 'framer-motion';
 import { ExternalLink, Download, Mail, FileText, Image, Film, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
+import { usePageContent } from '@/hooks/use-page-content';
+
+/* ─── helpers ──────────────────────────────────────────── */
+
+function parseArray<T>(val: unknown, defaults: T[]): T[] {
+  if (Array.isArray(val)) return val;
+  if (typeof val === 'string') {
+    try { return JSON.parse(val); } catch {}
+  }
+  return defaults;
+}
 
 interface PressCard {
   outlet: string;
@@ -75,6 +86,14 @@ const PRESS_CARDS: PressCard[] = [
   },
 ];
 
+/* ─── defaults ────────────────────────────────────────── */
+
+const DEFAULT_CONTENT = {
+  hero_title: 'Bizden Bahsedenler',
+  hero_subtitle: 'Basın Odası',
+  press_items: PRESS_CARDS as PressCard[],
+};
+
 const KIT_CONTENTS = [
   { icon: <Image className="h-4 w-4" />, label: 'Logo Paketi (SVG, PNG, PDF)' },
   { icon: <FileText className="h-4 w-4" />, label: 'Şirket Profili & Hakkında Metni' },
@@ -133,6 +152,21 @@ function PressCardItem({ card, index }: { card: PressCard; index: number }) {
 }
 
 export function PressContent() {
+  const content = usePageContent('page_content_press', DEFAULT_CONTENT);
+  const pressItemsRaw = parseArray(content.press_items, DEFAULT_CONTENT.press_items);
+  const pressItems: PressCard[] = pressItemsRaw.map((item, i) => {
+    if (typeof item === 'object' && item !== null && 'outlet' in item) return item as PressCard;
+    const it = item as { source?: string; title?: string; date?: string; url?: string };
+    return {
+      outlet: it.source ?? `Kaynak ${i + 1}`,
+      headline: it.title ?? '',
+      excerpt: '',
+      date: it.date ?? '',
+      url: it.url ?? '#',
+      category: '',
+    };
+  });
+
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Hero */}
@@ -148,13 +182,10 @@ export function PressContent() {
           >
             <span className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/20 px-4 py-1.5 text-xs font-medium text-white mb-6">
               <FileText className="h-3 w-3" />
-              Basın Odası
+              {content.hero_subtitle}
             </span>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white mb-4">
-              Bizden{' '}
-              <span className="text-emerald-200">
-                Bahsedenler
-              </span>
+              {content.hero_title}
             </h1>
             <p className="max-w-xl mx-auto text-base text-white/80">
               Türkiye'nin önde gelen medya kuruluşlarının NetTapu hakkındaki haberleri ve değerlendirmeleri.
@@ -194,7 +225,7 @@ export function PressContent() {
             </div>
           </motion.div>
           <div className="grid gap-4 sm:grid-cols-2">
-            {PRESS_CARDS.map((card, i) => (
+            {pressItems.map((card, i) => (
               <PressCardItem key={i} card={card} index={i} />
             ))}
           </div>

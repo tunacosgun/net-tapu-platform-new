@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef } from 'react';
+import { usePageContent } from '@/hooks/use-page-content';
 import Link from 'next/link';
 import { motion, useInView, useScroll, useTransform } from 'framer-motion';
 import {
@@ -17,6 +18,48 @@ import {
   CheckCircle2,
   TrendingUp,
 } from 'lucide-react';
+
+/* ─── helpers ──────────────────────────────────────────── */
+
+function parseArray<T>(val: unknown, defaults: T[]): T[] {
+  if (Array.isArray(val)) return val;
+  if (typeof val === 'string') {
+    try { return JSON.parse(val); } catch {}
+  }
+  return defaults;
+}
+
+/* ─── defaults ────────────────────────────────────────── */
+
+const DEFAULT_CONTENT = {
+  hero_title: '5 Adımda Gayrimenkul Yatırımı',
+  hero_subtitle: 'Platform Rehberi',
+  hero_description: 'NetTapu ile arsa satın alma süreciniz tamamen dijital, güvenli ve şeffaf bir şekilde tamamlanır. Her adım tasarlanmış olup hukuki geçerliliğe sahiptir.',
+  steps: [
+    { step: '01', title: 'Keşfedin', description: 'Türkiye genelindeki arsa ilanlarını interaktif harita üzerinden keşfedin. Şehir, ilçe, fiyat aralığı, metrekare ve imar durumuna göre gelişmiş filtrelerle arama yapın. Her ilan için konum, çevre analizi ve erişim bilgilerine anında ulaşın.' },
+    { step: '02', title: 'İnceleyin', description: 'Beğendiğiniz arsanın detay sayfasından tüm teknik bilgilere erişin: ada/parsel numaraları, imar durumu, tapu sicil kayıtları, fotoğraflar ve konum haritası. TKGM parsel sorgu bağlantısı ile resmi kayıtları doğrulayın.' },
+    { step: '03', title: 'Teklif Verin', description: 'Doğrudan teklif verin veya açık artırma ilanlarına canlı olarak katılın. İhaleye girmek için güvenli ödeme sistemi üzerinden teminat bedelini yatırın. Gerçek zamanlı ihale ekranında rakiplerinizin tekliflerini anlık takip edin.' },
+    { step: '04', title: 'Güvende Olun', description: 'Tüm finansal işlemler 3D Secure güvenlik protokolü ile korunur. Ödeme bilgileriniz PCI-DSS uyumlu şifreli kanallar üzerinden iletilir. İhale sürecinin her adımı kayıt altına alınır ve yasal güvence altındadır.' },
+    { step: '05', title: 'Tapu İşlemleri', description: 'İhaleyi kazandığınızda veya teklifiniz kabul edildiğinde, uzman danışman ekibimiz tapu devir sürecinde size adım adım rehberlik eder. Tüm yasal belgeler profesyonel olarak hazırlanır, devir işlemi sorunsuz tamamlanır.' },
+  ],
+};
+
+const STEP_ICONS = [Search, FileText, Gavel, ShieldCheck, Home];
+const STEP_GRADIENTS = [
+  'from-emerald-500 to-emerald-700',
+  'from-blue-500 to-blue-700',
+  'from-emerald-500 to-teal-600',
+  'from-emerald-500 to-emerald-700',
+  'from-amber-500 to-orange-600',
+];
+const STEP_TAGS = ['Ücretsiz Keşfet', 'Detaylı Bilgi', 'Canlı İhale', '3D Secure', 'Uzman Destek'];
+const STEP_SUBTITLES = [
+  'Harita ile ilanları incele',
+  'Detay sayfası, ada/parsel bilgileri',
+  'İhaleye katıl, depozito yatır',
+  '3D Secure, şifreli kanallar',
+  'Devir süreci',
+];
 
 const steps = [
   {
@@ -193,6 +236,17 @@ function AdvantageCard({ adv, index }: { adv: (typeof advantages)[0]; index: num
 
 export function HowItWorksContent() {
   const heroRef = useRef<HTMLDivElement>(null);
+  const content = usePageContent('page_content_how_it_works', DEFAULT_CONTENT);
+  const stepsRaw = parseArray(content.steps, DEFAULT_CONTENT.steps);
+  const dynamicSteps = stepsRaw.map((s, i) => ({
+    number: s.step ?? String(i + 1).padStart(2, '0'),
+    title: s.title,
+    subtitle: STEP_SUBTITLES[i] ?? '',
+    description: s.description,
+    icon: STEP_ICONS[i % STEP_ICONS.length],
+    gradient: STEP_GRADIENTS[i % STEP_GRADIENTS.length],
+    tag: STEP_TAGS[i] ?? '',
+  }));
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
   const heroY = useTransform(scrollYProgress, [0, 1], [0, 60]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
@@ -222,7 +276,7 @@ export function HowItWorksContent() {
             >
               <TrendingUp className="h-3.5 w-3.5 text-emerald-200" />
               <span className="text-xs font-semibold uppercase tracking-widest text-emerald-100">
-                Platform Rehberi
+                {content.hero_subtitle}
               </span>
             </motion.div>
 
@@ -232,9 +286,7 @@ export function HowItWorksContent() {
               transition={{ duration: 0.7, delay: 0.1 }}
               className="text-4xl font-extrabold leading-tight tracking-tight lg:text-5xl"
             >
-              5 Adımda{' '}
-              <span className="text-emerald-200">Gayrimenkul</span>{' '}
-              Yatırımı
+              {content.hero_title}
             </motion.h1>
 
             <motion.p
@@ -243,8 +295,7 @@ export function HowItWorksContent() {
               transition={{ duration: 0.7, delay: 0.2 }}
               className="mt-4 text-lg leading-relaxed text-white/80"
             >
-              NetTapu ile arsa satın alma süreciniz tamamen dijital, güvenli ve şeffaf bir şekilde tamamlanır.
-              Her adım tasarlanmış olup hukuki geçerliliğe sahiptir.
+              {content.hero_description}
             </motion.p>
           </div>
         </motion.div>
@@ -282,7 +333,7 @@ export function HowItWorksContent() {
         </motion.div>
 
         <div className="relative">
-          {steps.map((step, index) => (
+          {dynamicSteps.map((step, index) => (
             <StepCard key={step.number} step={step} index={index} />
           ))}
         </div>

@@ -4,6 +4,17 @@ import { useRef } from 'react';
 import Link from 'next/link';
 import { motion, useInView } from 'framer-motion';
 import { Star, CheckCircle2, Quote, ArrowRight, Users, ThumbsUp, Award } from 'lucide-react';
+import { usePageContent } from '@/hooks/use-page-content';
+
+/* ─── helpers ──────────────────────────────────────────── */
+
+function parseArray<T>(val: unknown, defaults: T[]): T[] {
+  if (Array.isArray(val)) return val;
+  if (typeof val === 'string') {
+    try { return JSON.parse(val); } catch {}
+  }
+  return defaults;
+}
 
 interface Testimonial {
   id: number;
@@ -135,6 +146,14 @@ const SOCIAL_PROOF = [
   { icon: Award, value: '2.400+', label: 'Tamamlanan İşlem' },
 ];
 
+/* ─── defaults ────────────────────────────────────────── */
+
+const DEFAULT_CONTENT = {
+  hero_title: 'Onlar Konuşsun',
+  hero_subtitle: 'Müşteri Yorumları',
+  testimonials: TESTIMONIALS as unknown as { name: string; role: string; text: string; rating: number }[],
+};
+
 function StarRating({ rating, size = 'sm' }: { rating: number; size?: 'sm' | 'lg' }) {
   const cls = size === 'lg' ? 'h-6 w-6' : 'h-4 w-4';
   return (
@@ -191,13 +210,34 @@ export function TestimonialsContent() {
   const socialRef = useRef<HTMLDivElement>(null);
   const socialInView = useInView(socialRef, { once: true });
 
+  const content = usePageContent('page_content_testimonials', DEFAULT_CONTENT);
+  const testimonialsRaw = parseArray(content.testimonials, DEFAULT_CONTENT.testimonials);
+  const GRADIENTS = ['from-indigo-500 to-violet-600', 'from-violet-500 to-pink-500', 'from-blue-500 to-cyan-500', 'from-emerald-500 to-teal-500', 'from-amber-500 to-orange-500', 'from-rose-500 to-pink-500', 'from-cyan-500 to-blue-500', 'from-purple-500 to-violet-500', 'from-green-500 to-emerald-500'];
+  const dynamicTestimonials: Testimonial[] = testimonialsRaw.map((t, i) => {
+    if ('id' in (t as object)) return t as unknown as Testimonial;
+    const tt = t as { name?: string; role?: string; text?: string; rating?: number };
+    const name = tt.name ?? `Kullanıcı ${i + 1}`;
+    const initials = name.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
+    return {
+      id: i + 1,
+      name,
+      initials,
+      role: tt.role ?? '',
+      company: '',
+      rating: tt.rating ?? 5,
+      quote: tt.text ?? '',
+      verified: true,
+      gradient: GRADIENTS[i % GRADIENTS.length],
+    };
+  });
+
   const avgRating = (
-    TESTIMONIALS.reduce((sum, t) => sum + t.rating, 0) / TESTIMONIALS.length
+    dynamicTestimonials.reduce((sum, t) => sum + t.rating, 0) / Math.max(dynamicTestimonials.length, 1)
   ).toFixed(1);
 
-  const col1 = TESTIMONIALS.filter((_, i) => i % 3 === 0);
-  const col2 = TESTIMONIALS.filter((_, i) => i % 3 === 1);
-  const col3 = TESTIMONIALS.filter((_, i) => i % 3 === 2);
+  const col1 = dynamicTestimonials.filter((_, i) => i % 3 === 0);
+  const col2 = dynamicTestimonials.filter((_, i) => i % 3 === 1);
+  const col3 = dynamicTestimonials.filter((_, i) => i % 3 === 2);
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -217,7 +257,7 @@ export function TestimonialsContent() {
           >
             <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
             <span className="text-xs font-semibold uppercase tracking-widest text-white">
-              Müşteri Yorumları
+              {content.hero_subtitle}
             </span>
           </motion.div>
 
@@ -227,10 +267,7 @@ export function TestimonialsContent() {
             transition={{ duration: 0.7, delay: 0.1 }}
             className="text-4xl font-extrabold leading-tight tracking-tight text-white lg:text-6xl"
           >
-            Onlar{' '}
-            <span className="text-emerald-200">
-              Konuşsun
-            </span>
+            {content.hero_title}
           </motion.h1>
 
           <motion.p
@@ -250,7 +287,7 @@ export function TestimonialsContent() {
           >
             <div className="text-6xl font-black text-white">{avgRating}</div>
             <StarRating rating={5} size="lg" />
-            <p className="text-sm text-white/70">{TESTIMONIALS.length} doğrulanmış yorum</p>
+            <p className="text-sm text-white/70">{dynamicTestimonials.length} doğrulanmış yorum</p>
           </motion.div>
         </div>
       </div>
@@ -301,7 +338,7 @@ export function TestimonialsContent() {
           </div>
 
           <div className="flex flex-col gap-4 md:hidden">
-            {TESTIMONIALS.map((t, i) => (
+            {dynamicTestimonials.map((t, i) => (
               <TestimonialCard key={t.id} testimonial={t} index={i} />
             ))}
           </div>
@@ -320,8 +357,8 @@ export function TestimonialsContent() {
           >
             <h3 className="mb-5 text-base font-semibold text-slate-900">Puan Dağılımı</h3>
             {[5, 4, 3, 2, 1].map((stars) => {
-              const count = TESTIMONIALS.filter((t) => t.rating === stars).length;
-              const pct = Math.round((count / TESTIMONIALS.length) * 100);
+              const count = dynamicTestimonials.filter((t) => t.rating === stars).length;
+              const pct = Math.round((count / Math.max(dynamicTestimonials.length, 1)) * 100);
               return (
                 <div key={stars} className="mb-3 flex items-center gap-3 text-sm">
                   <span className="w-12 shrink-0 text-right text-slate-500">{stars} ★</span>

@@ -2,6 +2,7 @@
 
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
+import { usePageContent } from '@/hooks/use-page-content';
 import Link from 'next/link';
 import {
   Monitor,
@@ -172,35 +173,54 @@ function Timeline() {
   );
 }
 
+/* ─── helpers ──────────────────────────────────────────── */
+
+function parseArray<T>(val: unknown, defaults: T[]): T[] {
+  if (Array.isArray(val)) return val;
+  if (typeof val === 'string') {
+    try { return JSON.parse(val); } catch {}
+  }
+  return defaults;
+}
+
+/* ─── defaults ────────────────────────────────────────── */
+
+const DEFAULT_CONTENT = {
+  hero_title: 'Vizyon 2030',
+  hero_subtitle: 'Vizyonumuz',
+  hero_description:
+    "Türkiye'nin gayrimenkul ekosistemini dijitalleştirerek küresel sahneye taşımak ve her vatandaşa güvenli yatırım fırsatı sunmak.",
+  vision_statement:
+    'Teknoloji ve güven bir araya geldiğinde, gayrimenkul yatırımı coğrafyadan, bütçeden ve bürokratik engellerden bağımsız olarak herkes için erişilebilir hale gelir.',
+  goals: [
+    { year: '2024', title: 'Platform Lansmanı', description: 'Canlı ihale motoru ve harita tabanlı arayüz' },
+    { year: '2025', title: 'Mobil Uygulama', description: 'iOS ve Android native uygulamalar' },
+    { year: '2026', title: 'Uluslararası Açılım', description: 'Çok dilli platform ve uluslararası ödemeler' },
+    { year: '2030', title: 'Ekosistem Liderliği', description: 'Bölgenin en büyük gayrimenkul ekosistemi' },
+  ],
+  pillars: [
+    { title: 'Dijital Dönüşüm', description: 'Gayrimenkul sektörünü geleneksel yöntemlerden kurtararak tamamen dijital ve şeffaf bir ekosistem oluşturmak. Yapay zeka destekli değerleme ve gerçek zamanlı piyasa analizi ile sektörü geleceğe taşımak.' },
+    { title: 'Küresel Erişim', description: 'Türkiye gayrimenkul piyasasını uluslararası yatırımcılara açarak sınır ötesi yatırım imkanları sunmak. Çok dilli platform desteği ve uluslararası ödeme altyapısı ile küresel bir pazar yeri olmak.' },
+    { title: 'Toplumsal Fayda', description: 'Gayrimenkul yatırımını demokratikleştirerek her bütçeye uygun fırsatlar sunmak. Kırsal kalkınmayı destekleyen arazi projeleri ve sürdürülebilir şehircilik vizyonu ile topluma değer katmak.' },
+  ],
+};
+
+const PILLAR_ICONS = [Monitor, Globe2, Heart];
+const PILLAR_GRADIENTS = ['from-emerald-500 to-emerald-700', 'from-blue-500 to-blue-700', 'from-emerald-500 to-teal-600'];
+const PILLAR_NUMBERS = ['01', '02', '03'];
+
 /* ─── main ────────────────────────────────────────────── */
 
 export function VisionContent() {
-  const pillars = [
-    {
-      number: '01',
-      icon: Monitor,
-      title: 'Dijital Dönüşüm',
-      description:
-        'Gayrimenkul sektörünü geleneksel yöntemlerden kurtararak tamamen dijital ve şeffaf bir ekosistem oluşturmak. Yapay zeka destekli değerleme ve gerçek zamanlı piyasa analizi ile sektörü geleceğe taşımak.',
-      gradient: 'from-emerald-500 to-emerald-700',
-    },
-    {
-      number: '02',
-      icon: Globe2,
-      title: 'Küresel Erişim',
-      description:
-        'Türkiye gayrimenkul piyasasını uluslararası yatırımcılara açarak sınır ötesi yatırım imkanları sunmak. Çok dilli platform desteği ve uluslararası ödeme altyapısı ile küresel bir pazar yeri olmak.',
-      gradient: 'from-blue-500 to-blue-700',
-    },
-    {
-      number: '03',
-      icon: Heart,
-      title: 'Toplumsal Fayda',
-      description:
-        'Gayrimenkul yatırımını demokratikleştirerek her bütçeye uygun fırsatlar sunmak. Kırsal kalkınmayı destekleyen arazi projeleri ve sürdürülebilir şehircilik vizyonu ile topluma değer katmak.',
-      gradient: 'from-emerald-500 to-teal-600',
-    },
-  ];
+  const content = usePageContent('page_content_vision', DEFAULT_CONTENT);
+  const pillarsRaw = parseArray(content.pillars, DEFAULT_CONTENT.pillars);
+  const pillars = pillarsRaw.map((p, i) => ({
+    number: PILLAR_NUMBERS[i] ?? String(i + 1).padStart(2, '0'),
+    icon: PILLAR_ICONS[i % PILLAR_ICONS.length],
+    gradient: PILLAR_GRADIENTS[i % PILLAR_GRADIENTS.length],
+    title: p.title,
+    description: p.description,
+  }));
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
@@ -216,15 +236,13 @@ export function VisionContent() {
         <div className="relative">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-sm font-medium">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-200" />
-            Vizyonumuz
+            {content.hero_subtitle}
           </div>
           <h1 className="text-5xl font-extrabold leading-none tracking-tight sm:text-6xl">
-            Vizyon
-            <br />
-            <span className="text-emerald-200">2030</span>
+            {content.hero_title}
           </h1>
           <WordReveal
-            text="Türkiye'nin gayrimenkul ekosistemini dijitalleştirerek küresel sahneye taşımak ve her vatandaşa güvenli yatırım fırsatı sunmak."
+            text={content.hero_description}
             className="mt-5 max-w-2xl text-lg leading-relaxed text-white/80"
           />
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -313,9 +331,7 @@ export function VisionContent() {
         <div className="absolute left-0 top-0 h-full w-1 rounded-l-2xl bg-gradient-to-b from-emerald-500 to-transparent" />
         <div className="text-4xl text-emerald-500 mb-4">&ldquo;</div>
         <blockquote className="text-xl font-light italic leading-relaxed text-slate-700 sm:text-2xl">
-          Teknoloji ve güven bir araya geldiğinde, gayrimenkul yatırımı
-          coğrafyadan, bütçeden ve bürokratik engellerden bağımsız olarak
-          herkes için erişilebilir hale gelir.
+          {content.vision_statement}
         </blockquote>
         <p className="mt-6 text-sm font-semibold tracking-widest text-emerald-600">
           — NetTapu Kurucu Ekibi

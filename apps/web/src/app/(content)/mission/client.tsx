@@ -2,6 +2,7 @@
 
 import { motion, useInView } from 'framer-motion';
 import { useRef, useState, useEffect } from 'react';
+import { usePageContent } from '@/hooks/use-page-content';
 import Link from 'next/link';
 import {
   Eye,
@@ -137,43 +138,53 @@ function MetricCard({
   );
 }
 
+/* ─── helpers ──────────────────────────────────────────── */
+
+function parseArray<T>(val: unknown, defaults: T[]): T[] {
+  if (Array.isArray(val)) return val;
+  if (typeof val === 'string') {
+    try { return JSON.parse(val); } catch {}
+  }
+  return defaults;
+}
+
+/* ─── defaults ────────────────────────────────────────── */
+
+const DEFAULT_CONTENT = {
+  hero_title: 'Gayrimenkul yatırımını herkes için güvenli kılmak',
+  hero_subtitle: 'Misyonumuz',
+  hero_description:
+    "Şeffaflık, güvenlik ve erişilebilirlik ilkeleri üzerine inşa edilmiş bir platform olarak, Türkiye'nin her köşesinden vatandaşlara adil ve güvenilir yatırım fırsatları sunuyoruz.",
+  mission_statement: 'Size verdiğimiz söz',
+  pillars: [
+    { title: 'Şeffaflık', description: 'Her işlemi kayıt altına alarak alıcı ve satıcı arasında tam şeffaflık sağlamak. Fiyat geçmişi, ihale süreçleri ve tapu bilgileri açık erişimde tutulur.' },
+    { title: 'Güvenlik', description: '3D Secure ödeme altyapısı, kimlik doğrulama ve yasal çerçevede işlem garantisi. Tüm veriler şifreli kanallarla korunur, her adımda denetlenebilir.' },
+    { title: 'Erişilebilirlik', description: 'Her bütçeye uygun gayrimenkul fırsatları sunarak yatırımı demokratikleştirmek. Web, mobil ve tablet — her platformdan, her coğrafyadan kolay erişim.' },
+    { title: 'İnovasyon', description: 'Canlı ihale motoru, harita tabanlı arayüz, akıllı fiyat analizi ve bildirim sistemi ile sektörün en yenilikçi platformunu sunmak.' },
+  ],
+};
+
+const MISSION_ICONS = [Eye, Lock, Globe2, Zap];
+const MISSION_GRADIENTS = [
+  'from-emerald-500 to-emerald-700',
+  'from-blue-500 to-blue-700',
+  'from-emerald-500 to-teal-600',
+  'from-amber-500 to-orange-600',
+];
+const MISSION_ACCENT_BGS = ['bg-emerald-50', 'bg-blue-50', 'bg-teal-50', 'bg-amber-50'];
+
 /* ─── main ────────────────────────────────────────────── */
 
 export function MissionContent() {
-  const missionCards = [
-    {
-      icon: Eye,
-      title: 'Şeffaflık',
-      description:
-        'Her işlemi kayıt altına alarak alıcı ve satıcı arasında tam şeffaflık sağlamak. Fiyat geçmişi, ihale süreçleri ve tapu bilgileri açık erişimde tutulur.',
-      gradient: 'from-emerald-500 to-emerald-700',
-      accentBg: 'bg-emerald-50',
-    },
-    {
-      icon: Lock,
-      title: 'Güvenlik',
-      description:
-        '3D Secure ödeme altyapısı, kimlik doğrulama ve yasal çerçevede işlem garantisi. Tüm veriler şifreli kanallarla korunur, her adımda denetlenebilir.',
-      gradient: 'from-blue-500 to-blue-700',
-      accentBg: 'bg-blue-50',
-    },
-    {
-      icon: Globe2,
-      title: 'Erişilebilirlik',
-      description:
-        'Her bütçeye uygun gayrimenkul fırsatları sunarak yatırımı demokratikleştirmek. Web, mobil ve tablet — her platformdan, her coğrafyadan kolay erişim.',
-      gradient: 'from-emerald-500 to-teal-600',
-      accentBg: 'bg-teal-50',
-    },
-    {
-      icon: Zap,
-      title: 'İnovasyon',
-      description:
-        'Canlı ihale motoru, harita tabanlı arayüz, akıllı fiyat analizi ve bildirim sistemi ile sektörün en yenilikçi platformunu sunmak.',
-      gradient: 'from-amber-500 to-orange-600',
-      accentBg: 'bg-amber-50',
-    },
-  ];
+  const content = usePageContent('page_content_mission', DEFAULT_CONTENT);
+  const pillarsRaw = parseArray(content.pillars, DEFAULT_CONTENT.pillars);
+  const missionCards = pillarsRaw.map((p, i) => ({
+    icon: MISSION_ICONS[i % MISSION_ICONS.length],
+    gradient: MISSION_GRADIENTS[i % MISSION_GRADIENTS.length],
+    accentBg: MISSION_ACCENT_BGS[i % MISSION_ACCENT_BGS.length],
+    title: p.title,
+    description: p.description,
+  }));
 
   const commitments = [
     'Tüm işlemlerde yasal uyumluluk ve notere dayalı güvence',
@@ -205,19 +216,13 @@ export function MissionContent() {
         <div className="relative">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-sm font-medium">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-200" />
-            Misyonumuz
+            {content.hero_subtitle}
           </div>
           <h1 className="text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
-            Gayrimenkul yatırımını
-            <br />
-            <span className="text-emerald-200">herkes için güvenli</span>
-            <br />
-            kılmak
+            {content.hero_title}
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-relaxed text-white/80">
-            Şeffaflık, güvenlik ve erişilebilirlik ilkeleri üzerine inşa edilmiş bir platform
-            olarak, Türkiye&apos;nin her köşesinden vatandaşlara adil ve güvenilir yatırım
-            fırsatları sunuyoruz.
+            {content.hero_description}
           </p>
           <div className="mt-7 flex flex-col gap-3 sm:flex-row">
             <Link

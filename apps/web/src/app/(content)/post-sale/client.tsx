@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { usePageContent } from '@/hooks/use-page-content';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FileSignature,
@@ -17,6 +18,31 @@ import {
   Shield,
 } from 'lucide-react';
 import Link from 'next/link';
+
+/* ─── helpers ──────────────────────────────────────────── */
+
+function parseArray<T>(val: unknown, defaults: T[]): T[] {
+  if (Array.isArray(val)) return val;
+  if (typeof val === 'string') {
+    try { return JSON.parse(val); } catch {}
+  }
+  return defaults;
+}
+
+/* ─── defaults ────────────────────────────────────────── */
+
+const DEFAULT_CONTENT = {
+  hero_title: 'Satıştan Sonra Da Yanınızdayız',
+  hero_subtitle: 'Satış Sonrası Destek',
+  hero_description: 'Sözleşmeden tapu tesciline kadar her adımda uzman ekibimiz sizi yönlendirir.',
+  services: [
+    { title: 'Sözleşme İmzalama', description: 'Satış kararının ardından satış sözleşmesi taraflarca imzalanır.' },
+    { title: 'Ödeme Planı', description: 'Ödeme takvimi ve taksit planı netleştirilir, depozito iadesi başlatılır.' },
+    { title: 'Tapu Başvurusu', description: 'Gerekli belgeler hazırlanır ve Tapu Müdürlüğü\'ne başvuru yapılır.' },
+    { title: 'Tapu Devri', description: 'Tapu Müdürlüğü\'nde resmi devir işlemi gerçekleştirilir.' },
+    { title: 'Teslim', description: 'Tapunuz tescillenir ve arsa fiilen size devredilir.' },
+  ],
+};
 
 interface TimelineStep {
   icon: React.ReactNode;
@@ -178,6 +204,8 @@ function FaqRow({ item, index }: { item: FaqItem; index: number }) {
 }
 
 export function PostSaleContent() {
+  const content = usePageContent('page_content_post_sale', DEFAULT_CONTENT);
+
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Hero */}
@@ -196,13 +224,10 @@ export function PostSaleContent() {
               Satış Sonrası Destek
             </span>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white mb-4">
-              Satıştan Sonra Da{' '}
-              <span className="text-emerald-200">
-                Yanınızdayız
-              </span>
+              {content.hero_title}
             </h1>
             <p className="max-w-xl mx-auto text-base text-white/80">
-              Sözleşmeden tapu tesciline kadar her adımda uzman ekibimiz sizi yönlendirir.
+              {content.hero_description}
             </p>
           </motion.div>
         </div>

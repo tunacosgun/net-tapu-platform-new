@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { usePageContent } from '@/hooks/use-page-content';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Phone,
@@ -18,6 +19,15 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import Link from 'next/link';
+
+/* ─── defaults ────────────────────────────────────────── */
+
+const DEFAULT_CONTENT = {
+  hero_title: 'Bize Ulaşın',
+  hero_subtitle: '7/24 Destek',
+  address: 'NetTapu Gayrimenkul Teknoloji A.Ş.\nMaslak, Büyükdere Cad. No:123\nSarıyer / İstanbul, 34398',
+  working_hours: '',
+};
 
 interface FormData {
   name: string;
@@ -304,6 +314,7 @@ function SuccessState({ onReset }: { onReset: () => void }) {
 }
 
 export function ContactPageContent() {
+  const content = usePageContent('page_content_contact', DEFAULT_CONTENT);
   const [form, setForm] = useState<FormData>({
     name: '',
     email: '',
@@ -367,13 +378,10 @@ export function ContactPageContent() {
           >
             <span className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/20 px-4 py-1.5 text-xs font-medium text-white mb-6">
               <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
-              7/24 Destek
+              {content.hero_subtitle}
             </span>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white mb-4">
-              Bize{' '}
-              <span className="text-emerald-200">
-                Ulaşın
-              </span>
+              {content.hero_title}
             </h1>
             <p className="max-w-xl mx-auto text-base sm:text-lg text-white/80">
               Sorularınız, önerileriniz veya destek talepleriniz için bir mesaj bırakın.
@@ -482,10 +490,8 @@ export function ContactPageContent() {
                 <MapPin className="h-4 w-4 text-emerald-600" />
                 <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">Adres</p>
               </div>
-              <p className="text-sm text-slate-700 leading-relaxed">
-                NetTapu Gayrimenkul Teknoloji A.Ş.<br />
-                Maslak, Büyükdere Cad. No:123<br />
-                Sarıyer / İstanbul, 34398
+              <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">
+                {content.address || DEFAULT_CONTENT.address}
               </p>
             </div>
 
