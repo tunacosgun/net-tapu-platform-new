@@ -30,10 +30,307 @@ const statusConfig: Record<string, { label: string; dot: string; bg: string }> =
   archived: { label: 'Arşiv', dot: 'bg-gray-400', bg: 'bg-gray-50 text-gray-500 border-gray-200' },
 };
 
+/* ── Page content schemas ── */
+type FieldDef = { key: string; label: string; type?: string; placeholder?: string };
+type ArrayDef = { key: string; label: string; itemFields: FieldDef[] };
+type PageSchema = { settingsKey: string; fields: FieldDef[]; arrays: ArrayDef[] };
+
+const PAGE_CONTENT_SCHEMAS: Record<string, PageSchema> = {
+  '/about': {
+    settingsKey: 'page_content_about',
+    fields: [
+      { key: 'hero_title', label: 'Başlık', type: 'text' },
+      { key: 'hero_subtitle', label: 'Alt Başlık', type: 'text' },
+      { key: 'hero_description', label: 'Açıklama', type: 'textarea' },
+      { key: 'story_title', label: 'Hikaye Başlığı', type: 'text' },
+      { key: 'story_text', label: 'Hikaye Metni', type: 'textarea' },
+    ],
+    arrays: [
+      { key: 'stats', label: 'İstatistikler', itemFields: [{ key: 'value', label: 'Değer', placeholder: '10.000+' }, { key: 'label', label: 'Etiket', placeholder: 'Kayıtlı Kullanıcı' }] },
+      { key: 'values', label: 'Değerlerimiz', itemFields: [{ key: 'title', label: 'Başlık', placeholder: 'Güvenilirlik' }, { key: 'description', label: 'Açıklama', placeholder: 'Açıklama...', type: 'textarea' }] },
+      { key: 'team', label: 'Ekip', itemFields: [{ key: 'name', label: 'Ad Soyad', placeholder: 'Ahmet Yılmaz' }, { key: 'role', label: 'Görev', placeholder: 'CEO' }, { key: 'initials', label: 'Kısaltma', placeholder: 'AY' }] },
+    ],
+  },
+  '/vision': {
+    settingsKey: 'page_content_vision',
+    fields: [
+      { key: 'hero_title', label: 'Başlık', type: 'text' },
+      { key: 'hero_subtitle', label: 'Alt Başlık', type: 'text' },
+      { key: 'hero_description', label: 'Açıklama', type: 'textarea' },
+      { key: 'vision_statement', label: 'Vizyon Beyanı', type: 'textarea' },
+    ],
+    arrays: [
+      { key: 'goals', label: 'Hedefler', itemFields: [{ key: 'year', label: 'Yıl', placeholder: '2025' }, { key: 'title', label: 'Başlık', placeholder: 'Hedef başlığı' }, { key: 'description', label: 'Açıklama', placeholder: 'Hedef açıklaması...', type: 'textarea' }] },
+    ],
+  },
+  '/mission': {
+    settingsKey: 'page_content_mission',
+    fields: [
+      { key: 'hero_title', label: 'Başlık', type: 'text' },
+      { key: 'hero_subtitle', label: 'Alt Başlık', type: 'text' },
+      { key: 'hero_description', label: 'Açıklama', type: 'textarea' },
+      { key: 'mission_statement', label: 'Misyon Beyanı', type: 'textarea' },
+    ],
+    arrays: [
+      { key: 'pillars', label: 'Temel Değerler', itemFields: [{ key: 'title', label: 'Başlık', placeholder: 'Şeffaflık' }, { key: 'description', label: 'Açıklama', placeholder: 'Açıklama...', type: 'textarea' }] },
+    ],
+  },
+  '/how-it-works': {
+    settingsKey: 'page_content_how_it_works',
+    fields: [
+      { key: 'hero_title', label: 'Başlık', type: 'text' },
+      { key: 'hero_subtitle', label: 'Alt Başlık', type: 'text' },
+      { key: 'hero_description', label: 'Açıklama', type: 'textarea' },
+    ],
+    arrays: [
+      { key: 'steps', label: 'Adımlar', itemFields: [{ key: 'step', label: 'Adım No', placeholder: '01' }, { key: 'title', label: 'Başlık', placeholder: 'Üye Olun' }, { key: 'description', label: 'Açıklama', placeholder: 'Adım açıklaması...', type: 'textarea' }] },
+    ],
+  },
+  '/press': {
+    settingsKey: 'page_content_press',
+    fields: [
+      { key: 'hero_title', label: 'Başlık', type: 'text' },
+      { key: 'hero_subtitle', label: 'Alt Başlık', type: 'text' },
+    ],
+    arrays: [
+      { key: 'press_items', label: 'Basın Haberleri', itemFields: [{ key: 'source', label: 'Yayın Organı', placeholder: 'Hürriyet' }, { key: 'title', label: 'Haber Başlığı', placeholder: 'Haber başlığı' }, { key: 'date', label: 'Tarih', placeholder: '2024-03-15' }, { key: 'url', label: 'Link', placeholder: 'https://...' }] },
+    ],
+  },
+  '/real-estate-guide': {
+    settingsKey: 'page_content_real_estate_guide',
+    fields: [
+      { key: 'hero_title', label: 'Başlık', type: 'text' },
+      { key: 'hero_subtitle', label: 'Alt Başlık', type: 'text' },
+      { key: 'hero_description', label: 'Açıklama', type: 'textarea' },
+    ],
+    arrays: [
+      { key: 'sections', label: 'Bölümler', itemFields: [{ key: 'title', label: 'Bölüm Başlığı', placeholder: 'Arsa Yatırımı Nedir?' }, { key: 'content', label: 'İçerik', placeholder: 'Bölüm içeriği...', type: 'textarea' }] },
+    ],
+  },
+  '/legal': {
+    settingsKey: 'page_content_legal',
+    fields: [
+      { key: 'hero_title', label: 'Başlık', type: 'text' },
+      { key: 'content', label: 'İçerik', type: 'textarea' },
+      { key: 'kvkk_text', label: 'KVKK Metni', type: 'textarea' },
+    ],
+    arrays: [],
+  },
+  '/withdrawal-rights': {
+    settingsKey: 'page_content_withdrawal',
+    fields: [
+      { key: 'hero_title', label: 'Başlık', type: 'text' },
+      { key: 'hero_description', label: 'Açıklama', type: 'textarea' },
+      { key: 'content', label: 'İçerik', type: 'textarea' },
+    ],
+    arrays: [],
+  },
+};
+
+/* ── Simple Page Editor ── */
+function SimplePageEditor({ publicPath, onClose }: { publicPath: string; onClose: () => void }) {
+  const schema = PAGE_CONTENT_SCHEMAS[publicPath];
+  if (!schema) {
+    return <p className="p-4 text-sm text-slate-500">Bu sayfa için düzenleyici bulunamadı.</p>;
+  }
+
+  const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
+  const [arrayValues, setArrayValues] = useState<Record<string, Record<string, string>[]>>({});
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+
+  useEffect(() => {
+    apiClient.get('/content/site-settings').then(({ data }) => {
+      try {
+        const raw = data?.[schema.settingsKey];
+        const parsed = raw ? JSON.parse(raw) : {};
+
+        const fv: Record<string, string> = {};
+        for (const f of schema.fields) {
+          fv[f.key] = parsed[f.key] ?? '';
+        }
+        setFieldValues(fv);
+
+        const av: Record<string, Record<string, string>[]> = {};
+        for (const arr of schema.arrays) {
+          const rawArr = parsed[arr.key];
+          if (Array.isArray(rawArr)) {
+            av[arr.key] = rawArr;
+          } else if (typeof rawArr === 'string') {
+            try { av[arr.key] = JSON.parse(rawArr); } catch { av[arr.key] = []; }
+          } else {
+            av[arr.key] = [];
+          }
+        }
+        setArrayValues(av);
+      } catch {
+        setLoadError(true);
+      }
+    }).catch(() => setLoadError(true));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [schema.settingsKey]);
+
+  async function handleSave() {
+    setSaving(true);
+    try {
+      const content: Record<string, unknown> = { ...fieldValues };
+      for (const arr of schema.arrays) {
+        content[arr.key] = arrayValues[arr.key] ?? [];
+      }
+      await apiClient.patch('/admin/settings', { [schema.settingsKey]: JSON.stringify(content) });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      showApiError(err);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function addArrayItem(arrKey: string, itemFields: FieldDef[]) {
+    const empty: Record<string, string> = {};
+    for (const f of itemFields) empty[f.key] = '';
+    setArrayValues(prev => ({ ...prev, [arrKey]: [...(prev[arrKey] ?? []), empty] }));
+  }
+
+  function removeArrayItem(arrKey: string, index: number) {
+    setArrayValues(prev => ({ ...prev, [arrKey]: prev[arrKey].filter((_, i) => i !== index) }));
+  }
+
+  function updateArrayItem(arrKey: string, index: number, fieldKey: string, value: string) {
+    setArrayValues(prev => {
+      const updated = [...(prev[arrKey] ?? [])];
+      updated[index] = { ...updated[index], [fieldKey]: value };
+      return { ...prev, [arrKey]: updated };
+    });
+  }
+
+  if (loadError) {
+    return (
+      <div className="border-t border-slate-200 bg-slate-50 p-4">
+        <p className="text-sm text-red-500">İçerik yüklenirken hata oluştu.</p>
+        <button type="button" onClick={onClose} className="mt-2 text-xs text-slate-500 hover:text-slate-700 underline">Kapat</button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="border-t border-slate-200 bg-slate-50 p-4 space-y-4">
+      {/* Simple text fields */}
+      {schema.fields.map((f) => (
+        <div key={f.key}>
+          <label className="block text-xs font-semibold text-slate-600 mb-1">{f.label}</label>
+          {f.type === 'textarea' ? (
+            <textarea
+              rows={3}
+              value={fieldValues[f.key] ?? ''}
+              onChange={(e) => setFieldValues(prev => ({ ...prev, [f.key]: e.target.value }))}
+              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+            />
+          ) : (
+            <input
+              type="text"
+              value={fieldValues[f.key] ?? ''}
+              onChange={(e) => setFieldValues(prev => ({ ...prev, [f.key]: e.target.value }))}
+              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+            />
+          )}
+        </div>
+      ))}
+
+      {/* Array fields */}
+      {schema.arrays.map((arr) => (
+        <div key={arr.key}>
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-xs font-semibold text-slate-600">{arr.label}</label>
+            <button
+              type="button"
+              onClick={() => addArrayItem(arr.key, arr.itemFields)}
+              className="text-xs font-medium text-brand-600 hover:text-brand-700 flex items-center gap-1"
+            >
+              + Ekle
+            </button>
+          </div>
+          <div className="space-y-2">
+            {(arrayValues[arr.key] ?? []).map((item, index) => (
+              <div key={index} className="rounded-lg border border-slate-200 bg-white p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-slate-400">#{index + 1}</span>
+                  <button
+                    type="button"
+                    onClick={() => removeArrayItem(arr.key, index)}
+                    className="text-xs text-red-500 hover:text-red-700 font-medium"
+                  >
+                    × Kaldır
+                  </button>
+                </div>
+                {arr.itemFields.map((f) => (
+                  <div key={f.key}>
+                    <label className="block text-[10px] font-medium text-slate-500 mb-0.5">{f.label}</label>
+                    {f.type === 'textarea' ? (
+                      <textarea
+                        rows={2}
+                        placeholder={f.placeholder}
+                        value={item[f.key] ?? ''}
+                        onChange={(e) => updateArrayItem(arr.key, index, f.key, e.target.value)}
+                        className="w-full rounded-md border border-slate-200 px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-brand-500"
+                      />
+                    ) : (
+                      <input
+                        type="text"
+                        placeholder={f.placeholder}
+                        value={item[f.key] ?? ''}
+                        onChange={(e) => updateArrayItem(arr.key, index, f.key, e.target.value)}
+                        className="w-full rounded-md border border-slate-200 px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-brand-500"
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+            ))}
+            {(arrayValues[arr.key] ?? []).length === 0 && (
+              <p className="text-xs text-slate-400 italic py-1">Henüz öğe yok. &quot;+ Ekle&quot; ile başlayın.</p>
+            )}
+          </div>
+        </div>
+      ))}
+
+      {/* Actions */}
+      <div className="flex items-center gap-2 pt-2">
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={saving}
+          className="flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-50 transition-colors"
+        >
+          {saving ? 'Kaydediliyor...' : saved ? '✓ Kaydedildi' : 'Kaydet'}
+        </button>
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors"
+        >
+          Kapat
+        </button>
+        <a
+          href={publicPath}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="ml-auto text-xs text-slate-400 hover:text-brand-600 flex items-center gap-1"
+        >
+          Önizle ↗
+        </a>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminPagesPage() {
   const [pages, setPages] = useState<CmsPage[]>([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'cards' | 'table'>('cards');
+  const [editingPath, setEditingPath] = useState<string | null>(null);
 
   const fetchPages = useCallback(async () => {
     try {
@@ -72,7 +369,6 @@ export default function AdminPagesPage() {
     }
   }
 
-  // Match DB pages to our content page definitions
   function findDbPage(slug: string): CmsPage | undefined {
     return pages.find((p) => p.slug === slug);
   }
@@ -146,6 +442,8 @@ export default function AdminPagesPage() {
                     config={cp}
                     dbPage={dbPage}
                     onTogglePublish={handleTogglePublish}
+                    isEditing={editingPath === cp.publicPath}
+                    onEditToggle={(path) => setEditingPath(prev => prev === path ? null : path)}
                   />
                 );
               })}
@@ -166,6 +464,8 @@ export default function AdminPagesPage() {
                     config={cp}
                     dbPage={dbPage}
                     onTogglePublish={handleTogglePublish}
+                    isEditing={editingPath === cp.publicPath}
+                    onEditToggle={(path) => setEditingPath(prev => prev === path ? null : path)}
                   />
                 );
               })}
@@ -274,9 +574,11 @@ interface ContentPageCardProps {
   config: { slug: string; type: string; label: string; icon: string; color: string; publicPath: string };
   dbPage?: CmsPage;
   onTogglePublish: (id: string, status: string) => void;
+  isEditing: boolean;
+  onEditToggle: (path: string) => void;
 }
 
-function ContentPageCard({ config, dbPage, onTogglePublish }: ContentPageCardProps) {
+function ContentPageCard({ config, dbPage, onTogglePublish, isEditing, onEditToggle }: ContentPageCardProps) {
   const st = dbPage ? (statusConfig[dbPage.status] || statusConfig.draft) : null;
 
   return (
@@ -307,16 +609,27 @@ function ContentPageCard({ config, dbPage, onTogglePublish }: ContentPageCardPro
                 </>
               )}
             </div>
-            <div className="flex gap-1.5">
+            <div className="flex gap-1.5 flex-wrap">
+              <button
+                type="button"
+                onClick={() => onEditToggle(config.publicPath)}
+                className={`flex-1 rounded-md py-1.5 text-center text-xs font-medium transition-colors ${
+                  isEditing
+                    ? 'bg-brand-500 text-white hover:bg-brand-600'
+                    : 'bg-brand-50 text-brand-700 hover:bg-brand-100'
+                }`}
+              >
+                {isEditing ? '✕ Kapat' : 'İçeriği Düzenle'}
+              </button>
               <Link
                 href={`/admin/pages/${dbPage.id}`}
-                className="flex-1 rounded-md bg-brand-50 py-1.5 text-center text-xs font-medium text-brand-700 hover:bg-brand-100 transition-colors"
+                className="rounded-md border border-[var(--border)] px-2.5 py-1.5 text-center text-xs font-medium text-[var(--muted-foreground)] hover:bg-[var(--muted)] transition-colors"
               >
                 Düzenle
               </Link>
               <button
                 onClick={() => onTogglePublish(dbPage.id, dbPage.status)}
-                className={`flex-1 rounded-md py-1.5 text-center text-xs font-medium transition-colors ${
+                className={`rounded-md px-2.5 py-1.5 text-center text-xs font-medium transition-colors ${
                   dbPage.status === 'published'
                     ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     : 'bg-green-100 text-green-700 hover:bg-green-200'
@@ -337,15 +650,36 @@ function ContentPageCard({ config, dbPage, onTogglePublish }: ContentPageCardPro
         ) : (
           <div className="text-center py-2">
             <p className="text-xs text-[var(--muted-foreground)] mb-2">Henüz içerik eklenmedi</p>
-            <Link
-              href={`/admin/pages/new?type=${config.type}&slug=${config.slug}&title=${encodeURIComponent(config.label)}`}
-              className="inline-flex items-center gap-1 rounded-md bg-brand-500 px-4 py-1.5 text-xs font-medium text-white hover:bg-brand-600 transition-colors"
-            >
-              + İçerik Oluştur
-            </Link>
+            <div className="flex gap-1.5 justify-center">
+              <Link
+                href={`/admin/pages/new?type=${config.type}&slug=${config.slug}&title=${encodeURIComponent(config.label)}`}
+                className="inline-flex items-center gap-1 rounded-md bg-brand-500 px-4 py-1.5 text-xs font-medium text-white hover:bg-brand-600 transition-colors"
+              >
+                + İçerik Oluştur
+              </Link>
+              <button
+                type="button"
+                onClick={() => onEditToggle(config.publicPath)}
+                className={`inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                  isEditing
+                    ? 'bg-brand-500 text-white hover:bg-brand-600'
+                    : 'bg-brand-50 text-brand-700 hover:bg-brand-100'
+                }`}
+              >
+                {isEditing ? '✕ Kapat' : 'İçeriği Düzenle'}
+              </button>
+            </div>
           </div>
         )}
       </div>
+
+      {/* Inline editor */}
+      {isEditing && (
+        <SimplePageEditor
+          publicPath={config.publicPath}
+          onClose={() => onEditToggle(config.publicPath)}
+        />
+      )}
     </div>
   );
 }

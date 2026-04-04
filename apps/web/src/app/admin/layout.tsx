@@ -43,7 +43,6 @@ const navSections: Array<{
   ]},
   { title: 'İçerik', items: [
     { href: '/admin/pages', label: 'Sayfalar', icon: FileText },
-    { href: '/admin/pages/content', label: 'Sayfa İçerikleri', icon: LayoutTemplate },
     { href: '/admin/faq', label: 'S.S.S.', icon: HelpCircle },
     { href: '/admin/references', label: 'Referanslar', icon: Trophy },
     { href: '/admin/testimonials', label: 'Yorumlar', icon: MessageSquare },
