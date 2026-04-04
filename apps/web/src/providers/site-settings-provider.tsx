@@ -5,13 +5,15 @@ import apiClient from '@/lib/api-client';
 import { SiteSettingsContext, type SiteSettings } from '@/hooks/use-site-settings';
 
 export function SiteSettingsProvider({ children }: { children: ReactNode }) {
-  const [settings, setSettings] = useState<SiteSettings & { _loaded?: boolean }>({ _loaded: false });
+  const [settings, setSettings] = useState<SiteSettings>({});
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     apiClient
       .get<Record<string, string>>('/content/site-settings')
       .then(({ data }) => {
-        setSettings({ ...(data || {}), _loaded: true });
+        setSettings(data || {});
+        setLoaded(true);
         // Dynamically set favicon from admin settings
         if (data?.site_favicon) {
           let link = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
@@ -24,12 +26,15 @@ export function SiteSettingsProvider({ children }: { children: ReactNode }) {
         }
       })
       .catch(() => {
-        setSettings({ _loaded: true });
+        setLoaded(true);
       });
   }, []);
 
+  // Merge _loaded flag as a string token so header can detect it without breaking SiteSettings type
+  const value: SiteSettings = loaded ? { ...settings, _loaded: 'true' } : settings;
+
   return (
-    <SiteSettingsContext.Provider value={settings}>
+    <SiteSettingsContext.Provider value={value}>
       {children}
     </SiteSettingsContext.Provider>
   );
