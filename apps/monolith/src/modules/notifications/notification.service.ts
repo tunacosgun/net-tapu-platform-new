@@ -533,13 +533,105 @@ ${data.message ? `<p style="background:#f3f4f6;border-radius:6px;padding:12px;ma
       take: limit,
     });
 
-    return rows.map((n) => ({
-      id: n.id,
-      title: n.subject ?? null,
-      body: n.body,
-      channel: n.channel,
-      createdAt: n.createdAt,
-      isRead: true, // queue has no read-tracking yet
-    }));
+    // Deduplicate by template+auctionId within same minute (burst prevention)
+    const seen = new Set<string>();
+    const unique = rows.filter((n) => {
+      const meta = (n.metadata ?? {}) as Record<string, any>;
+      const key = `${meta.template ?? ''}_${meta.auctionId ?? meta.parcelId ?? n.id}_${Math.floor(new Date(n.createdAt).getTime() / 60000)}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    return unique.map((n) => {
+      const meta = (n.metadata ?? {}) as Record<string, any>;
+      const template: string = meta.template ?? '';
+      const { title, body } = this.resolveNotificationText(template, meta, n.subject, n.body);
+      return {
+        id: n.id,
+        title,
+        body,
+        channel: n.channel,
+        template,
+        createdAt: n.createdAt,
+        isRead: true,
+      };
+    });
+  }
+
+  private resolveNotificationText(
+    template: string,
+    meta: Record<string, any>,
+    rawSubject: string | null,
+    rawBody: string,
+  ): { title: string; body: string } {
+    const formatPrice = (v: number | string | undefined) =>
+      v ? Number(v).toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }) : '';
+
+    const MAP: Record<string, { title: string; body: (m: Record<string, any>) => string }> = {
+      'auction.bid_placed': {
+        title: 'Teklifiniz Alındı',
+        body: (m) => `${m.auctionTitle || 'İhale'} için ${formatPrice(m.amount)} tutarındaki teklifiniz sisteme kaydedildi.`,
+      },
+      'auction.outbid': {
+        title: 'Teklifiniz Geçildi',
+        body: (m) => `${m.auctionTitle || 'İhale'} için teklifiniz geçildi. Yeni en yüksek teklif: ${formatPrice(m.currentPrice)}.`,
+      },
+      'auction.won': {
+        title: '🏆 İhaleyi Kazandınız!',
+        body: (m) => `${m.auctionTitle || 'İhale'} — kazanan teklifiniz: ${formatPrice(m.finalPrice)}.`,
+      },
+      'auction.lost': {
+        title: 'İhale Sonuçlandı',
+        body: (m) => `${m.auctionTitle || 'İhale'} sona erdi. Depozitonuz iade sürecine alınacaktır.`,
+      },
+      'auction.deposit_approved': {
+        title: 'Depozitonuz Onaylandı',
+        body: (m) => `${m.auctionTitle || 'İhale'} için depozitonuz onaylandı. Artık teklif verebilirsiniz.`,
+      },
+      'auction.starting_soon': {
+        title: 'İhale Yakında Başlıyor',
+        body: (m) => `${m.auctionTitle || 'Takip ettiğiniz ihale'} kısa süre içinde başlayacak.`,
+      },
+      'auth.registered': {
+        title: 'Hoş Geldiniz! 👋',
+        body: () => 'NetTapu\'ya kayıt olduğunuz için teşekkürler. Hesabınız aktif.',
+      },
+      'auth.password_reset': {
+        title: 'Şifre Sıfırlama',
+        body: () => 'Şifre sıfırlama bağlantısı e-posta adresinize gönderildi.',
+      },
+      'payment.completed': {
+        title: 'Ödeme Tamamlandı ✅',
+        body: (m) => `${formatPrice(m.amount)} tutarındaki ödemeniz başarıyla gerçekleşti.`,
+      },
+      'deposit.refunded': {
+        title: 'Depozitonuz İade Edildi',
+        body: (m) => `${formatPrice(m.amount)} tutarındaki depozitonuz iade edildi.`,
+      },
+    };
+
+    const mapping = MAP[template];
+    if (mapping) {
+      return { title: mapping.title, body: mapping.body(meta) };
+    }
+
+    // Fallback: clean up raw body (strip HTML tags / JSON)
+    let cleanBody = rawBody ?? '';
+    if (cleanBody.startsWith('{') || cleanBody.startsWith('[')) {
+      try {
+        const parsed = JSON.parse(cleanBody) as Record<string, any>;
+        cleanBody = parsed.body ?? parsed.message ?? parsed.text ?? template;
+      } catch {
+        cleanBody = template || 'Bildirim';
+      }
+    } else {
+      cleanBody = cleanBody.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120);
+    }
+
+    return {
+      title: rawSubject ?? 'Bildirim',
+      body: cleanBody || 'Detay için tıklayın.',
+    };
   }
 }
