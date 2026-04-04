@@ -72,12 +72,7 @@ function AuctionsContent() {
     try {
       const params: Record<string, any> = { page, limit: 12 };
       if (statusFilter !== 'all') {
-        // "ended" filter includes ended, settling, settled
-        if (statusFilter === 'ended') {
-          params.status = 'ended,settling,settled';
-        } else {
-          params.status = statusFilter;
-        }
+        params.status = statusFilter; // single valid AuctionStatus enum value
       }
       const { data: res } = await apiClient.get<PaginatedResponse<Auction>>('/auctions', { params });
       setData(res);

@@ -521,4 +521,25 @@ ${data.message ? `<p style="background:#f3f4f6;border-radius:6px;padding:12px;ma
 <p>${data.body || JSON.stringify(data)}</p>`);
     }
   }
+
+  /** Return last N sent/delivered notifications for a user (push inbox) */
+  async getUserNotifications(userId: string, limit = 20) {
+    const rows = await this.queueRepo.find({
+      where: [
+        { userId, status: 'sent' as any },
+        { userId, status: 'delivered' as any },
+      ],
+      order: { createdAt: 'DESC' },
+      take: limit,
+    });
+
+    return rows.map((n) => ({
+      id: n.id,
+      title: n.subject ?? null,
+      body: n.body,
+      channel: n.channel,
+      createdAt: n.createdAt,
+      isRead: true, // queue has no read-tracking yet
+    }));
+  }
 }
