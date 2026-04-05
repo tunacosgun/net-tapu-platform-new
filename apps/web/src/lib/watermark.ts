@@ -62,21 +62,44 @@ export function burnWatermark(
           }
           ctx.restore();
 
-          // 3. Listing ID — top-left, big enough to read when image is scaled down
+          // 3. Listing ID — elegant pill badge, top-left
           if (listingNumber) {
-            const pad = Math.max(14, W * 0.022);
-            const idSize = Math.max(22, W * 0.038);
+            const pad = Math.max(12, W * 0.018);
+            const idSize = Math.max(18, W * 0.028);
+            const label = `#${listingNumber}`;
             ctx.save();
-            ctx.globalAlpha = 0.90;
-            ctx.font = `700 ${idSize}px Arial, sans-serif`;
+            ctx.font = `600 ${idSize}px -apple-system, Arial, sans-serif`;
             ctx.textBaseline = 'top';
             ctx.textAlign = 'left';
+
+            // Measure text for pill background
+            const textMetrics = ctx.measureText(label);
+            const pillPadX = idSize * 0.55;
+            const pillPadY = idSize * 0.35;
+            const pillW = textMetrics.width + pillPadX * 2;
+            const pillH = idSize + pillPadY * 2;
+            const pillR = pillH / 2; // fully rounded
+            const pillX = pad;
+            const pillY = pad;
+
+            // Draw semi-transparent dark pill
+            ctx.globalAlpha = 0.55;
+            ctx.fillStyle = 'rgba(0,0,0,1)';
+            ctx.beginPath();
+            ctx.moveTo(pillX + pillR, pillY);
+            ctx.arcTo(pillX + pillW, pillY, pillX + pillW, pillY + pillH, pillR);
+            ctx.arcTo(pillX + pillW, pillY + pillH, pillX, pillY + pillH, pillR);
+            ctx.arcTo(pillX, pillY + pillH, pillX, pillY, pillR);
+            ctx.arcTo(pillX, pillY, pillX + pillW, pillY, pillR);
+            ctx.closePath();
+            ctx.fill();
+
+            // Draw white text on top
+            ctx.globalAlpha = 0.92;
             ctx.fillStyle = '#ffffff';
-            ctx.shadowColor = 'rgba(0,0,0,0.85)';
-            ctx.shadowBlur = idSize * 0.5;
-            ctx.shadowOffsetX = 1;
-            ctx.shadowOffsetY = 1;
-            ctx.fillText(`#${listingNumber}`, pad, pad);
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.fillText(label, pillX + pillPadX, pillY + pillPadY);
             ctx.restore();
           }
 
