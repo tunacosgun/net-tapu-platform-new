@@ -1,13 +1,13 @@
 /**
- * Burns a single diagonal watermark + listing ID into an image using canvas.
- * One clean centered text, rotated -30°. No tiling.
+ * Burns a TILED diagonal watermark (sahibinden.com style) + listing ID into an image.
+ * Dense repeating pattern across the entire image, rotated -30°.
  */
 export function burnWatermark(
   imageUrl: string,
   watermarkText: string,
   options?: { opacity?: number; listingNumber?: string },
 ): Promise<string> {
-  const { opacity = 0.18 } = options || {};
+  const { opacity = 0.22 } = options || {};
   const listingNumber = options?.listingNumber;
 
   return new Promise((resolve) => {
@@ -29,37 +29,53 @@ export function burnWatermark(
           // 1. Draw original image
           ctx.drawImage(img, 0, 0);
 
-          // 2. Single centered diagonal watermark
-          const fontSize = Math.max(18, Math.min(W, H) * 0.055);
+          // 2. Tiled diagonal watermark (sahibinden style)
+          const fontSize = Math.max(12, Math.min(W, H) * 0.038);
           ctx.save();
-          ctx.translate(W / 2, H / 2);
-          ctx.rotate((-30 * Math.PI) / 180);
           ctx.globalAlpha = opacity;
           ctx.font = `600 ${fontSize}px Arial, sans-serif`;
-          ctx.textAlign = 'center';
+          ctx.fillStyle = '#ffffff';
+          ctx.textAlign = 'left';
           ctx.textBaseline = 'middle';
-          // Subtle shadow for depth
-          ctx.shadowColor = 'rgba(0,0,0,0.25)';
-          ctx.shadowBlur = 6;
-          ctx.fillStyle = 'rgba(255,255,255,0.9)';
-          ctx.fillText(watermarkText, 0, 0);
+          ctx.shadowColor = 'rgba(0,0,0,0.35)';
+          ctx.shadowBlur = 4;
+
+          const metrics = ctx.measureText(watermarkText);
+          const textW = metrics.width;
+          const colGap = textW + fontSize * 2.5;
+          const rowGap = fontSize * 4;
+
+          const diagLen = Math.ceil(Math.sqrt(W * W + H * H));
+          const cols = Math.ceil(diagLen / colGap) + 2;
+          const rows = Math.ceil(diagLen / rowGap) + 2;
+
+          ctx.translate(W / 2, H / 2);
+          ctx.rotate((-30 * Math.PI) / 180);
+
+          for (let row = -rows; row <= rows; row++) {
+            for (let col = -cols; col <= cols; col++) {
+              const offsetX = (row % 2 === 0) ? 0 : colGap / 2;
+              const x = col * colGap + offsetX - diagLen / 2;
+              const y = row * rowGap;
+              ctx.fillText(watermarkText, x, y);
+            }
+          }
           ctx.restore();
 
-          // 3. Listing ID — top-left, clearly readable at any display size
+          // 3. Listing ID — sahibinden style: small, plain, no heavy shadow
           if (listingNumber) {
-            const pad = Math.max(12, W * 0.018);
-            const idSize = Math.max(16, W * 0.032); // bigger so visible when scaled down
+            const pad = Math.max(8, W * 0.012);
+            const idSize = Math.max(11, W * 0.018);
             ctx.save();
-            ctx.globalAlpha = 0.88;
-            ctx.font = `700 ${idSize}px Arial, sans-serif`;
+            ctx.globalAlpha = 0.65;
+            ctx.font = `400 ${idSize}px Arial, sans-serif`;
             ctx.textBaseline = 'top';
             ctx.textAlign = 'left';
-            // Strong shadow for contrast on any background
-            ctx.shadowColor = 'rgba(0,0,0,0.85)';
-            ctx.shadowBlur = idSize * 0.8;
-            ctx.shadowOffsetX = 1;
-            ctx.shadowOffsetY = 1;
             ctx.fillStyle = '#ffffff';
+            ctx.shadowColor = 'rgba(0,0,0,0.5)';
+            ctx.shadowBlur = 3;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
             ctx.fillText(`#${listingNumber}`, pad, pad);
             ctx.restore();
           }
