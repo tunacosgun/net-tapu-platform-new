@@ -15,11 +15,13 @@ export function LoadingState({ message = 'Yükleniyor...', centered = true }: Lo
   );
 }
 
-function Bone({ className = '' }: { className?: string }) {
-  return <div className={`skeleton ${className}`} />;
+import type { CSSProperties } from 'react';
+
+function Bone({ className = '', style }: { className?: string; style?: CSSProperties }) {
+  return <div className={`skeleton ${className}`} style={style} />;
 }
 
-export function TableSkeleton({ rows = 6 }: { rows?: number }) {
+export function TableSkeleton({ rows = 6, cols: _cols }: { rows?: number; cols?: number }) {
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">

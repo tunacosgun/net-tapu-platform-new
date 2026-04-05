@@ -15,10 +15,11 @@ interface StatCardProps {
   variant?: keyof typeof variantMap;
   icon?: ReactNode;
   trend?: { value: string; up?: boolean };
+  size?: 'sm' | 'lg';
   className?: string;
 }
 
-export function StatCard({ label, value, variant = 'default', icon, trend, className = '' }: StatCardProps) {
+export function StatCard({ label, value, variant = 'default', icon, trend, size, className = '' }: StatCardProps) {
   const colors = variantMap[variant];
   return (
     <div className={`card p-4 ${className}`}>

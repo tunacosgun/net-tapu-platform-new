@@ -3,17 +3,24 @@ import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, Clipboard,
   Alert, ActivityIndicator, Platform, KeyboardAvoidingView,
 } from 'react-native';
+import Animated, {
+  FadeInDown, FadeIn, SlideInUp,
+  useSharedValue, useAnimatedStyle, withSpring, withRepeat, withSequence, withTiming, withDelay,
+} from 'react-native-reanimated';
 import { useRoute, useNavigation, CommonActions } from '@react-navigation/native';
 import type { RouteProp, NavigationProp } from '@react-navigation/native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import apiClient from '../../api/client';
 import { useTheme } from '../../theme';
 import { formatPrice } from '../../lib/format';
+import { SPRING } from '../../lib/animations';
 import type { RootStackParamList } from '../../navigation/RootNavigator';
 import { useAuctionStore } from '../../stores/auction-store';
 import type { Auction } from '../../types';
 
 type PaymentMethod = 'credit_card' | 'bank_transfer';
+
+const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
 export default function DepositPaymentScreen() {
   const route = useRoute<RouteProp<RootStackParamList, 'DepositPayment'>>();
@@ -30,6 +37,58 @@ export default function DepositPaymentScreen() {
   const [bankInfo, setBankInfo] = useState<{
     bank_name?: string; bank_iban?: string; bank_account_holder?: string; bank_branch?: string;
   }>({});
+
+  // Animated scales for payment method cards
+  const creditScale = useSharedValue(1);
+  const bankScale = useSharedValue(1);
+  const submitScale = useSharedValue(1);
+
+  // Security card pulse
+  const securityBorderOpacity = useSharedValue(1);
+
+  useEffect(() => {
+    // Start security card pulse
+    securityBorderOpacity.value = withRepeat(
+      withSequence(
+        withTiming(0.5, { duration: 1500 }),
+        withTiming(1, { duration: 1500 }),
+      ),
+      -1,
+      true,
+    );
+  }, []);
+
+  const creditAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: creditScale.value }],
+  }));
+
+  const bankAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: bankScale.value }],
+  }));
+
+  const submitAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: submitScale.value }],
+  }));
+
+  const securityAnimStyle = useAnimatedStyle(() => ({
+    opacity: securityBorderOpacity.value,
+  }));
+
+  const selectMethod = (method: PaymentMethod) => {
+    setPaymentMethod(method);
+    const sv = method === 'credit_card' ? creditScale : bankScale;
+    sv.value = withSequence(
+      withSpring(1.06, SPRING.snappy),
+      withSpring(1, SPRING.snappy),
+    );
+  };
+
+  const onSubmitPressIn = () => {
+    submitScale.value = withSpring(0.95, SPRING.snappy);
+  };
+  const onSubmitPressOut = () => {
+    submitScale.value = withSpring(1, SPRING.snappy);
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -153,18 +212,18 @@ export default function DepositPaymentScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['top']}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         {/* Header */}
-        <View style={[styles.header, { borderBottomColor: theme.colors.border }]}>
+        <Animated.View entering={FadeInDown.duration(300)} style={[styles.header, { borderBottomColor: theme.colors.border }]}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
             <Text style={[styles.backIcon, { color: theme.colors.text }]}>‹</Text>
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Kaparo Öde</Text>
           <View style={{ width: 36 }} />
-        </View>
+        </Animated.View>
 
         <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 16 }]} showsVerticalScrollIndicator={false}>
           {/* Auction Info Card */}
           {auction && (
-            <View style={[styles.auctionCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.borderLight }]}>
+            <Animated.View entering={FadeInDown.delay(100).duration(400).springify()} style={[styles.auctionCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.borderLight }]}>
               <Text style={[styles.auctionTitle, { color: theme.colors.text }]} numberOfLines={2}>
                 {auction.title}
               </Text>
@@ -180,36 +239,41 @@ export default function DepositPaymentScreen() {
                   {formatPrice(auction.startingPrice)}
                 </Text>
               </View>
-            </View>
+            </Animated.View>
           )}
 
           {/* Security Notice */}
-          <View style={[styles.securityCard, { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' }]}>
-            <Text style={styles.securityIcon}>🔒</Text>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.securityTitle, { color: '#15803d' }]}>Güvenli Ödeme</Text>
-              <Text style={[styles.securityText, { color: '#166534' }]}>
-                Tüm ödemeler 3D Secure ile korunmaktadır. İhaleyi kazanamazsanız kaparonuz iade edilir.
-              </Text>
-            </View>
-          </View>
+          <Animated.View entering={FadeInDown.delay(200).duration(400).springify()}>
+            <Animated.View style={[styles.securityCard, { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' }, securityAnimStyle]}>
+              <Text style={styles.securityIcon}>🔒</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.securityTitle, { color: '#15803d' }]}>Güvenli Ödeme</Text>
+                <Text style={[styles.securityText, { color: '#166534' }]}>
+                  Tüm ödemeler 3D Secure ile korunmaktadır. İhaleyi kazanamazsanız kaparonuz iade edilir.
+                </Text>
+              </View>
+            </Animated.View>
+          </Animated.View>
 
           {/* Error */}
           {error && (
-            <View style={[styles.errorCard, { borderColor: '#fecaca' }]}>
+            <Animated.View entering={FadeInDown.duration(300)} style={[styles.errorCard, { borderColor: '#fecaca' }]}>
               <Text style={styles.errorText}>{error}</Text>
-            </View>
+            </Animated.View>
           )}
 
           {/* Payment Method Selection */}
-          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Ödeme Yöntemi</Text>
-          <View style={styles.methodGrid}>
-            <TouchableOpacity
+          <Animated.View entering={FadeInDown.delay(300).duration(400).springify()}>
+            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Ödeme Yöntemi</Text>
+          </Animated.View>
+          <Animated.View entering={FadeInDown.delay(400).duration(400).springify()} style={styles.methodGrid}>
+            <AnimatedTouchable
               style={[
                 styles.methodCard,
                 { borderColor: paymentMethod === 'credit_card' ? theme.colors.primary : theme.colors.borderLight, backgroundColor: paymentMethod === 'credit_card' ? theme.colors.primaryBg : theme.colors.card },
+                creditAnimStyle,
               ]}
-              onPress={() => setPaymentMethod('credit_card')}
+              onPress={() => selectMethod('credit_card')}
               activeOpacity={0.7}
             >
               <Text style={styles.methodIcon}>💳</Text>
@@ -220,13 +284,14 @@ export default function DepositPaymentScreen() {
                   <Text style={styles.methodCheckText}>✓</Text>
                 </View>
               )}
-            </TouchableOpacity>
-            <TouchableOpacity
+            </AnimatedTouchable>
+            <AnimatedTouchable
               style={[
                 styles.methodCard,
                 { borderColor: paymentMethod === 'bank_transfer' ? theme.colors.primary : theme.colors.borderLight, backgroundColor: paymentMethod === 'bank_transfer' ? theme.colors.primaryBg : theme.colors.card },
+                bankAnimStyle,
               ]}
-              onPress={() => setPaymentMethod('bank_transfer')}
+              onPress={() => selectMethod('bank_transfer')}
               activeOpacity={0.7}
             >
               <Text style={styles.methodIcon}>🏦</Text>
@@ -237,12 +302,12 @@ export default function DepositPaymentScreen() {
                   <Text style={styles.methodCheckText}>✓</Text>
                 </View>
               )}
-            </TouchableOpacity>
-          </View>
+            </AnimatedTouchable>
+          </Animated.View>
 
           {/* Credit Card Info */}
           {paymentMethod === 'credit_card' && (
-            <View style={[styles.infoCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.borderLight }]}>
+            <Animated.View entering={FadeInDown.duration(300).springify()} style={[styles.infoCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.borderLight }]}>
               <Text style={[styles.infoText, { color: theme.colors.textSecondary }]}>
                 "Ödemeyi Başlat" butonuna bastığınızda güvenli ödeme sayfasına yönlendirileceksiniz.
                 Kart bilgileriniz bankanızın güvenli 3D Secure sayfasında girilecektir.
@@ -258,14 +323,14 @@ export default function DepositPaymentScreen() {
                   <Text style={styles.cardLogoText}>AMEX</Text>
                 </View>
               </View>
-            </View>
+            </Animated.View>
           )}
 
           {/* Bank Transfer Info */}
           {paymentMethod === 'bank_transfer' && (() => {
             const transferCode = `NT-${auctionId.slice(0, 4).toUpperCase()}-${Date.now().toString(36).slice(-4).toUpperCase()}`;
             return (
-              <View style={[styles.bankCard, { borderColor: '#93c5fd' }]}>
+              <Animated.View entering={FadeInDown.duration(300).springify()} style={[styles.bankCard, { borderColor: '#93c5fd' }]}>
                 <Text style={[styles.bankTitle, { color: '#1e40af' }]}>Havale / EFT Bilgileri</Text>
                 <View style={styles.bankRow}>
                   <Text style={styles.bankLabel}>Banka</Text>
@@ -313,40 +378,47 @@ export default function DepositPaymentScreen() {
                     📋 Havale yaptıktan sonra dekontunuzu WhatsApp veya e-posta ile iletmeniz gerekmektedir.
                   </Text>
                 </View>
-              </View>
+              </Animated.View>
             );
           })()}
 
           {/* Submit Button */}
-          <TouchableOpacity
-            style={[
-              styles.submitBtn,
-              { backgroundColor: theme.colors.primary },
-              submitting && { opacity: 0.6 },
-            ]}
-            onPress={handleSubmit}
-            disabled={submitting}
-            activeOpacity={0.8}
-          >
-            {submitting ? (
-              <View style={styles.submitLoading}>
-                <ActivityIndicator color="#fff" size="small" />
-                <Text style={styles.submitText}>İşleniyor...</Text>
-              </View>
-            ) : (
-              <Text style={styles.submitText}>
-                {paymentMethod === 'credit_card'
-                  ? `${depositAmount ? formatPrice(depositAmount) + ' ' : ''}Ödemeyi Başlat`
-                  : 'Havale Bildirimini Gönder'}
-              </Text>
-            )}
-          </TouchableOpacity>
+          <Animated.View entering={FadeInDown.delay(500).duration(400).springify()}>
+            <AnimatedTouchable
+              style={[
+                styles.submitBtn,
+                { backgroundColor: theme.colors.primary },
+                submitting && { opacity: 0.6 },
+                submitAnimStyle,
+              ]}
+              onPress={handleSubmit}
+              onPressIn={onSubmitPressIn}
+              onPressOut={onSubmitPressOut}
+              disabled={submitting}
+              activeOpacity={0.8}
+            >
+              {submitting ? (
+                <View style={styles.submitLoading}>
+                  <ActivityIndicator color="#fff" size="small" />
+                  <Text style={styles.submitText}>İşleniyor...</Text>
+                </View>
+              ) : (
+                <Text style={styles.submitText}>
+                  {paymentMethod === 'credit_card'
+                    ? `${depositAmount ? formatPrice(depositAmount) + ' ' : ''}Ödemeyi Başlat`
+                    : 'Havale Bildirimini Gönder'}
+                </Text>
+              )}
+            </AnimatedTouchable>
+          </Animated.View>
 
           {/* Terms */}
-          <Text style={[styles.terms, { color: theme.colors.textMuted }]}>
-            Ödemeyi başlatarak açık artırma katılım şartlarını ve
-            depozito iade politikasını kabul etmiş olursunuz.
-          </Text>
+          <Animated.View entering={FadeInDown.delay(600).duration(400)}>
+            <Text style={[styles.terms, { color: theme.colors.textMuted }]}>
+              Ödemeyi başlatarak açık artırma katılım şartlarını ve
+              depozito iade politikasını kabul etmiş olursunuz.
+            </Text>
+          </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

@@ -1,10 +1,12 @@
-import React, { useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Animated, Platform } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Platform } from 'react-native';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import LinearGradient from 'react-native-linear-gradient';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '../../theme';
 import { StatusBadge } from '../ui/Badge';
 import { formatPrice, formatArea, resolveImageUrl } from '../../lib/format';
+import { SPRING } from '../../lib/animations';
 import type { Parcel } from '../../types';
 
 interface ParcelCardProps {
@@ -17,21 +19,22 @@ interface ParcelCardProps {
 
 export function ParcelCard({ parcel, onPress, compact = false, featured = false, vitrin = false }: ParcelCardProps) {
   const { colors: c, isDark } = useTheme();
-  const scale = useRef(new Animated.Value(1)).current;
+  const scale = useSharedValue(1);
+  const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
   const coverImage = parcel.images?.find((i) => i.isCover) || parcel.images?.[0];
   const imageUrl = coverImage ? resolveImageUrl(coverImage) : null;
 
   const onPressIn = () => {
-    Animated.spring(scale, { toValue: 0.97, friction: 8, tension: 100, useNativeDriver: true }).start();
+    scale.value = withSpring(0.97, SPRING.snappy);
   };
   const onPressOut = () => {
-    Animated.spring(scale, { toValue: 1, friction: 5, tension: 60, useNativeDriver: true }).start();
+    scale.value = withSpring(1, SPRING.bouncy);
   };
 
   // ── Compact variant ──
   if (compact) {
     return (
-      <Animated.View style={{ transform: [{ scale }] }}>
+      <Animated.View style={animStyle}>
         <TouchableOpacity onPress={onPress} onPressIn={onPressIn} onPressOut={onPressOut}
           activeOpacity={0.9}
           style={[styles.compactCard, {
@@ -67,7 +70,7 @@ export function ParcelCard({ parcel, onPress, compact = false, featured = false,
   // ── Vitrin variant (2-column square) ──
   if (vitrin) {
     return (
-      <Animated.View style={{ transform: [{ scale }], width: '100%' }}>
+      <Animated.View style={[animStyle, { width: '100%' }]}>
         <TouchableOpacity onPress={onPress} onPressIn={onPressIn} onPressOut={onPressOut}
           activeOpacity={0.9}
           style={[styles.vitrinCard, {
@@ -105,7 +108,7 @@ export function ParcelCard({ parcel, onPress, compact = false, featured = false,
   // ── Featured variant: big hero card ──
   if (featured) {
     return (
-      <Animated.View style={[{ transform: [{ scale }] }]}>
+      <Animated.View style={animStyle}>
         <TouchableOpacity onPress={onPress} onPressIn={onPressIn} onPressOut={onPressOut}
           activeOpacity={0.95}
           style={[styles.featuredCard, {
@@ -181,7 +184,7 @@ export function ParcelCard({ parcel, onPress, compact = false, featured = false,
   ].filter(Boolean).join(' · ');
 
   return (
-    <Animated.View style={{ transform: [{ scale }] }}>
+    <Animated.View style={animStyle}>
       <TouchableOpacity onPress={onPress} onPressIn={onPressIn} onPressOut={onPressOut}
         activeOpacity={0.95}
         style={[styles.card, {

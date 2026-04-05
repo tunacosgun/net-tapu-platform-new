@@ -474,8 +474,8 @@ export default function ParcelDetailClient() {
   if (parcel.landType) detailRows.push({ label: 'Arazi Türü', value: parcel.landType });
   if (parcel.isAuctionEligible) detailRows.push({ label: 'Açık Artırma', value: 'Uygun' });
   if (parcel.isFeatured) detailRows.push({ label: 'Öne Çıkan', value: 'Evet' });
-  if ((parcel as Record<string, unknown>).deedType) detailRows.push({ label: 'Tapu Türü', value: String((parcel as Record<string, unknown>).deedType) });
-  if ((parcel as Record<string, unknown>).vatRate !== undefined && (parcel as Record<string, unknown>).vatRate !== null) detailRows.push({ label: 'KDV Oranı', value: `%${(parcel as Record<string, unknown>).vatRate}` });
+  if (parcel.deedType) detailRows.push({ label: 'Tapu Türü', value: parcel.deedType });
+  if (parcel.vatRate !== undefined && parcel.vatRate !== null) detailRows.push({ label: 'KDV Oranı', value: `%${parcel.vatRate}` });
   detailRows.push({ label: 'Tapu Harcı', value: 'Alıcı Öder' });
 
   return (

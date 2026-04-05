@@ -1,11 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, RefreshControl, StyleSheet } from 'react-native';
+import Animated, {
+  FadeInDown, FadeIn, useSharedValue, useAnimatedStyle,
+  withSpring, withRepeat, withSequence, withTiming,
+} from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import apiClient from '../../api/client';
 import { useTheme } from '../../theme';
 import { formatPrice, formatDate } from '../../lib/format';
 import { StatusBadge } from '../../components/ui';
+import { SPRING } from '../../lib/animations';
 
 interface Offer {
   id: string; parcelTitle: string; amount: string; status: string; createdAt: string; message?: string;
@@ -34,25 +39,27 @@ export default function OffersScreen() {
         ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={async () => { setRefreshing(true); await fetchData(); setRefreshing(false); }} tintColor={c.primary} />}
-        renderItem={({ item }) => (
-          <View style={[styles.card, { backgroundColor: c.card, borderColor: isDark ? c.borderLight : c.border }]}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.parcelTitle, { color: c.text }]} numberOfLines={1}>{item.parcelTitle}</Text>
-                <Text style={[styles.amount, { color: c.primary }]}>{formatPrice(item.amount)}</Text>
+        renderItem={({ item, index }) => (
+          <Animated.View entering={FadeInDown.delay(index * 50).springify()}>
+            <View style={[styles.card, { backgroundColor: c.card, borderColor: isDark ? c.borderLight : c.border }]}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.parcelTitle, { color: c.text }]} numberOfLines={1}>{item.parcelTitle}</Text>
+                  <Text style={[styles.amount, { color: c.primary }]}>{formatPrice(item.amount)}</Text>
+                </View>
+                <StatusBadge status={item.status} />
               </View>
-              <StatusBadge status={item.status} />
+              {item.message && <Text style={[styles.message, { color: c.textSecondary }]} numberOfLines={2}>{item.message}</Text>}
+              <Text style={[styles.date, { color: c.textMuted }]}>{formatDate(item.createdAt, 'datetime')}</Text>
             </View>
-            {item.message && <Text style={[styles.message, { color: c.textSecondary }]} numberOfLines={2}>{item.message}</Text>}
-            <Text style={[styles.date, { color: c.textMuted }]}>{formatDate(item.createdAt, 'datetime')}</Text>
-          </View>
+          </Animated.View>
         )}
         ListEmptyComponent={!loading ? (
-          <View style={styles.empty}>
+          <Animated.View entering={FadeIn.delay(200).duration(500)} style={styles.empty}>
             <Ionicons name="document-text-outline" size={48} color={c.textMuted} />
             <Text style={[styles.emptyTitle, { color: c.text }]}>Henüz teklifiniz yok</Text>
             <Text style={[styles.emptyDesc, { color: c.textSecondary }]}>İlan sahiplerine gönderdiğiniz teklifler burada listelenir</Text>
-          </View>
+          </Animated.View>
         ) : null}
       />
     </SafeAreaView>

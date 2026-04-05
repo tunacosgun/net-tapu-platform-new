@@ -21,7 +21,7 @@ export function CardSkeleton() {
   );
 }
 
-export function TableSkeleton({ rows = 6 }: { rows?: number }) {
+export function TableSkeleton({ rows = 6, cols: _cols }: { rows?: number; cols?: number }) {
   return (
     <div className="space-y-5">
       {/* Header area */}

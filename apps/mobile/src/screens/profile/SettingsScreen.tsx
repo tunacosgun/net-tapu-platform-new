@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Switch, TouchableOpacity, Alert, Linking } from 'react-native';
+import Animated, {
+  FadeInDown, FadeIn, useSharedValue, useAnimatedStyle,
+  withSpring, withRepeat, withSequence, withTiming,
+} from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '../../theme';
 import { useAuthStore } from '../../stores/auth-store';
+import { SPRING } from '../../lib/animations';
 
 export default function SettingsScreen() {
   const { colors: c, isDark } = useTheme();
@@ -21,59 +26,65 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: c.background }} edges={['top']}>
-      <Text style={[styles.title, { color: c.text }]}>Ayarlar</Text>
+      <Animated.Text entering={FadeInDown.duration(400)} style={[styles.title, { color: c.text }]}>Ayarlar</Animated.Text>
       <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
         {/* Notifications */}
-        <Text style={[styles.sectionLabel, { color: c.textMuted }]}>BİLDİRİMLER</Text>
-        <View style={[styles.card, { backgroundColor: c.card, borderColor: isDark ? c.borderLight : c.border }]}>
-          {[
-            { label: 'Push Bildirimleri', value: pushEnabled, onChange: setPushEnabled },
-            { label: 'E-posta Bildirimleri', value: emailEnabled, onChange: setEmailEnabled },
-            { label: 'SMS Bildirimleri', value: smsEnabled, onChange: setSmsEnabled },
-          ].map((item, i, arr) => (
-            <View key={item.label} style={[styles.row, i < arr.length - 1 && { borderBottomWidth: 1, borderBottomColor: isDark ? c.borderLight : '#f1f5f9' }]}>
-              <Text style={[styles.rowLabel, { color: c.text }]}>{item.label}</Text>
-              <Switch value={item.value} onValueChange={item.onChange} trackColor={{ true: c.primary }} />
-            </View>
-          ))}
-        </View>
+        <Animated.View entering={FadeInDown.delay(60).springify()}>
+          <Text style={[styles.sectionLabel, { color: c.textMuted }]}>BİLDİRİMLER</Text>
+          <View style={[styles.card, { backgroundColor: c.card, borderColor: isDark ? c.borderLight : c.border }]}>
+            {[
+              { label: 'Push Bildirimleri', value: pushEnabled, onChange: setPushEnabled },
+              { label: 'E-posta Bildirimleri', value: emailEnabled, onChange: setEmailEnabled },
+              { label: 'SMS Bildirimleri', value: smsEnabled, onChange: setSmsEnabled },
+            ].map((item, i, arr) => (
+              <View key={item.label} style={[styles.row, i < arr.length - 1 && { borderBottomWidth: 1, borderBottomColor: isDark ? c.borderLight : '#f1f5f9' }]}>
+                <Text style={[styles.rowLabel, { color: c.text }]}>{item.label}</Text>
+                <Switch value={item.value} onValueChange={item.onChange} trackColor={{ true: c.primary }} />
+              </View>
+            ))}
+          </View>
+        </Animated.View>
 
         {/* Legal */}
-        <Text style={[styles.sectionLabel, { color: c.textMuted }]}>YASAL</Text>
-        <View style={[styles.card, { backgroundColor: c.card, borderColor: isDark ? c.borderLight : c.border }]}>
-          {[
-            { label: 'Kullanım Koşulları', url: 'https://nettapu.com/terms' },
-            { label: 'Gizlilik Politikası', url: 'https://nettapu.com/privacy' },
-            { label: 'KVKK Aydınlatma Metni', url: 'https://nettapu.com/kvkk' },
-          ].map((item, i, arr) => (
-            <TouchableOpacity key={item.label}
-              style={[styles.row, i < arr.length - 1 && { borderBottomWidth: 1, borderBottomColor: isDark ? c.borderLight : '#f1f5f9' }]}
-              onPress={() => Linking.openURL(item.url)} activeOpacity={0.6}
-            >
-              <Text style={[styles.rowLabel, { color: c.text }]}>{item.label}</Text>
-              <Ionicons name="chevron-forward" size={16} color={c.textMuted} />
-            </TouchableOpacity>
-          ))}
-        </View>
+        <Animated.View entering={FadeInDown.delay(120).springify()}>
+          <Text style={[styles.sectionLabel, { color: c.textMuted }]}>YASAL</Text>
+          <View style={[styles.card, { backgroundColor: c.card, borderColor: isDark ? c.borderLight : c.border }]}>
+            {[
+              { label: 'Kullanım Koşulları', url: 'https://nettapu.com/terms' },
+              { label: 'Gizlilik Politikası', url: 'https://nettapu.com/privacy' },
+              { label: 'KVKK Aydınlatma Metni', url: 'https://nettapu.com/kvkk' },
+            ].map((item, i, arr) => (
+              <TouchableOpacity key={item.label}
+                style={[styles.row, i < arr.length - 1 && { borderBottomWidth: 1, borderBottomColor: isDark ? c.borderLight : '#f1f5f9' }]}
+                onPress={() => Linking.openURL(item.url)} activeOpacity={0.6}
+              >
+                <Text style={[styles.rowLabel, { color: c.text }]}>{item.label}</Text>
+                <Ionicons name="chevron-forward" size={16} color={c.textMuted} />
+              </TouchableOpacity>
+            ))}
+          </View>
+        </Animated.View>
 
         {/* Account */}
-        <Text style={[styles.sectionLabel, { color: c.textMuted }]}>HESAP</Text>
-        <View style={[styles.card, { backgroundColor: c.card, borderColor: isDark ? c.borderLight : c.border }]}>
-          <TouchableOpacity style={[styles.row, { borderBottomWidth: 1, borderBottomColor: isDark ? c.borderLight : '#f1f5f9' }]}
-            onPress={() => Alert.alert('Şifre Değiştir', 'Yakında aktif olacak.')}
-          >
-            <Text style={[styles.rowLabel, { color: c.text }]}>Şifre Değiştir</Text>
-            <Ionicons name="chevron-forward" size={16} color={c.textMuted} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.row} onPress={handleDeleteAccount}>
-            <Text style={[styles.rowLabel, { color: c.error }]}>Hesabı Sil</Text>
-          </TouchableOpacity>
-        </View>
+        <Animated.View entering={FadeInDown.delay(180).springify()}>
+          <Text style={[styles.sectionLabel, { color: c.textMuted }]}>HESAP</Text>
+          <View style={[styles.card, { backgroundColor: c.card, borderColor: isDark ? c.borderLight : c.border }]}>
+            <TouchableOpacity style={[styles.row, { borderBottomWidth: 1, borderBottomColor: isDark ? c.borderLight : '#f1f5f9' }]}
+              onPress={() => Alert.alert('Şifre Değiştir', 'Yakında aktif olacak.')}
+            >
+              <Text style={[styles.rowLabel, { color: c.text }]}>Şifre Değiştir</Text>
+              <Ionicons name="chevron-forward" size={16} color={c.textMuted} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.row} onPress={handleDeleteAccount}>
+              <Text style={[styles.rowLabel, { color: c.error }]}>Hesabı Sil</Text>
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
 
-        <View style={styles.appInfo}>
+        <Animated.View entering={FadeInDown.delay(240).springify()} style={styles.appInfo}>
           <Text style={[styles.appName, { color: c.textMuted }]}>NetTapu v1.0.0</Text>
           <Text style={[styles.appCopy, { color: c.textMuted }]}>© 2026 NetTapu</Text>
-        </View>
+        </Animated.View>
       </ScrollView>
     </SafeAreaView>
   );

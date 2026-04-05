@@ -1,14 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, Alert, TouchableOpacity, Platform,
   KeyboardAvoidingView, ScrollView, StatusBar, ActivityIndicator,
 } from 'react-native';
+import Animated, {
+  FadeInDown, FadeIn, useSharedValue, useAnimatedStyle,
+  withSpring, withRepeat, withSequence, withTiming,
+} from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import apiClient from '../../api/client';
 import { Input } from '../../components/ui';
 import { useTheme } from '../../theme';
+import { SPRING } from '../../lib/animations';
 
 export default function ForgotPasswordScreen() {
   const navigation = useNavigation();
@@ -17,6 +22,22 @@ export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+
+  const iconScale = useSharedValue(0);
+
+  useEffect(() => {
+    if (sent) {
+      iconScale.value = withSequence(
+        withTiming(0, { duration: 0 }),
+        withSpring(1.15, SPRING.bouncy),
+        withSpring(1, SPRING.snappy),
+      );
+    }
+  }, [sent]);
+
+  const iconAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: iconScale.value }],
+  }));
 
   async function handleSubmit() {
     if (!email) return;
@@ -40,40 +61,45 @@ export default function ForgotPasswordScreen() {
       >
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled" bounces={false}>
           {/* Header */}
-          <LinearGradient
-            colors={isDark ? ['#052e16', '#0f172a'] : ['#15803d', '#16a34a']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.header}
-          >
-            <TouchableOpacity
-              onPress={() => navigation.goBack()}
-              style={styles.backBtn}
-              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          <Animated.View entering={FadeInDown.duration(500).springify()}>
+            <LinearGradient
+              colors={isDark ? ['#052e16', '#0f172a'] : ['#15803d', '#16a34a']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.header}
             >
-              <Ionicons name="chevron-back" size={22} color="#fff" />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Şifremi Unuttum</Text>
-            <Text style={styles.headerSubtitle}>
-              Şifre sıfırlama bağlantısı göndereceğiz
-            </Text>
-            <View style={styles.headerCircle} />
-          </LinearGradient>
+              <TouchableOpacity
+                onPress={() => navigation.goBack()}
+                style={styles.backBtn}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              >
+                <Ionicons name="chevron-back" size={22} color="#fff" />
+              </TouchableOpacity>
+              <Text style={styles.headerTitle}>Şifremi Unuttum</Text>
+              <Text style={styles.headerSubtitle}>
+                Şifre sıfırlama bağlantısı göndereceğiz
+              </Text>
+              <View style={styles.headerCircle} />
+            </LinearGradient>
+          </Animated.View>
 
           {/* Content Card */}
-          <View style={[styles.card, {
-            backgroundColor: theme.colors.card,
-            shadowColor: isDark ? '#000' : '#16a34a',
-          }]}>
+          <Animated.View
+            entering={FadeInDown.delay(150).duration(500).springify()}
+            style={[styles.card, {
+              backgroundColor: theme.colors.card,
+              shadowColor: isDark ? '#000' : '#16a34a',
+            }]}
+          >
             {sent ? (
               <View style={styles.successBox}>
-                <View style={[styles.successIcon, { backgroundColor: theme.colors.primaryBg }]}>
+                <Animated.View style={[styles.successIcon, { backgroundColor: theme.colors.primaryBg }, iconAnimStyle]}>
                   <Ionicons name="mail-outline" size={40} color={theme.colors.primary} />
-                </View>
-                <Text style={[styles.successTitle, { color: theme.colors.text }]}>E-posta Gönderildi</Text>
-                <Text style={[styles.successDesc, { color: theme.colors.textSecondary }]}>
+                </Animated.View>
+                <Animated.Text entering={FadeIn.delay(300).duration(400)} style={[styles.successTitle, { color: theme.colors.text }]}>E-posta Gönderildi</Animated.Text>
+                <Animated.Text entering={FadeIn.delay(450).duration(400)} style={[styles.successDesc, { color: theme.colors.textSecondary }]}>
                   Şifre sıfırlama bağlantısı e-posta adresinize gönderildi. Lütfen gelen kutunuzu kontrol edin.
-                </Text>
+                </Animated.Text>
                 <TouchableOpacity
                   onPress={() => navigation.goBack()}
                   style={{ borderRadius: 14, overflow: 'hidden', alignSelf: 'stretch', marginTop: 20 }}
@@ -117,7 +143,7 @@ export default function ForgotPasswordScreen() {
                 </TouchableOpacity>
               </>
             )}
-          </View>
+          </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
     </>

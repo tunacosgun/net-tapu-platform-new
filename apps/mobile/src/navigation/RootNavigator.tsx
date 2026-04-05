@@ -41,16 +41,20 @@ export type RootStackParamList = {
   Notifications: undefined;
 };
 
+import { useSettingsStore } from '../stores/settings-store';
+
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function RootNavigator() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isLoading = useAuthStore((s) => s.isLoading);
   const hydrate = useAuthStore((s) => s.hydrate);
+  const fetchSettings = useSettingsStore((s) => s.fetchSettings);
   const theme = useTheme();
 
   useEffect(() => {
     hydrate();
+    fetchSettings();
   }, []);
 
   if (isLoading) {

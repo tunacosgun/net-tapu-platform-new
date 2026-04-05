@@ -1,11 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, RefreshControl, StyleSheet } from 'react-native';
+import Animated, {
+  FadeInDown, FadeIn, useSharedValue, useAnimatedStyle,
+  withSpring, withRepeat, withSequence, withTiming,
+} from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import apiClient from '../../api/client';
 import { useTheme } from '../../theme';
 import { formatPrice, formatDate } from '../../lib/format';
 import { StatusBadge } from '../../components/ui';
+import { SPRING } from '../../lib/animations';
 import type { Payment } from '../../types';
 
 export default function PaymentsScreen() {
@@ -31,24 +36,26 @@ export default function PaymentsScreen() {
         ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={async () => { setRefreshing(true); await fetchData(); setRefreshing(false); }} tintColor={c.primary} />}
-        renderItem={({ item }) => (
-          <View style={[styles.card, { backgroundColor: c.card, borderColor: isDark ? c.borderLight : c.border }]}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <View>
-                <Text style={[styles.label, { color: c.textMuted }]}>{(item as any).type === 'deposit' ? 'Kaparo' : 'Ödeme'}</Text>
-                <Text style={[styles.amount, { color: c.primary }]}>{formatPrice(item.amount)}</Text>
+        renderItem={({ item, index }) => (
+          <Animated.View entering={FadeInDown.delay(index * 50).springify()}>
+            <View style={[styles.card, { backgroundColor: c.card, borderColor: isDark ? c.borderLight : c.border }]}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <View>
+                  <Text style={[styles.label, { color: c.textMuted }]}>{(item as any).type === 'deposit' ? 'Kaparo' : 'Ödeme'}</Text>
+                  <Text style={[styles.amount, { color: c.primary }]}>{formatPrice(item.amount)}</Text>
+                </View>
+                <StatusBadge status={item.status} />
               </View>
-              <StatusBadge status={item.status} />
+              <Text style={[styles.date, { color: c.textMuted }]}>{formatDate(item.createdAt, 'datetime')}</Text>
             </View>
-            <Text style={[styles.date, { color: c.textMuted }]}>{formatDate(item.createdAt, 'datetime')}</Text>
-          </View>
+          </Animated.View>
         )}
         ListEmptyComponent={!loading ? (
-          <View style={styles.empty}>
+          <Animated.View entering={FadeIn.delay(200).duration(500)} style={styles.empty}>
             <Ionicons name="card-outline" size={48} color={c.textMuted} />
             <Text style={[styles.emptyTitle, { color: c.text }]}>Henüz ödemeniz yok</Text>
             <Text style={[styles.emptyDesc, { color: c.textSecondary }]}>Ödeme geçmişiniz burada görünecek</Text>
-          </View>
+          </Animated.View>
         ) : null}
       />
     </SafeAreaView>

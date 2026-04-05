@@ -87,10 +87,10 @@ export default function AdminEditParcelPage() {
             isFeatured: parcelData.isFeatured,
             showListingDate: parcelData.showListingDate !== false,
             description: parcelData.description || '',
-            deedType: (parcelData as Record<string, unknown>).deedType as string || '',
-            vatRate: String((parcelData as Record<string, unknown>).vatRate ?? '0'),
-            roadAccess: (parcelData as Record<string, unknown>).roadAccess as string || '',
-            isCornerParcel: Boolean((parcelData as Record<string, unknown>).isCornerParcel),
+            deedType: parcelData.deedType || '',
+            vatRate: parcelData.vatRate !== undefined ? String(parcelData.vatRate) : '0',
+            roadAccess: parcelData.roadAccess || '',
+            isCornerParcel: Boolean(parcelData.isCornerParcel),
           });
           setLoading(false);
         }

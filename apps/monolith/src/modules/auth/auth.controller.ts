@@ -25,6 +25,7 @@ import { PasswordResetService } from './services/password-reset.service';
 import { EmailVerificationService } from './services/email-verification.service';
 import { BanService } from './services/ban.service';
 import { GoogleOAuthService } from './services/google-oauth.service';
+import { AppleOAuthService } from './services/apple-oauth.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { JwtPayload } from './auth.service';
@@ -45,6 +46,7 @@ export class AuthController {
     private readonly emailVerificationService: EmailVerificationService,
     private readonly banService: BanService,
     private readonly googleOAuthService: GoogleOAuthService,
+    private readonly appleOAuthService: AppleOAuthService,
   ) {}
 
   @Post('register')
@@ -289,6 +291,33 @@ export class AuthController {
 
     return this.googleOAuthService.handleOneTapCredential(
       credential,
+      deviceInfo,
+      ipAddress,
+    );
+  }
+
+  // ── Apple OAuth ───────────────────────────────────────────────
+
+  @Post('apple/identity-token')
+  @Throttle({ short: { ttl: 60000, limit: 10 } })
+  @HttpCode(HttpStatus.OK)
+  async appleIdentityToken(
+    @Body('identityToken') identityToken: string,
+    @Body('email') email: string | undefined, // from Apple SDK (first login only)
+    @Body('firstName') firstName: string | undefined,
+    @Body('lastName') lastName: string | undefined,
+    @Req() req: Request,
+  ) {
+    const deviceInfo = req.headers['user-agent'] ?? undefined;
+    const ipAddress =
+      (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ??
+      req.ip;
+
+    return this.appleOAuthService.handleIdentityToken(
+      identityToken,
+      email,
+      firstName,
+      lastName,
       deviceInfo,
       ipAddress,
     );

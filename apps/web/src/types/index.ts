@@ -38,6 +38,10 @@ export interface Parcel {
   assignedConsultant: string | null;
   listedAt: string | null;
   showListingDate?: boolean;
+  deedType?: string | null;
+  vatRate?: string | number | null;
+  roadAccess?: string | null;
+  isCornerParcel?: boolean;
   createdAt: string;
   updatedAt: string;
   favoriteCount?: number;

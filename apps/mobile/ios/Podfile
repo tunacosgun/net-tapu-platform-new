@@ -32,5 +32,36 @@ target 'NetTapu' do
       :mac_catalyst_enabled => false,
       # :ccache_enabled => true
     )
+
+    # Hermes V1: Reanimated's pod xcconfig sets HERMES_ENABLE_DEBUGGER for *Debug* without
+    # HERMES_V1_ENABLED, so C++ still takes the legacy inspector path. Xcode merges xcconfig
+    # conditionals with the project; patch the generated xcconfig so Debug matches React-hermes.
+    if ENV['RCT_HERMES_V1_ENABLED'] != '0'
+      ['RNReanimated.debug.xcconfig', 'RNReanimated.release.xcconfig'].each do |name|
+        path = File.join(__dir__, 'Pods/Target Support Files/RNReanimated', name)
+        next unless File.exist?(path)
+        text = File.read(path)
+        next if text.include?('HERMES_V1_ENABLED')
+        text = text.gsub(
+          /^(GCC_PREPROCESSOR_DEFINITIONS\[config=\*Debug\*\] = \$\(inherited\) HERMES_ENABLE_DEBUGGER=1)\s*$/,
+          '\\1 HERMES_V1_ENABLED=1'
+        )
+        File.write(path, text)
+      end
+
+      installer.pods_project.targets.each do |target|
+        next unless target.name == 'RNReanimated'
+
+        target.build_configurations.each do |cfg|
+          defs = cfg.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] || '$(inherited)'
+          defs = defs.is_a?(Array) ? defs : defs.split(' ')
+          next if defs.any? { |d| d.to_s.include?('HERMES_V1_ENABLED') }
+
+          defs << 'HERMES_V1_ENABLED=1'
+          cfg.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] = defs
+        end
+      end
+      installer.pods_project.save
+    end
   end
 end

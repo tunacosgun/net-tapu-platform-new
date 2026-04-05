@@ -1,11 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import Animated, {
+  FadeIn, FadeInDown, SlideInUp,
+  useSharedValue, useAnimatedStyle, withSpring, withRepeat, withSequence, withTiming, withDelay,
+} from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import MapView, { Marker, Callout } from 'react-native-maps';
 import apiClient from '../../api/client';
 import { useTheme } from '../../theme';
 import { formatPrice } from '../../lib/format';
+import { SPRING } from '../../lib/animations';
 import { parcelStatusColor } from '../../components/ui/Badge';
 import type { RootStackParamList } from '../../navigation/RootNavigator';
 import type { Parcel, PaginatedResponse } from '../../types';
@@ -13,6 +18,8 @@ import type { Parcel, PaginatedResponse } from '../../types';
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 const TURKEY_CENTER = { latitude: 39.0, longitude: 35.0, latitudeDelta: 8, longitudeDelta: 12 };
+
+const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
 export default function ParcelMapScreen() {
   const navigation = useNavigation<Nav>();
@@ -27,9 +34,13 @@ export default function ParcelMapScreen() {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backBtn, { backgroundColor: theme.colors.card }]}>
+      <AnimatedTouchable
+        entering={FadeIn.delay(300).duration(400)}
+        onPress={() => navigation.goBack()}
+        style={[styles.backBtn, { backgroundColor: theme.colors.card }]}
+      >
         <Text style={{ color: theme.colors.text, fontSize: 16 }}>← Geri</Text>
-      </TouchableOpacity>
+      </AnimatedTouchable>
 
       <MapView
         style={styles.map}
@@ -55,7 +66,7 @@ export default function ParcelMapScreen() {
         ))}
       </MapView>
 
-      <View style={[styles.legend, { backgroundColor: theme.colors.card }]}>
+      <Animated.View entering={SlideInUp.delay(400).duration(500).springify()} style={[styles.legend, { backgroundColor: theme.colors.card }]}>
         {[
           { color: '#22c55e', label: 'Satışta' },
           { color: '#eab308', label: 'Kaparo' },
@@ -66,7 +77,7 @@ export default function ParcelMapScreen() {
             <Text style={[styles.legendText, { color: theme.colors.textSecondary }]}>{l.label}</Text>
           </View>
         ))}
-      </View>
+      </Animated.View>
     </View>
   );
 }

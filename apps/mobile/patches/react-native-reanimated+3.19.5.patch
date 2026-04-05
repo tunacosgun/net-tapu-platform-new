@@ -1,0 +1,156 @@
+diff --git a/node_modules/react-native-reanimated/Common/cpp/worklets/WorkletRuntime/ReanimatedHermesRuntime.cpp b/node_modules/react-native-reanimated/Common/cpp/worklets/WorkletRuntime/ReanimatedHermesRuntime.cpp
+index 29f068c..666ff69 100644
+--- a/node_modules/react-native-reanimated/Common/cpp/worklets/WorkletRuntime/ReanimatedHermesRuntime.cpp
++++ b/node_modules/react-native-reanimated/Common/cpp/worklets/WorkletRuntime/ReanimatedHermesRuntime.cpp
+@@ -16,11 +16,11 @@ namespace worklets {
+ 
+ using namespace facebook;
+ using namespace react;
+-#if HERMES_ENABLE_DEBUGGER
++#if defined(HERMES_ENABLE_DEBUGGER) && !defined(HERMES_V1_ENABLED)
+ using namespace facebook::hermes::inspector_modern;
+-#endif // HERMES_ENABLE_DEBUGGER
++#endif
+ 
+-#if HERMES_ENABLE_DEBUGGER
++#if defined(HERMES_ENABLE_DEBUGGER) && !defined(HERMES_V1_ENABLED)
+ 
+ class HermesExecutorRuntimeAdapter : public RuntimeAdapter {
+  public:
+@@ -50,7 +50,7 @@ class HermesExecutorRuntimeAdapter : public RuntimeAdapter {
+   std::shared_ptr<MessageQueueThread> thread_;
+ };
+ 
+-#endif // HERMES_ENABLE_DEBUGGER
++#endif
+ 
+ ReanimatedHermesRuntime::ReanimatedHermesRuntime(
+     std::unique_ptr<facebook::hermes::HermesRuntime> runtime,
+@@ -60,15 +60,15 @@ ReanimatedHermesRuntime::ReanimatedHermesRuntime(
+           *runtime,
+           reentrancyCheck_),
+       runtime_(std::move(runtime)) {
+-#if HERMES_ENABLE_DEBUGGER
++#if defined(HERMES_ENABLE_DEBUGGER) && !defined(HERMES_V1_ENABLED)
+   auto adapter =
+       std::make_unique<HermesExecutorRuntimeAdapter>(*runtime_, jsQueue);
+   debugToken_ = chrome::enableDebugging(std::move(adapter), name);
+ #else
+-  // This is required by iOS, because there is an assertion in the destructor
+-  // that the thread was indeed `quit` before
++  // Required on iOS (Hermes V1 has no legacy chrome registration; same as
++  // non-debug builds — see HermesExecutorFactory.cpp).
+   jsQueue->quitSynchronous();
+-#endif // HERMES_ENABLE_DEBUGGER
++#endif
+ 
+ #ifndef NDEBUG
+   facebook::hermes::HermesRuntime *wrappedRuntime = runtime_.get();
+@@ -101,10 +101,9 @@ ReanimatedHermesRuntime::ReanimatedHermesRuntime(
+ }
+ 
+ ReanimatedHermesRuntime::~ReanimatedHermesRuntime() {
+-#if HERMES_ENABLE_DEBUGGER
+-  // We have to disable debugging before the runtime is destroyed.
++#if defined(HERMES_ENABLE_DEBUGGER) && !defined(HERMES_V1_ENABLED)
+   chrome::disableDebugging(debugToken_);
+-#endif // HERMES_ENABLE_DEBUGGER
++#endif
+ }
+ 
+ } // namespace worklets
+diff --git a/node_modules/react-native-reanimated/Common/cpp/worklets/WorkletRuntime/ReanimatedHermesRuntime.h b/node_modules/react-native-reanimated/Common/cpp/worklets/WorkletRuntime/ReanimatedHermesRuntime.h
+index 5bd2350..7581755 100644
+--- a/node_modules/react-native-reanimated/Common/cpp/worklets/WorkletRuntime/ReanimatedHermesRuntime.h
++++ b/node_modules/react-native-reanimated/Common/cpp/worklets/WorkletRuntime/ReanimatedHermesRuntime.h
+@@ -16,17 +16,17 @@
+ #include <string>
+ #include <thread>
+ 
+-#if HERMES_ENABLE_DEBUGGER
++#if defined(HERMES_ENABLE_DEBUGGER) && !defined(HERMES_V1_ENABLED)
+ #include <hermes/inspector-modern/chrome/Registration.h>
+-#endif // HERMES_ENABLE_DEBUGGER
++#endif
+ 
+ namespace worklets {
+ 
+ using namespace facebook;
+ using namespace react;
+-#if HERMES_ENABLE_DEBUGGER
++#if defined(HERMES_ENABLE_DEBUGGER) && !defined(HERMES_V1_ENABLED)
+ using namespace facebook::hermes::inspector_modern;
+-#endif // HERMES_ENABLE_DEBUGGER
++#endif
+ 
+ // ReentrancyCheck is copied from React Native
+ // from ReactCommon/hermes/executor/HermesExecutorFactory.cpp
+@@ -117,9 +117,9 @@ class ReanimatedHermesRuntime
+  private:
+   std::unique_ptr<facebook::hermes::HermesRuntime> runtime_;
+   ReanimatedReentrancyCheck reentrancyCheck_;
+-#if HERMES_ENABLE_DEBUGGER
++#if defined(HERMES_ENABLE_DEBUGGER) && !defined(HERMES_V1_ENABLED)
+   chrome::DebugSessionToken debugToken_;
+-#endif // HERMES_ENABLE_DEBUGGER
++#endif
+ };
+ 
+ } // namespace worklets
+diff --git a/node_modules/react-native-reanimated/apple/reanimated/apple/LayoutReanimation/REASwizzledUIManager.mm b/node_modules/react-native-reanimated/apple/reanimated/apple/LayoutReanimation/REASwizzledUIManager.mm
+index 96ebbcd..8142756 100644
+--- a/node_modules/react-native-reanimated/apple/reanimated/apple/LayoutReanimation/REASwizzledUIManager.mm
++++ b/node_modules/react-native-reanimated/apple/reanimated/apple/LayoutReanimation/REASwizzledUIManager.mm
+@@ -4,6 +4,7 @@
+ #import <React/RCTRootViewInternal.h>
+ #import <React/RCTUIManager.h>
+ #import <React/RCTUIManagerUtils.h>
++#import <React/RCTDefines.h>
+ #import <objc/runtime.h>
+ #import <reanimated/Tools/FeaturesConfig.h>
+ #import <reanimated/apple/LayoutReanimation/REASwizzledUIManager.h>
+@@ -213,6 +214,9 @@ std::atomic<bool> hasPendingBlocks;
+       });
+     }
+ 
++#if !RCT_REMOVE_LEGACY_ARCH
++    // RCTRootViewInternal's readwrite intrinsicContentSize exists only with the legacy
++    // architecture; RCT_REMOVE_LEGACY_ARCH removes it (see RCTRootViewInternal.h).
+     if (RCTIsReactRootView(reactTag) && [shadowView isKindOfClass:[RCTRootShadowView class]]) {
+       CGSize contentSize = shadowView.layoutMetrics.frame.size;
+ 
+@@ -226,6 +230,7 @@ std::atomic<bool> hasPendingBlocks;
+         }
+       });
+     }
++#endif // !RCT_REMOVE_LEGACY_ARCH
+   }
+ 
+   // Perform layout (possibly animated)
+diff --git a/node_modules/react-native-reanimated/apple/reanimated/apple/native/NativeMethods.mm b/node_modules/react-native-reanimated/apple/reanimated/apple/native/NativeMethods.mm
+index 6c9523b..c347851 100644
+--- a/node_modules/react-native-reanimated/apple/reanimated/apple/native/NativeMethods.mm
++++ b/node_modules/react-native-reanimated/apple/reanimated/apple/native/NativeMethods.mm
+@@ -1,5 +1,8 @@
+ #import <React/RCTEventDispatcher.h>
++#import <React/RCTDefines.h>
++#if !RCT_REMOVE_LEGACY_ARCH
+ #import <React/RCTScrollView.h>
++#endif
+ #import <reanimated/apple/REAUIKit.h>
+ #import <reanimated/apple/native/NativeMethods.h>
+ 
+@@ -39,8 +42,13 @@ std::vector<std::pair<std::string, double>> measure(int viewTag, RCTUIManager *u
+ void scrollTo(int scrollViewTag, RCTUIManager *uiManager, double x, double y, bool animated)
+ {
+   REAUIView *view = [uiManager viewForReactTag:@(scrollViewTag)];
++#if RCT_REMOVE_LEGACY_ARCH
++  UIScrollView *scrollView = (UIScrollView *)view;
++  [scrollView setContentOffset:(CGPoint){(CGFloat)x, (CGFloat)y} animated:animated];
++#else
+   RCTScrollView *scrollView = (RCTScrollView *)view;
+   [scrollView scrollToOffset:(CGPoint){(CGFloat)x, (CGFloat)y} animated:animated];
++#endif
+ }
+ 
+ void setGestureState(id<RNGestureHandlerStateManager> gestureHandlerStateManager, int handlerTag, int newState)

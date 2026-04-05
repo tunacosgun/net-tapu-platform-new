@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -8,22 +8,49 @@ import {
   Platform,
   TouchableOpacity,
   Alert,
-  Animated,
   StatusBar,
   Switch,
   ActivityIndicator,
+  Image,
 } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withRepeat,
+  withTiming,
+  FadeInDown,
+  FadeIn,
+} from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import LinearGradient from 'react-native-linear-gradient';
 import { registerSchema } from '../../lib/validators';
 import { useAuthStore } from '../../stores/auth-store';
+import { useSettingsStore } from '../../stores/settings-store';
 import apiClient, { RateLimitError } from '../../api/client';
 import { Input } from '../../components/ui';
 import { useTheme } from '../../theme';
+import { SPRING } from '../../lib/animations';
 import type { LoginResponse } from '../../types';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+
+// Google Sign-In — lazy load
+let GoogleSignin: any = null;
+try {
+  GoogleSignin = require('@react-native-google-signin/google-signin').GoogleSignin;
+  GoogleSignin.configure({
+    iosClientId: 'YOUR_IOS_CLIENT_ID.apps.googleusercontent.com',
+    webClientId: 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com',
+  });
+} catch {}
+
+// Apple Sign-In — lazy load
+let appleAuth: any = null;
+try {
+  appleAuth = require('@invertase/react-native-apple-authentication').appleAuth;
+} catch {}
 
 type FormData = {
   username: string;
@@ -39,10 +66,43 @@ type FormData = {
 export default function RegisterScreen() {
   const navigation = useNavigation();
   const setTokens = useAuthStore((s) => s.setTokens);
+  const settings = useSettingsStore((s) => s.settings);
   const theme = useTheme();
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const buttonScale = useRef(new Animated.Value(1)).current;
+  const [appleLoading, setAppleLoading] = useState(false);
+  const buttonScale = useSharedValue(1);
+  const googleBtnScale = useSharedValue(1);
+  const appleBtnScale = useSharedValue(1);
+
+  // Decorative circle drift
+  const circleDrift = useSharedValue(0);
+  React.useEffect(() => {
+    circleDrift.value = withRepeat(
+      withTiming(1, { duration: 6000 }),
+      -1,
+      true,
+    );
+  }, []);
+
+  const circleAnimStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: circleDrift.value * 12 },
+      { translateY: circleDrift.value * 8 },
+    ],
+  }));
+
+  const buttonAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: buttonScale.value }],
+  }));
+
+  const googleBtnAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: googleBtnScale.value }],
+  }));
+
+  const appleBtnAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: appleBtnScale.value }],
+  }));
 
   const {
     control,
@@ -64,10 +124,9 @@ export default function RegisterScreen() {
 
   async function onSubmit(data: FormData) {
     setLoading(true);
-    Animated.sequence([
-      Animated.timing(buttonScale, { toValue: 0.96, duration: 100, useNativeDriver: true }),
-      Animated.timing(buttonScale, { toValue: 1, duration: 100, useNativeDriver: true }),
-    ]).start();
+    buttonScale.value = withSpring(0.96, SPRING.snappy, () => {
+      buttonScale.value = withSpring(1, SPRING.snappy);
+    });
     try {
       const { acceptTerms, acceptKvkk, ...body } = data;
       const { data: res } = await apiClient.post<LoginResponse>('/auth/register', body);
@@ -85,10 +144,7 @@ export default function RegisterScreen() {
   }
 
   async function handleGoogleRegister() {
-    let GoogleSignin: any;
-    try {
-      GoogleSignin = require('@react-native-google-signin/google-signin').GoogleSignin;
-    } catch {
+    if (!GoogleSignin) {
       Alert.alert('Google ile Kayıt', 'Google OAuth entegrasyonu yakında aktif olacak.');
       return;
     }
@@ -113,7 +169,41 @@ export default function RegisterScreen() {
     }
   }
 
+  async function handleAppleRegister() {
+    if (!appleAuth || !appleAuth.isSupported) {
+      Alert.alert('Hata', 'Apple ile Kayıt bu cihazda desteklenmiyor.');
+      return;
+    }
+    setAppleLoading(true);
+    try {
+      const appleAuthRequestResponse = await appleAuth.performRequest({
+        requestedOperation: appleAuth.Operation.LOGIN,
+        requestedScopes: [appleAuth.Scope.EMAIL, appleAuth.Scope.FULL_NAME],
+      });
+      
+      const { identityToken, email, fullName } = appleAuthRequestResponse;
+      if (!identityToken) throw new Error('Apple identity token alınamadı');
+      
+      const { data: res } = await apiClient.post<LoginResponse>('/auth/apple/identity-token', {
+        identityToken,
+        email,
+        firstName: fullName?.givenName,
+        lastName: fullName?.familyName,
+      });
+      await setTokens(res.accessToken, res.refreshToken);
+    } catch (err: any) {
+      if (err.code === appleAuth.Error.CANCELED) return;
+      const msg = err?.response?.data?.message || err?.message || 'Apple ile kayıt başarısız';
+      Alert.alert('Hata', Array.isArray(msg) ? msg[0] : msg);
+    } finally {
+      setAppleLoading(false);
+    }
+  }
+
   const isDark = theme.isDark;
+
+  // Form field index for stagger
+  let fieldIndex = 0;
 
   return (
     <>
@@ -129,7 +219,7 @@ export default function RegisterScreen() {
         >
           {/* Compact Header */}
           <LinearGradient
-            colors={isDark ? ['#052e16', '#0f172a'] : ['#15803d', '#16a34a']}
+            colors={isDark ? [theme.colors.primaryDark, '#0f172a'] : [theme.colors.primary, theme.colors.primaryLight]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.header}
@@ -141,78 +231,123 @@ export default function RegisterScreen() {
             >
               <Ionicons name="chevron-back" size={22} color="#fff" />
             </TouchableOpacity>
+
+            {settings?.site_logo && (
+              <Image
+                source={{ uri: settings.site_logo }}
+                style={{ width: 140, height: 40, resizeMode: 'contain', marginBottom: 16 }}
+              />
+            )}
+
             <Text style={styles.headerTitle}>Hesap Oluşturun</Text>
             <Text style={styles.headerSubtitle}>
               Hemen ücretsiz üye olun ve ihalelere katılın
             </Text>
             {/* Decorative circle */}
-            <View style={styles.headerCircle} />
+            <Animated.View style={[styles.headerCircle, circleAnimStyle]} />
           </LinearGradient>
 
           {/* Form Card */}
-          <View style={[styles.formCard, {
-            backgroundColor: theme.colors.card,
-            shadowColor: isDark ? '#000' : '#16a34a',
-          }]}>
-            {/* Google Signup */}
-            <TouchableOpacity
-              style={[styles.googleButton, {
-                borderColor: isDark ? theme.colors.border : '#e5e7eb',
-                backgroundColor: isDark ? theme.colors.surface : '#fff',
-              }]}
-              onPress={handleGoogleRegister}
-              activeOpacity={0.7}
-              disabled={googleLoading}
+          <Animated.View
+            entering={FadeInDown.springify()}
+            style={[styles.formCard, {
+              backgroundColor: theme.colors.card,
+              shadowColor: isDark ? '#000' : '#16a34a',
+            }]}
+          >
+            {/* Social Signup */}
+            <Animated.View
+              entering={FadeInDown.delay((fieldIndex++) * 60)}
+              style={{ flexDirection: 'row', gap: 12, marginBottom: 18 }}
             >
-              {googleLoading ? (
-                <ActivityIndicator size="small" color={theme.colors.text} />
-              ) : (
-                <>
-                  <Ionicons name="logo-google" size={18} color="#4285F4" style={{ marginRight: 10 }} />
-                  <Text style={[styles.googleText, { color: theme.colors.text }]}>
-                    Google ile Kaydolun
-                  </Text>
-                </>
+              <Animated.View style={[googleBtnAnimStyle, { flex: 1 }]}>
+                <TouchableOpacity
+                  style={[styles.socialBtn, {
+                    borderColor: isDark ? theme.colors.border : '#e5e7eb',
+                    backgroundColor: isDark ? theme.colors.surface : '#fff',
+                  }]}
+                  onPress={handleGoogleRegister}
+                  onPressIn={() => { googleBtnScale.value = withTiming(0.97, { duration: 100 }); }}
+                  onPressOut={() => { googleBtnScale.value = withSpring(1, SPRING.snappy); }}
+                  activeOpacity={0.9}
+                  disabled={googleLoading}
+                >
+                  {googleLoading ? (
+                    <ActivityIndicator size="small" color={theme.colors.text} />
+                  ) : (
+                    <>
+                      <Ionicons name="logo-google" size={18} color="#4285F4" style={{ marginRight: 8 }} />
+                      <Text style={[styles.socialLabel, { color: theme.colors.text }]}>Google</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </Animated.View>
+
+              {(Platform.OS === 'ios' || appleAuth?.isSupported) && (
+                <Animated.View style={[appleBtnAnimStyle, { flex: 1 }]}>
+                  <TouchableOpacity
+                    style={[styles.socialBtn, {
+                      borderColor: isDark ? theme.colors.border : theme.colors.text,
+                      backgroundColor: isDark ? theme.colors.text : theme.colors.text,
+                    }]}
+                    onPress={handleAppleRegister}
+                    onPressIn={() => { appleBtnScale.value = withTiming(0.97, { duration: 100 }); }}
+                    onPressOut={() => { appleBtnScale.value = withSpring(1, SPRING.snappy); }}
+                    activeOpacity={0.9}
+                    disabled={appleLoading}
+                  >
+                    {appleLoading ? (
+                      <ActivityIndicator size="small" color={theme.colors.surface} />
+                    ) : (
+                      <>
+                        <Ionicons name="logo-apple" size={18} color={theme.colors.surface} style={{ marginRight: 8 }} />
+                        <Text style={[styles.socialLabel, { color: theme.colors.surface }]}>Apple</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                </Animated.View>
               )}
-            </TouchableOpacity>
+            </Animated.View>
 
             {/* Divider */}
-            <View style={styles.divider}>
+            <Animated.View entering={FadeInDown.delay((fieldIndex++) * 60)} style={styles.divider}>
               <View style={[styles.dividerLine, { backgroundColor: theme.colors.border }]} />
               <View style={[styles.dividerBadge, { backgroundColor: theme.colors.background }]}>
                 <Text style={[styles.dividerText, { color: theme.colors.textMuted }]}>veya</Text>
               </View>
               <View style={[styles.dividerLine, { backgroundColor: theme.colors.border }]} />
-            </View>
+            </Animated.View>
 
             {/* Username */}
-            <Controller
-              control={control}
-              name="username"
-              render={({ field: { onChange, value } }) => (
-                <View>
-                  <Input
-                    label="Kullanıcı Adı"
-                    placeholder="ornek_kullanici"
-                    leftIcon="at-outline"
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    value={value}
-                    onChangeText={onChange}
-                    error={errors.username?.message}
-                  />
-                  <View style={[styles.hintRow, { backgroundColor: theme.colors.primaryBg }]}>
-                    <Ionicons name="information-circle-outline" size={14} color={theme.colors.primary} />
-                    <Text style={[styles.hintText, { color: theme.colors.primary }]}>
-                      İhalelerde diğer kullanıcılar bu adı görecek
-                    </Text>
+            <Animated.View entering={FadeInDown.delay((fieldIndex++) * 60)}>
+              <Controller
+                control={control}
+                name="username"
+                render={({ field: { onChange, value } }) => (
+                  <View>
+                    <Input
+                      label="Kullanıcı Adı"
+                      placeholder="ornek_kullanici"
+                      leftIcon="at-outline"
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      value={value}
+                      onChangeText={onChange}
+                      error={errors.username?.message}
+                    />
+                    <View style={[styles.hintRow, { backgroundColor: theme.colors.primaryBg }]}>
+                      <Ionicons name="information-circle-outline" size={14} color={theme.colors.primary} />
+                      <Text style={[styles.hintText, { color: theme.colors.primary }]}>
+                        İhalelerde diğer kullanıcılar bu adı görecek
+                      </Text>
+                    </View>
                   </View>
-                </View>
-              )}
-            />
+                )}
+              />
+            </Animated.View>
 
             {/* Name Row */}
-            <View style={styles.row}>
+            <Animated.View entering={FadeInDown.delay((fieldIndex++) * 60)} style={styles.row}>
               <View style={{ flex: 1 }}>
                 <Controller
                   control={control}
@@ -231,119 +366,127 @@ export default function RegisterScreen() {
                   )}
                 />
               </View>
-            </View>
+            </Animated.View>
 
             {/* Email */}
-            <Controller
-              control={control}
-              name="email"
-              render={({ field: { onChange, value } }) => (
-                <Input
-                  label="E-posta"
-                  placeholder="ornek@email.com"
-                  leftIcon="mail-outline"
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  value={value}
-                  onChangeText={onChange}
-                  error={errors.email?.message}
-                />
-              )}
-            />
+            <Animated.View entering={FadeInDown.delay((fieldIndex++) * 60)}>
+              <Controller
+                control={control}
+                name="email"
+                render={({ field: { onChange, value } }) => (
+                  <Input
+                    label="E-posta"
+                    placeholder="ornek@email.com"
+                    leftIcon="mail-outline"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    value={value}
+                    onChangeText={onChange}
+                    error={errors.email?.message}
+                  />
+                )}
+              />
+            </Animated.View>
 
             {/* Phone */}
-            <Controller
-              control={control}
-              name="phone"
-              render={({ field: { onChange, value } }) => (
-                <Input
-                  label="Telefon (opsiyonel)"
-                  placeholder="05XX XXX XX XX"
-                  leftIcon="call-outline"
-                  keyboardType="phone-pad"
-                  value={value}
-                  onChangeText={onChange}
-                  error={errors.phone?.message}
-                />
-              )}
-            />
+            <Animated.View entering={FadeInDown.delay((fieldIndex++) * 60)}>
+              <Controller
+                control={control}
+                name="phone"
+                render={({ field: { onChange, value } }) => (
+                  <Input
+                    label="Telefon (opsiyonel)"
+                    placeholder="05XX XXX XX XX"
+                    leftIcon="call-outline"
+                    keyboardType="phone-pad"
+                    value={value}
+                    onChangeText={onChange}
+                    error={errors.phone?.message}
+                  />
+                )}
+              />
+            </Animated.View>
 
             {/* Password */}
-            <Controller
-              control={control}
-              name="password"
-              render={({ field: { onChange, value } }) => (
-                <Input
-                  label="Şifre"
-                  placeholder="En az 8 karakter"
-                  leftIcon="lock-closed-outline"
-                  isPassword
-                  value={value}
-                  onChangeText={onChange}
-                  error={errors.password?.message}
-                />
-              )}
-            />
+            <Animated.View entering={FadeInDown.delay((fieldIndex++) * 60)}>
+              <Controller
+                control={control}
+                name="password"
+                render={({ field: { onChange, value } }) => (
+                  <Input
+                    label="Şifre"
+                    placeholder="En az 8 karakter"
+                    leftIcon="lock-closed-outline"
+                    isPassword
+                    value={value}
+                    onChangeText={onChange}
+                    error={errors.password?.message}
+                  />
+                )}
+              />
+            </Animated.View>
 
             {/* Legal Consents */}
-            <View style={[styles.legalBox, {
-              backgroundColor: isDark ? theme.colors.surface : '#f8fafc',
-              borderColor: theme.colors.border,
-            }]}>
-              <Controller
-                control={control}
-                name="acceptTerms"
-                render={({ field: { onChange, value } }) => (
-                  <View style={styles.checkRow}>
-                    <Switch
-                      value={value}
-                      onValueChange={onChange}
-                      trackColor={{ false: theme.colors.border, true: theme.colors.primary }}
-                      thumbColor="#fff"
-                      style={Platform.OS === 'ios' ? { transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] } : undefined}
-                    />
-                    <Text style={[styles.checkText, { color: theme.colors.text }]}>
-                      <Text style={[styles.linkText, { color: theme.colors.primary }]}>Kullanım Koşulları</Text>
-                      {' ve '}
-                      <Text style={[styles.linkText, { color: theme.colors.primary }]}>Mesafeli Satış Sözleşmesi</Text>
-                      {"'ni okudum ve kabul ediyorum."}
-                    </Text>
-                  </View>
+            <Animated.View entering={FadeInDown.delay((fieldIndex++) * 60)}>
+              <View style={[styles.legalBox, {
+                backgroundColor: isDark ? theme.colors.surface : '#f8fafc',
+                borderColor: theme.colors.border,
+              }]}>
+                <Controller
+                  control={control}
+                  name="acceptTerms"
+                  render={({ field: { onChange, value } }) => (
+                    <View style={styles.checkRow}>
+                      <Switch
+                        value={value}
+                        onValueChange={onChange}
+                        trackColor={{ false: theme.colors.border, true: theme.colors.primary }}
+                        thumbColor="#fff"
+                        style={Platform.OS === 'ios' ? { transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] } : undefined}
+                      />
+                      <Text style={[styles.checkText, { color: theme.colors.text }]}>
+                        <Text style={[styles.linkText, { color: theme.colors.primary }]}>Kullanım Koşulları</Text>
+                        {' ve '}
+                        <Text style={[styles.linkText, { color: theme.colors.primary }]}>Mesafeli Satış Sözleşmesi</Text>
+                        {"'ni okudum ve kabul ediyorum."}
+                      </Text>
+                    </View>
+                  )}
+                />
+                {errors.acceptTerms && (
+                  <Text style={styles.errorText}>{errors.acceptTerms.message}</Text>
                 )}
-              />
-              {errors.acceptTerms && (
-                <Text style={styles.errorText}>{errors.acceptTerms.message}</Text>
-              )}
 
-              <View style={[styles.legalDivider, { backgroundColor: theme.colors.borderLight }]} />
+                <View style={[styles.legalDivider, { backgroundColor: theme.colors.borderLight }]} />
 
-              <Controller
-                control={control}
-                name="acceptKvkk"
-                render={({ field: { onChange, value } }) => (
-                  <View style={styles.checkRow}>
-                    <Switch
-                      value={value}
-                      onValueChange={onChange}
-                      trackColor={{ false: theme.colors.border, true: theme.colors.primary }}
-                      thumbColor="#fff"
-                      style={Platform.OS === 'ios' ? { transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] } : undefined}
-                    />
-                    <Text style={[styles.checkText, { color: theme.colors.text }]}>
-                      <Text style={[styles.linkText, { color: theme.colors.primary }]}>KVKK Aydınlatma Metni</Text>
-                      {"'ni okudum ve kişisel verilerimin işlenmesini kabul ediyorum."}
-                    </Text>
-                  </View>
+                <Controller
+                  control={control}
+                  name="acceptKvkk"
+                  render={({ field: { onChange, value } }) => (
+                    <View style={styles.checkRow}>
+                      <Switch
+                        value={value}
+                        onValueChange={onChange}
+                        trackColor={{ false: theme.colors.border, true: theme.colors.primary }}
+                        thumbColor="#fff"
+                        style={Platform.OS === 'ios' ? { transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] } : undefined}
+                      />
+                      <Text style={[styles.checkText, { color: theme.colors.text }]}>
+                        <Text style={[styles.linkText, { color: theme.colors.primary }]}>KVKK Aydınlatma Metni</Text>
+                        {"'ni okudum ve kişisel verilerimin işlenmesini kabul ediyorum."}
+                      </Text>
+                    </View>
+                  )}
+                />
+                {errors.acceptKvkk && (
+                  <Text style={styles.errorText}>{errors.acceptKvkk.message}</Text>
                 )}
-              />
-              {errors.acceptKvkk && (
-                <Text style={styles.errorText}>{errors.acceptKvkk.message}</Text>
-              )}
-            </View>
+              </View>
+            </Animated.View>
 
             {/* Submit */}
-            <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
+            <Animated.View style={buttonAnimStyle}>
               <TouchableOpacity
                 onPress={handleSubmit(onSubmit)}
                 activeOpacity={0.85}
@@ -351,7 +494,7 @@ export default function RegisterScreen() {
                 style={{ borderRadius: 14, overflow: 'hidden' }}
               >
                 <LinearGradient
-                  colors={['#16a34a', '#15803d']}
+                  colors={[theme.colors.primary, theme.colors.primaryDark]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.submitButton}
@@ -362,24 +505,24 @@ export default function RegisterScreen() {
                     <>
                       <Text style={styles.submitText}>Üye Ol</Text>
                       <View style={styles.submitArrow}>
-                        <Ionicons name="arrow-forward" size={16} color="#16a34a" />
+                        <Ionicons name="arrow-forward" size={16} color={theme.colors.primary} />
                       </View>
                     </>
                   )}
                 </LinearGradient>
               </TouchableOpacity>
             </Animated.View>
-          </View>
+          </Animated.View>
 
           {/* Footer */}
-          <View style={styles.footer}>
+          <Animated.View entering={FadeIn.delay(400)} style={styles.footer}>
             <Text style={[styles.footerText, { color: theme.colors.textSecondary }]}>
               Zaten bir hesabınız var mı?{' '}
             </Text>
             <TouchableOpacity onPress={() => navigation.goBack()}>
               <Text style={[styles.footerLink, { color: theme.colors.primary }]}>Giriş Yap</Text>
             </TouchableOpacity>
-          </View>
+          </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
     </>
@@ -436,17 +579,17 @@ const styles = StyleSheet.create({
     shadowRadius: 24,
     elevation: 8,
   },
-  googleButton: {
+  socialBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 14,
+    height: 48,
+    paddingVertical: 12,
     borderRadius: 12,
     borderWidth: 1.5,
-    marginBottom: 18,
   },
-  googleText: {
-    fontSize: 15,
+  socialLabel: {
+    fontSize: 14,
     fontWeight: '600',
   },
   divider: {

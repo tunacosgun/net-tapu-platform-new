@@ -7,6 +7,13 @@ import { useRoute, useNavigation } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import Animated, {
+  useSharedValue, useAnimatedStyle, withSpring, withTiming, withRepeat,
+  withSequence, withDelay, FadeInLeft, FadeIn, SlideInUp, BounceIn,
+  interpolate, Extrapolation, runOnJS, useAnimatedProps,
+  Easing, FadeInDown, ZoomIn,
+} from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import apiClient from '../../api/client';
 import { useTheme } from '../../theme';
 import { formatPrice } from '../../lib/format';
@@ -14,16 +21,15 @@ import { useAuctionStore, BidFeedItem } from '../../stores/auction-store';
 import { useConnectionStore } from '../../stores/connection-store';
 import { connectToAuction, placeBid, disconnectFromAuction } from '../../lib/ws-client';
 import { Button, Card } from '../../components/ui';
+import { SPRING, TIMING } from '../../lib/animations';
 
 function formatRejectionMessage(msg: string): string {
   if (!msg) return 'Teklifiniz kabul edilmedi.';
-  // "Minimum bid is 34500000" → "Minimum teklif: ₺34.500.000"
   const minMatch = msg.match(/[Mm]inimum bid is (\d+)/);
   if (minMatch) {
     const amount = parseInt(minMatch[1], 10).toLocaleString('tr-TR');
     return `Minimum teklif tutarı: ₺${amount}`;
   }
-  // "Bid must be higher than current price" etc.
   if (msg.toLowerCase().includes('higher than current')) return 'Teklif mevcut fiyattan yüksek olmalıdır.';
   if (msg.toLowerCase().includes('increment')) return 'Teklif minimum artış miktarını karşılamıyor.';
   if (msg.toLowerCase().includes('consent')) return 'İhale sözleşmesini kabul etmeniz gerekiyor.';
@@ -35,6 +41,353 @@ import type { RootStackParamList } from '../../navigation/RootNavigator';
 import type { Auction } from '../../types';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
+
+// ── Animated Sub-Components ─────────────────────
+
+function PulsingTimerCard({ isUrgent, isEnded, timeDisplay, extendedUntil, theme }: {
+  isUrgent: boolean; isEnded: boolean; timeDisplay: string; extendedUntil: any; theme: any;
+}) {
+  const pulseScale = useSharedValue(1);
+  const pulseOpacity = useSharedValue(1);
+
+  useEffect(() => {
+    if (isUrgent && !isEnded) {
+      pulseScale.value = withRepeat(
+        withSequence(
+          withTiming(1.03, { duration: 500, easing: Easing.inOut(Easing.ease) }),
+          withTiming(1, { duration: 500, easing: Easing.inOut(Easing.ease) }),
+        ),
+        -1, true,
+      );
+      pulseOpacity.value = withRepeat(
+        withSequence(
+          withTiming(0.7, { duration: 500 }),
+          withTiming(1, { duration: 500 }),
+        ),
+        -1, true,
+      );
+    } else {
+      pulseScale.value = withTiming(1, TIMING.fast);
+      pulseOpacity.value = withTiming(1, TIMING.fast);
+    }
+  }, [isUrgent, isEnded]);
+
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pulseScale.value }],
+    opacity: pulseOpacity.value,
+  }));
+
+  return (
+    <Animated.View
+      style={[
+        styles.timerCard,
+        {
+          backgroundColor: isUrgent ? '#fef2f2' : theme.colors.card,
+          borderColor: isUrgent ? '#fecaca' : theme.colors.borderLight,
+        },
+        animStyle,
+      ]}
+    >
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+        {isUrgent && !isEnded && <Ionicons name="flash" size={14} color="#dc2626" />}
+        <Text style={[styles.timerLabel, { color: isUrgent ? '#dc2626' : theme.colors.textSecondary }]}>
+          {isEnded ? 'İhale Tamamlandı' : isUrgent ? 'Son Dakikalar!' : 'Kalan Süre'}
+        </Text>
+      </View>
+      <Text style={[styles.timerValue, { color: isEnded ? theme.colors.textMuted : isUrgent ? '#dc2626' : theme.colors.text }]}>
+        {isEnded ? 'Bitti' : timeDisplay}
+      </Text>
+      {extendedUntil && !isEnded && (
+        <Text style={[styles.extendedNote, { color: theme.colors.textSecondary }]}>
+          Uzatılmış süre
+        </Text>
+      )}
+    </Animated.View>
+  );
+}
+
+function AnimatedPriceCard({ currentPrice, isEnded, bidCount, participantCount, watcherCount, theme }: {
+  currentPrice: string | null; isEnded: boolean; bidCount: number; participantCount: number; watcherCount: number; theme: any;
+}) {
+  const flashOpacity = useSharedValue(0);
+  const prevPrice = useRef(currentPrice);
+
+  useEffect(() => {
+    if (currentPrice && currentPrice !== prevPrice.current) {
+      prevPrice.current = currentPrice;
+      flashOpacity.value = withSequence(
+        withTiming(1, { duration: 100 }),
+        withTiming(0, { duration: 600, easing: Easing.out(Easing.ease) }),
+      );
+    }
+  }, [currentPrice]);
+
+  const flashStyle = useAnimatedStyle(() => ({
+    position: 'absolute' as const,
+    top: 0, left: 0, right: 0, bottom: 0,
+    borderRadius: 16,
+    backgroundColor: `rgba(34, 197, 94, ${flashOpacity.value * 0.15})`,
+  }));
+
+  return (
+    <Animated.View
+      entering={FadeIn.duration(400)}
+      style={[styles.priceCard, { backgroundColor: theme.colors.primaryBg, borderColor: theme.colors.primary + '30' }]}
+    >
+      <Animated.View style={flashStyle} />
+      <Text style={[styles.priceLabel, { color: theme.colors.primaryDark }]}>
+        {isEnded ? 'Son Fiyat' : 'Güncel Fiyat'}
+      </Text>
+      <Text style={[styles.priceValue, { color: theme.colors.primary }]}>
+        {currentPrice ? formatPrice(currentPrice) : '—'}
+      </Text>
+      <View style={styles.priceStats}>
+        <View style={styles.priceStat}>
+          <Text style={[styles.priceStatValue, { color: theme.colors.text }]}>{bidCount}</Text>
+          <Text style={[styles.priceStatLabel, { color: theme.colors.textSecondary }]}>Teklif</Text>
+        </View>
+        <View style={[styles.priceStatDivider, { backgroundColor: theme.colors.border }]} />
+        <View style={styles.priceStat}>
+          <Text style={[styles.priceStatValue, { color: theme.colors.text }]}>{participantCount}</Text>
+          <Text style={[styles.priceStatLabel, { color: theme.colors.textSecondary }]}>Katılımcı</Text>
+        </View>
+        <View style={[styles.priceStatDivider, { backgroundColor: theme.colors.border }]} />
+        <View style={styles.priceStat}>
+          <Text style={[styles.priceStatValue, { color: theme.colors.text }]}>{watcherCount}</Text>
+          <Text style={[styles.priceStatLabel, { color: theme.colors.textSecondary }]}>İzleyici</Text>
+        </View>
+      </View>
+    </Animated.View>
+  );
+}
+
+function AnimatedBidItem({ bid, index, isFirst, isOptimistic, getBidUserName, theme }: {
+  bid: BidFeedItem; index: number; isFirst: boolean; isOptimistic: boolean; getBidUserName: (b: BidFeedItem) => string; theme: any;
+}) {
+  return (
+    <Animated.View
+      entering={FadeInLeft.delay(index * 40).springify().damping(14).stiffness(120)}
+      style={[
+        styles.bidItem,
+        isFirst && styles.bidItemFirst,
+        isFirst && { backgroundColor: theme.colors.primaryBg },
+        isOptimistic && { opacity: 0.6 },
+      ]}
+    >
+      <View style={[styles.bidRank, { backgroundColor: isFirst ? theme.colors.primary : theme.colors.surface }]}>
+        <Text style={[styles.bidRankText, { color: isFirst ? '#fff' : theme.colors.textSecondary }]}>
+          {index + 1}
+        </Text>
+      </View>
+      <View style={styles.bidInfo}>
+        <Text style={[styles.bidUser, { color: theme.colors.text }]}>
+          {getBidUserName(bid)}
+          {isOptimistic && ' (bekliyor...)'}
+        </Text>
+        <Text style={[styles.bidTime, { color: theme.colors.textMuted }]}>
+          {new Date(bid.server_timestamp).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+        </Text>
+      </View>
+      <Text style={[styles.bidAmount, { color: isFirst ? theme.colors.primary : theme.colors.text }]}>
+        {formatPrice(bid.amount)}
+      </Text>
+    </Animated.View>
+  );
+}
+
+function AnimatedSubmitButton({ onPress, disabled, submitting, theme }: {
+  onPress: () => void; disabled: boolean; submitting: boolean; theme: any;
+}) {
+  const scale = useSharedValue(1);
+
+  const gesture = Gesture.Tap()
+    .onBegin(() => {
+      scale.value = withSpring(0.92, SPRING.snappy);
+    })
+    .onFinalize(() => {
+      scale.value = withSpring(1, SPRING.snappy);
+    })
+    .onEnd(() => {
+      if (!disabled) runOnJS(onPress)();
+    });
+
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <GestureDetector gesture={gesture}>
+      <Animated.View
+        style={[
+          styles.bidSubmitBtn,
+          { backgroundColor: theme.colors.primary },
+          (submitting || disabled) && { opacity: 0.5 },
+          animStyle,
+        ]}
+      >
+        <Text style={styles.bidSubmitText}>
+          {submitting ? '...' : 'Teklif Ver'}
+        </Text>
+      </Animated.View>
+    </GestureDetector>
+  );
+}
+
+function AnimatedQuickBidButton({ label, onPress, theme }: {
+  label: string; onPress: () => void; theme: any;
+}) {
+  const scale = useSharedValue(1);
+
+  const gesture = Gesture.Tap()
+    .onBegin(() => {
+      scale.value = withSpring(0.9, SPRING.snappy);
+    })
+    .onFinalize(() => {
+      scale.value = withSpring(1, SPRING.snappy);
+    })
+    .onEnd(() => {
+      runOnJS(onPress)();
+    });
+
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <GestureDetector gesture={gesture}>
+      <Animated.View
+        style={[
+          styles.quickBidBtn,
+          { borderColor: theme.colors.primary, backgroundColor: theme.colors.primaryBg },
+          animStyle,
+        ]}
+      >
+        <Text style={[styles.quickBidText, { color: theme.colors.primary }]}>{label}</Text>
+      </Animated.View>
+    </GestureDetector>
+  );
+}
+
+function WinnerCard({ winnerIdMasked, finalPrice }: { winnerIdMasked: string; finalPrice: string | null }) {
+  const trophyBounce = useSharedValue(0);
+
+  useEffect(() => {
+    trophyBounce.value = withRepeat(
+      withSequence(
+        withTiming(-8, { duration: 400, easing: Easing.out(Easing.ease) }),
+        withTiming(0, { duration: 400, easing: Easing.bounce }),
+      ),
+      3, false,
+    );
+  }, []);
+
+  const trophyStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: trophyBounce.value }],
+    marginBottom: 8,
+  }));
+
+  return (
+    <Animated.View entering={BounceIn.duration(800)} style={styles.winnerCard}>
+      <Animated.View style={trophyStyle}>
+        <Ionicons name="trophy" size={48} color="#f59e0b" />
+      </Animated.View>
+      <Text style={styles.winnerTitle}>İhale Tamamlandı!</Text>
+      <Text style={styles.winnerDetail}>
+        Kazanan: {winnerIdMasked}
+      </Text>
+      <Text style={styles.winnerPrice}>
+        {finalPrice ? formatPrice(finalPrice) : ''}
+      </Text>
+    </Animated.View>
+  );
+}
+
+function RejectionCard({ lastRejection }: { lastRejection: any }) {
+  const shakeX = useSharedValue(0);
+
+  useEffect(() => {
+    shakeX.value = withSequence(
+      withTiming(10, { duration: 50 }),
+      withTiming(-10, { duration: 50 }),
+      withTiming(8, { duration: 50 }),
+      withTiming(-8, { duration: 50 }),
+      withTiming(4, { duration: 50 }),
+      withTiming(-4, { duration: 50 }),
+      withTiming(0, { duration: 50 }),
+    );
+  }, [lastRejection]);
+
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: shakeX.value }],
+  }));
+
+  return (
+    <Animated.View style={[styles.rejectionCard, { borderColor: '#fecaca' }, animStyle]}>
+      <View style={styles.rejectionIcon}>
+        <Ionicons name="close-circle" size={22} color="#dc2626" />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.rejectionTitle}>Teklif Reddedildi</Text>
+        <Text style={styles.rejectionReason}>
+          {formatRejectionMessage(lastRejection.message || lastRejection.reason || 'Teklifiniz kabul edilmedi.')}
+        </Text>
+      </View>
+    </Animated.View>
+  );
+}
+
+function ConnectionDot({ connectionStatus, connectionColor }: { connectionStatus: string; connectionColor: string }) {
+  const pulseScale = useSharedValue(1);
+  const pulseOpacity = useSharedValue(1);
+
+  useEffect(() => {
+    if (connectionStatus === 'connecting' || connectionStatus === 'reconnecting') {
+      pulseScale.value = withRepeat(
+        withSequence(
+          withTiming(1.8, { duration: 600 }),
+          withTiming(1, { duration: 600 }),
+        ),
+        -1, true,
+      );
+      pulseOpacity.value = withRepeat(
+        withSequence(
+          withTiming(0.3, { duration: 600 }),
+          withTiming(1, { duration: 600 }),
+        ),
+        -1, true,
+      );
+    } else {
+      pulseScale.value = withTiming(1, TIMING.fast);
+      pulseOpacity.value = withTiming(1, TIMING.fast);
+    }
+  }, [connectionStatus]);
+
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pulseScale.value }],
+    opacity: pulseOpacity.value,
+  }));
+
+  return (
+    <Animated.View style={[styles.connectionDot, { backgroundColor: connectionColor }, animStyle]} />
+  );
+}
+
+function ExtensionBanner({ addedMinutes }: { addedMinutes: number }) {
+  return (
+    <Animated.View entering={SlideInUp.springify().damping(14).stiffness(150)} style={styles.extensionBanner}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+        <Ionicons name="time-outline" size={16} color="#2563eb" />
+        <Text style={styles.extensionText}>
+          Süre {addedMinutes} dakika uzatıldı!
+        </Text>
+      </View>
+    </Animated.View>
+  );
+}
+
+// ── Main Screen ─────────────────────────────────
 
 export default function LiveAuctionScreen() {
   const route = useRoute<RouteProp<RootStackParamList, 'LiveAuction'>>();
@@ -65,7 +418,6 @@ export default function LiveAuctionScreen() {
         const { data } = await apiClient.get<Auction>(`/auctions/${auctionId}`, { params: { include_bids: 'true' } });
         setAuction(data);
         useAuctionStore.getState().setAuctionDetail(data);
-        // Load bids from the response (included via include_bids=true)
         const recentBids = (data as any).recentBids ?? (data as any).recent_bids ?? (data as any).bids;
         if (Array.isArray(recentBids) && recentBids.length > 0) {
           const feed = recentBids.map((b: any) => ({
@@ -80,7 +432,6 @@ export default function LiveAuctionScreen() {
         navigation.goBack();
         return;
       }
-      // Check deposit/participation status via the same endpoint web uses
       const storeState = useAuctionStore.getState();
       if ((storeState.hasActiveDeposit || storeState.hasPendingDeposit) && storeState.userDeposit) {
         useAuctionStore.setState({ depositLoading: false });
@@ -216,7 +567,7 @@ export default function LiveAuctionScreen() {
           <View style={styles.headerCenter}>
             <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Canlı İhale</Text>
             <View style={styles.connectionRow}>
-              <View style={[styles.connectionDot, { backgroundColor: connectionColor }]} />
+              <ConnectionDot connectionStatus={connectionStatus} connectionColor={connectionColor} />
               <Text style={[styles.connectionLabel, { color: theme.colors.textSecondary }]}>{connectionLabel}</Text>
             </View>
           </View>
@@ -234,100 +585,54 @@ export default function LiveAuctionScreen() {
         >
           {/* ── Time Extension Animation ───────── */}
           {timeExtensionAnimation && (
-            <View style={styles.extensionBanner}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Ionicons name="time-outline" size={16} color="#2563eb" />
-                <Text style={styles.extensionText}>
-                  Süre {timeExtensionAnimation.addedMinutes} dakika uzatıldı!
-                </Text>
-              </View>
-            </View>
+            <ExtensionBanner addedMinutes={timeExtensionAnimation.addedMinutes} />
           )}
 
           {/* ── Timer Card ────────────────────── */}
-          <View style={[styles.timerCard, { backgroundColor: timeInfo.isUrgent ? '#fef2f2' : theme.colors.card, borderColor: timeInfo.isUrgent ? '#fecaca' : theme.colors.borderLight }]}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              {timeInfo.isUrgent && !isEnded && <Ionicons name="flash" size={14} color="#dc2626" />}
-              <Text style={[styles.timerLabel, { color: timeInfo.isUrgent ? '#dc2626' : theme.colors.textSecondary }]}>
-                {isEnded ? 'İhale Tamamlandı' : timeInfo.isUrgent ? 'Son Dakikalar!' : 'Kalan Süre'}
-              </Text>
-            </View>
-            <Text style={[styles.timerValue, { color: isEnded ? theme.colors.textMuted : timeInfo.isUrgent ? '#dc2626' : theme.colors.text }]}>
-              {isEnded ? 'Bitti' : timeInfo.display}
-            </Text>
-            {extendedUntil && !isEnded && (
-              <Text style={[styles.extendedNote, { color: theme.colors.textSecondary }]}>
-                Uzatılmış süre
-              </Text>
-            )}
-          </View>
+          <PulsingTimerCard
+            isUrgent={timeInfo.isUrgent}
+            isEnded={isEnded}
+            timeDisplay={timeInfo.display}
+            extendedUntil={extendedUntil}
+            theme={theme}
+          />
 
           {/* ── Price Card ────────────────────── */}
-          <View style={[styles.priceCard, { backgroundColor: theme.colors.primaryBg, borderColor: theme.colors.primary + '30' }]}>
-            <Text style={[styles.priceLabel, { color: theme.colors.primaryDark }]}>
-              {isEnded ? 'Son Fiyat' : 'Güncel Fiyat'}
-            </Text>
-            <Text style={[styles.priceValue, { color: theme.colors.primary }]}>
-              {currentPrice ? formatPrice(currentPrice) : '—'}
-            </Text>
-            <View style={styles.priceStats}>
-              <View style={styles.priceStat}>
-                <Text style={[styles.priceStatValue, { color: theme.colors.text }]}>{bidCount}</Text>
-                <Text style={[styles.priceStatLabel, { color: theme.colors.textSecondary }]}>Teklif</Text>
-              </View>
-              <View style={[styles.priceStatDivider, { backgroundColor: theme.colors.border }]} />
-              <View style={styles.priceStat}>
-                <Text style={[styles.priceStatValue, { color: theme.colors.text }]}>{participantCount}</Text>
-                <Text style={[styles.priceStatLabel, { color: theme.colors.textSecondary }]}>Katılımcı</Text>
-              </View>
-              <View style={[styles.priceStatDivider, { backgroundColor: theme.colors.border }]} />
-              <View style={styles.priceStat}>
-                <Text style={[styles.priceStatValue, { color: theme.colors.text }]}>{watcherCount}</Text>
-                <Text style={[styles.priceStatLabel, { color: theme.colors.textSecondary }]}>İzleyici</Text>
-              </View>
-            </View>
-          </View>
+          <AnimatedPriceCard
+            currentPrice={currentPrice}
+            isEnded={isEnded}
+            bidCount={bidCount}
+            participantCount={participantCount}
+            watcherCount={watcherCount}
+            theme={theme}
+          />
 
           {/* ── Announcements ─────────────────── */}
           {announcements.length > 0 && (
-            <View style={[styles.announcementCard, { borderColor: '#fde68a' }]}>
+            <Animated.View entering={FadeInDown.duration(400)} style={[styles.announcementCard, { borderColor: '#fde68a' }]}>
               <View style={styles.announcementHeader}>
                 <Ionicons name="megaphone-outline" size={16} color="#92400e" />
                 <Text style={styles.announcementTitle}>Duyuru</Text>
               </View>
               <Text style={styles.announcementText}>{announcements[0].message}</Text>
-            </View>
+            </Animated.View>
           )}
 
           {/* ── Winner Banner ─────────────────── */}
           {isEnded && winnerIdMasked && (
-            <View style={styles.winnerCard}>
-              <Ionicons name="trophy" size={48} color="#f59e0b" style={{ marginBottom: 8 }} />
-              <Text style={styles.winnerTitle}>İhale Tamamlandı!</Text>
-              <Text style={styles.winnerDetail}>
-                Kazanan: {winnerIdMasked}
-              </Text>
-              <Text style={styles.winnerPrice}>
-                {finalPrice ? formatPrice(finalPrice) : ''}
-              </Text>
-            </View>
+            <WinnerCard winnerIdMasked={winnerIdMasked} finalPrice={finalPrice} />
           )}
 
           {/* ── Rejection Banner ──────────────── */}
           {lastRejection && (
-            <View style={[styles.rejectionCard, { borderColor: '#fecaca' }]}>
-              <View style={styles.rejectionIcon}>
-                <Ionicons name="close-circle" size={22} color="#dc2626" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.rejectionTitle}>Teklif Reddedildi</Text>
-                <Text style={styles.rejectionReason}>{formatRejectionMessage((lastRejection as any).message || (lastRejection as any).reason || 'Teklifiniz kabul edilmedi.')}</Text>
-              </View>
-            </View>
+            <RejectionCard lastRejection={lastRejection} />
           )}
 
           {/* ── Bid Feed ──────────────────────── */}
-          <View style={[styles.feedCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.borderLight }]}>
+          <Animated.View
+            entering={FadeIn.duration(300)}
+            style={[styles.feedCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.borderLight }]}
+          >
             <View style={styles.feedHeader}>
               <Text style={[styles.feedTitle, { color: theme.colors.text }]}>Teklif Akışı</Text>
               <Text style={[styles.feedCount, { color: theme.colors.textSecondary }]}>{bidFeed.length} teklif</Text>
@@ -351,33 +656,15 @@ export default function LiveAuctionScreen() {
                   const isOptimistic = bid.bid_id.startsWith('optimistic-');
                   const isFirst = i === 0;
                   return (
-                    <View
+                    <AnimatedBidItem
                       key={bid.bid_id}
-                      style={[
-                        styles.bidItem,
-                        isFirst && styles.bidItemFirst,
-                        isFirst && { backgroundColor: theme.colors.primaryBg },
-                        isOptimistic && { opacity: 0.6 },
-                      ]}
-                    >
-                      <View style={[styles.bidRank, { backgroundColor: isFirst ? theme.colors.primary : theme.colors.surface }]}>
-                        <Text style={[styles.bidRankText, { color: isFirst ? '#fff' : theme.colors.textSecondary }]}>
-                          {i + 1}
-                        </Text>
-                      </View>
-                      <View style={styles.bidInfo}>
-                        <Text style={[styles.bidUser, { color: theme.colors.text }]}>
-                          {getBidUserName(bid)}
-                          {isOptimistic && ' (bekliyor...)'}
-                        </Text>
-                        <Text style={[styles.bidTime, { color: theme.colors.textMuted }]}>
-                          {new Date(bid.server_timestamp).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                        </Text>
-                      </View>
-                      <Text style={[styles.bidAmount, { color: isFirst ? theme.colors.primary : theme.colors.text }]}>
-                        {formatPrice(bid.amount)}
-                      </Text>
-                    </View>
+                      bid={bid}
+                      index={i}
+                      isFirst={isFirst}
+                      isOptimistic={isOptimistic}
+                      getBidUserName={getBidUserName}
+                      theme={theme}
+                    />
                   );
                 })}
                 {bidFeed.length > 10 && !showAllBids && (
@@ -389,11 +676,14 @@ export default function LiveAuctionScreen() {
                 )}
               </>
             )}
-          </View>
+          </Animated.View>
 
           {/* ── Auction Info ──────────────────── */}
           {auction && (
-            <View style={[styles.infoCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.borderLight }]}>
+            <Animated.View
+              entering={FadeIn.delay(200).duration(400)}
+              style={[styles.infoCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.borderLight }]}
+            >
               <Text style={[styles.infoTitle, { color: theme.colors.text }]}>İhale Bilgileri</Text>
               <View style={styles.infoRow}>
                 <Text style={[styles.infoLabel, { color: theme.colors.textSecondary }]}>Başlangıç Fiyatı</Text>
@@ -411,13 +701,16 @@ export default function LiveAuctionScreen() {
                   <Text style={[styles.infoValue, { color: theme.colors.text }]}>{formatPrice((auction as any).depositAmount)}</Text>
                 </View>
               )}
-            </View>
+            </Animated.View>
           )}
         </ScrollView>
 
         {/* ── Bid Bar (Fixed Bottom) ──────────── */}
         {isActive && (
-          <View style={[styles.bidBar, { backgroundColor: theme.colors.card, borderTopColor: theme.colors.border, paddingBottom: Math.max(insets.bottom, 16) }]}>
+          <Animated.View
+            entering={FadeInDown.springify().damping(16).stiffness(140)}
+            style={[styles.bidBar, { backgroundColor: theme.colors.card, borderTopColor: theme.colors.border, paddingBottom: Math.max(insets.bottom, 16) }]}
+          >
             {depositLoading ? (
               <View style={styles.bidBarCenter}>
                 <Text style={[styles.depositMsg, { color: theme.colors.textSecondary }]}>Kaparo durumu kontrol ediliyor...</Text>
@@ -460,14 +753,12 @@ export default function LiveAuctionScreen() {
                 {/* Quick bid buttons */}
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.quickBids} contentContainerStyle={{ gap: 8 }}>
                   {suggestedBids.map((s) => (
-                    <TouchableOpacity
+                    <AnimatedQuickBidButton
                       key={s.amount}
-                      style={[styles.quickBidBtn, { borderColor: theme.colors.primary, backgroundColor: theme.colors.primaryBg }]}
+                      label={s.label}
                       onPress={() => setBidAmount(s.amount)}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={[styles.quickBidText, { color: theme.colors.primary }]}>{s.label}</Text>
-                    </TouchableOpacity>
+                      theme={theme}
+                    />
                   ))}
                 </ScrollView>
                 {/* Input row */}
@@ -484,24 +775,16 @@ export default function LiveAuctionScreen() {
                       returnKeyType="done"
                     />
                   </View>
-                  <TouchableOpacity
-                    style={[
-                      styles.bidSubmitBtn,
-                      { backgroundColor: theme.colors.primary },
-                      (submitting || !bidAmount) && { opacity: 0.5 },
-                    ]}
+                  <AnimatedSubmitButton
                     onPress={handleBid}
-                    disabled={submitting || !bidAmount}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={styles.bidSubmitText}>
-                      {submitting ? '...' : 'Teklif Ver'}
-                    </Text>
-                  </TouchableOpacity>
+                    disabled={!bidAmount}
+                    submitting={submitting}
+                    theme={theme}
+                  />
                 </View>
               </>
             )}
-          </View>
+          </Animated.View>
         )}
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -566,6 +849,7 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: 'center',
     marginBottom: 12,
+    overflow: 'hidden',
   },
   priceLabel: { fontSize: 13, fontWeight: '500', marginBottom: 4 },
   priceValue: { fontSize: 30, fontWeight: '800' },

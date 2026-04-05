@@ -1,21 +1,126 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
-  View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity,
-  ActivityIndicator, Animated, Platform,
+  View, Text, StyleSheet, TextInput, TouchableOpacity,
+  ActivityIndicator, Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import Animated, {
+  useSharedValue, useAnimatedStyle, withSpring, withTiming,
+  FadeInUp, FadeIn, SlideInLeft, useAnimatedProps,
+  interpolateColor, interpolate, Layout,
+} from 'react-native-reanimated';
+import { FlashList } from '@shopify/flash-list';
 import apiClient from '../../api/client';
 import { useTheme } from '../../theme';
 import { ParcelCard } from '../../components/parcel/ParcelCard';
+import { SPRING } from '../../lib/animations';
 import type { RootStackParamList } from '../../navigation/RootNavigator';
 import type { Parcel, PaginatedResponse } from '../../types';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
-
 type SortOption = 'newest' | 'price_asc' | 'price_desc';
+
+const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
+
+function AnimatedListItem({ children, index }: { children: React.ReactNode; index: number }) {
+  return (
+    <Animated.View entering={FadeInUp.delay(index * 50).springify().damping(18).stiffness(200)}>
+      {children}
+    </Animated.View>
+  );
+}
+
+function SortChipBar({
+  options,
+  active,
+  onSelect,
+  colors,
+  isDark,
+}: {
+  options: { key: SortOption; label: string }[];
+  active: SortOption;
+  onSelect: (k: SortOption) => void;
+  colors: any;
+  isDark: boolean;
+}) {
+  const underlineX = useSharedValue(0);
+  const chipWidths = useRef<number[]>([]);
+  const chipOffsets = useRef<number[]>([]);
+
+  useEffect(() => {
+    const idx = options.findIndex((o) => o.key === active);
+    if (chipOffsets.current[idx] !== undefined) {
+      underlineX.value = withSpring(chipOffsets.current[idx], SPRING.snappy);
+    }
+  }, [active]);
+
+  const underlineStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: underlineX.value }],
+  }));
+
+  return (
+    <View style={styles.sortRow}>
+      {options.map((opt, i) => {
+        const isActive = active === opt.key;
+        return (
+          <TouchableOpacity
+            key={opt.key}
+            onPress={() => onSelect(opt.key)}
+            activeOpacity={0.7}
+            onLayout={(e) => {
+              chipWidths.current[i] = e.nativeEvent.layout.width;
+              chipOffsets.current[i] = e.nativeEvent.layout.x;
+              // update position if this is the active chip
+              if (isActive) {
+                underlineX.value = withSpring(e.nativeEvent.layout.x, SPRING.snappy);
+              }
+            }}
+            style={[styles.sortChip, {
+              backgroundColor: isActive ? (colors.primaryBg) : 'transparent',
+              borderColor: isActive ? colors.primary : (isDark ? colors.borderLight : colors.border),
+            }]}
+          >
+            <Text style={[styles.sortChipText, {
+              color: isActive ? colors.primary : colors.textSecondary,
+              fontWeight: isActive ? '700' : '400',
+            }]}>
+              {opt.label}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+}
+
+function MapButton({ onPress, colors, isDark }: { onPress: () => void; colors: any; isDark: boolean }) {
+  const scale = useSharedValue(1);
+
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <Animated.View style={animStyle}>
+      <TouchableOpacity
+        onPress={onPress}
+        onPressIn={() => { scale.value = withSpring(0.92, SPRING.snappy); }}
+        onPressOut={() => { scale.value = withSpring(1, SPRING.snappy); }}
+        style={[styles.mapButton, {
+          backgroundColor: isDark ? colors.surface : '#fff',
+          shadowColor: isDark ? '#000' : '#94a3b8',
+        }]}
+        activeOpacity={0.7}
+      >
+        <Ionicons name="navigate-outline" size={16} color={colors.primary} />
+        <Text style={[styles.mapButtonText, { color: colors.primary }]}>Harita</Text>
+      </TouchableOpacity>
+    </Animated.View>
+  );
+}
 
 export default function ParcelsListScreen() {
   const navigation = useNavigation<Nav>();
@@ -29,12 +134,21 @@ export default function ParcelsListScreen() {
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [sort, setSort] = useState<SortOption>('newest');
-  const [showSort, setShowSort] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
+
+  // Search bar focus animation
+  const searchFocus = useSharedValue(0);
+
+  const searchBarAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scaleX: interpolate(searchFocus.value, [0, 1], [1, 1.02]) }],
+    borderWidth: interpolate(searchFocus.value, [0, 1], [0, 1.5]),
+    borderColor: interpolateColor(searchFocus.value, [0, 1], ['transparent', c.primary]),
+  }));
 
   const sortConfig: Record<SortOption, { sortBy: string; sortOrder: string; label: string; icon: string }> = {
     newest: { sortBy: 'createdAt', sortOrder: 'DESC', label: 'En Yeni', icon: 'time-outline' },
-    price_asc: { sortBy: 'price', sortOrder: 'ASC', label: 'Fiyat ↑', icon: 'trending-up-outline' },
-    price_desc: { sortBy: 'price', sortOrder: 'DESC', label: 'Fiyat ↓', icon: 'trending-down-outline' },
+    price_asc: { sortBy: 'price', sortOrder: 'ASC', label: 'Fiyat \u2191', icon: 'trending-up-outline' },
+    price_desc: { sortBy: 'price', sortOrder: 'DESC', label: 'Fiyat \u2193', icon: 'trending-down-outline' },
   };
 
   const fetchParcels = useCallback(async (p: number, reset = false) => {
@@ -48,6 +162,7 @@ export default function ParcelsListScreen() {
       const { data } = await apiClient.get<PaginatedResponse<Parcel>>('/parcels', { params });
       setParcels((prev) => reset ? data.data : [...prev, ...data.data]);
       setTotalPages(data.meta.totalPages);
+      if (!hasLoaded) setHasLoaded(true);
     } catch {} finally { setLoading(false); }
   }, [search, sort]);
 
@@ -66,24 +181,25 @@ export default function ParcelsListScreen() {
     setPage(1);
   }
 
+  const sortOptions = (Object.keys(sortConfig) as SortOption[]).map((key) => ({
+    key, label: sortConfig[key].label,
+  }));
+
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: c.background }]} edges={['top']}>
       {/* Header */}
-      <View style={styles.titleBar}>
+      <Animated.View entering={SlideInLeft.duration(400).springify().damping(20)} style={styles.titleBar}>
         <Text style={[styles.screenTitle, { color: c.text }]}>İlanlar</Text>
-        <TouchableOpacity
-          onPress={() => navigation.navigate('ParcelMap')}
-          style={[styles.mapButton, { backgroundColor: isDark ? c.surface : '#fff', shadowColor: isDark ? '#000' : '#94a3b8' }]}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="navigate-outline" size={16} color={c.primary} />
-          <Text style={[styles.mapButtonText, { color: c.primary }]}>Harita</Text>
-        </TouchableOpacity>
-      </View>
+        <MapButton onPress={() => navigation.navigate('ParcelMap')} colors={c} isDark={isDark} />
+      </Animated.View>
 
       {/* Search */}
       <View style={styles.searchSection}>
-        <View style={[styles.searchBar, { backgroundColor: isDark ? c.surface : '#fff', shadowColor: isDark ? '#000' : '#94a3b8' }]}>
+        <Animated.View style={[
+          styles.searchBar,
+          { backgroundColor: isDark ? c.surface : '#fff', shadowColor: isDark ? '#000' : '#94a3b8' },
+          searchBarAnimStyle,
+        ]}>
           <Ionicons name="search-outline" size={18} color={c.textMuted} />
           <TextInput
             style={[styles.searchInput, { color: c.text }]}
@@ -93,56 +209,56 @@ export default function ParcelsListScreen() {
             onChangeText={setSearchInput}
             onSubmitEditing={handleSearch}
             returnKeyType="search"
+            onFocus={() => { searchFocus.value = withSpring(1, SPRING.smooth); }}
+            onBlur={() => { searchFocus.value = withSpring(0, SPRING.smooth); }}
           />
           {searchInput.length > 0 && (
             <TouchableOpacity onPress={() => { setSearchInput(''); setSearch(''); }} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
               <Ionicons name="close-circle" size={18} color={c.textMuted} />
             </TouchableOpacity>
           )}
-        </View>
+        </Animated.View>
       </View>
 
       {/* Sort */}
-      <View style={styles.sortRow}>
-        {(Object.keys(sortConfig) as SortOption[]).map((key) => {
-          const isActive = sort === key;
-          return (
-            <TouchableOpacity
-              key={key} onPress={() => setSort(key)} activeOpacity={0.7}
-              style={[styles.sortChip, {
-                backgroundColor: isActive ? (isDark ? c.primaryBg : c.primaryBg) : 'transparent',
-                borderColor: isActive ? c.primary : (isDark ? c.borderLight : c.border),
-              }]}
-            >
-              <Text style={[styles.sortChipText, { color: isActive ? c.primary : c.textSecondary, fontWeight: isActive ? '700' : '400' }]}>
-                {sortConfig[key].label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+      <SortChipBar options={sortOptions} active={sort} onSelect={setSort} colors={c} isDark={isDark} />
 
-      <FlatList
+      <FlashList
         data={parcels}
-        renderItem={({ item }) => (
-          <View style={{ paddingHorizontal: 20 }}>
-            <ParcelCard parcel={item} onPress={() => navigation.navigate('ParcelDetail', { id: item.id })} />
-          </View>
+        estimatedItemSize={200}
+        renderItem={({ item, index }) => (
+          <AnimatedListItem index={hasLoaded && page === 1 ? index : 0}>
+            <View style={{ paddingHorizontal: 20 }}>
+              <ParcelCard parcel={item} onPress={() => navigation.navigate('ParcelDetail', { id: item.id })} />
+            </View>
+          </AnimatedListItem>
         )}
         keyExtractor={(item) => item.id}
         onEndReached={loadMore}
         onEndReachedThreshold={0.5}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 110 }}
         ListFooterComponent={loading ? <ActivityIndicator style={{ padding: 20 }} color={c.primary} /> : null}
         ListEmptyComponent={!loading ? (
           <View style={styles.empty}>
-            <View style={[styles.emptyIconWrap, { backgroundColor: isDark ? c.surface : '#f8fafc' }]}>
+            <Animated.View
+              entering={FadeIn.springify().damping(16).stiffness(140)}
+              style={[styles.emptyIconWrap, { backgroundColor: isDark ? c.surface : '#f8fafc' }]}
+            >
               <Ionicons name="search-outline" size={36} color={c.textMuted} />
-            </View>
-            <Text style={[styles.emptyTitle, { color: c.text }]}>İlan bulunamadı</Text>
-            <Text style={[styles.emptyDesc, { color: c.textSecondary }]}>
+            </Animated.View>
+            <Animated.Text
+              entering={FadeIn.delay(100).springify().damping(16)}
+              style={[styles.emptyTitle, { color: c.text }]}
+            >
+              İlan bulunamadı
+            </Animated.Text>
+            <Animated.Text
+              entering={FadeIn.delay(200).springify().damping(16)}
+              style={[styles.emptyDesc, { color: c.textSecondary }]}
+            >
               Farklı arama kriterleri deneyebilirsiniz
-            </Text>
+            </Animated.Text>
           </View>
         ) : null}
       />

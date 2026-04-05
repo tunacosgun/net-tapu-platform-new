@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,12 +8,22 @@ import {
   Platform,
   TouchableOpacity,
   Alert,
-  Animated,
   StatusBar,
   ActivityIndicator,
   Dimensions,
-  Image,
 } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+  withDelay,
+  withSequence,
+  FadeIn,
+  SlideInDown,
+  FadeInDown,
+  runOnJS,
+} from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useForm, Controller } from 'react-hook-form';
@@ -21,12 +31,14 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import LinearGradient from 'react-native-linear-gradient';
 import { loginSchema } from '../../lib/validators';
 import { useAuthStore } from '../../stores/auth-store';
+import { useSettingsStore } from '../../stores/settings-store';
 import apiClient, { RateLimitError } from '../../api/client';
 import { Input } from '../../components/ui';
 import { useTheme } from '../../theme';
 import type { RootStackParamList } from '../../navigation/RootNavigator';
 import type { LoginResponse } from '../../types';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { SPRING, TIMING } from '../../lib/animations';
 
 // Google Sign-In — lazy load
 let GoogleSignin: any = null;
@@ -38,27 +50,40 @@ try {
   });
 } catch {}
 
+// Apple Sign-In — lazy load
+let appleAuth: any = null;
+try {
+  appleAuth = require('@invertase/react-native-apple-authentication').appleAuth;
+} catch {}
+
 const { width: SCREEN_W } = Dimensions.get('window');
+
+const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 type FormData = { email: string; password: string };
 
+// Stagger timing constants
+const LOGO_DELAY = 0;
+const WELCOME_DELAY = 150;
+const FORM_DELAY = 300;
+const FIELD_STAGGER = 60;
+const FOOTER_DELAY = 650;
+const TRUST_DELAY = 850;
+
 export default function LoginScreen() {
   const navigation = useNavigation<Nav>();
   const setTokens = useAuthStore((s) => s.setTokens);
+  const settings = useSettingsStore((s) => s.settings);
   const theme = useTheme();
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const buttonScale = useRef(new Animated.Value(1)).current;
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(30)).current;
+  const [appleLoading, setAppleLoading] = useState(false);
 
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
-      Animated.timing(slideAnim, { toValue: 0, duration: 600, useNativeDriver: true }),
-    ]).start();
-  }, []);
+  // Press scale shared values
+  const loginBtnScale = useSharedValue(1);
+  const googleBtnScale = useSharedValue(1);
+  const appleBtnScale = useSharedValue(1);
 
   const {
     control,
@@ -71,10 +96,10 @@ export default function LoginScreen() {
 
   async function onSubmit(data: FormData) {
     setLoading(true);
-    Animated.sequence([
-      Animated.timing(buttonScale, { toValue: 0.97, duration: 80, useNativeDriver: true }),
-      Animated.timing(buttonScale, { toValue: 1, duration: 80, useNativeDriver: true }),
-    ]).start();
+    loginBtnScale.value = withSequence(
+      withTiming(0.95, { duration: 80 }),
+      withSpring(1, SPRING.snappy),
+    );
     try {
       const { data: res } = await apiClient.post<LoginResponse>('/auth/login', data);
       await setTokens(res.accessToken, res.refreshToken);
@@ -115,6 +140,74 @@ export default function LoginScreen() {
     }
   }
 
+  async function handleAppleLogin() {
+    if (!appleAuth || !appleAuth.isSupported) {
+      Alert.alert('Hata', 'Apple ile Giriş bu cihazda desteklenmiyor.');
+      return;
+    }
+    setAppleLoading(true);
+    try {
+      const appleAuthRequestResponse = await appleAuth.performRequest({
+        requestedOperation: appleAuth.Operation.LOGIN,
+        requestedScopes: [appleAuth.Scope.EMAIL, appleAuth.Scope.FULL_NAME],
+      });
+      
+      const { identityToken, email, fullName } = appleAuthRequestResponse;
+      if (!identityToken) throw new Error('Apple identity token alınamadı');
+      
+      const { data: res } = await apiClient.post<LoginResponse>('/auth/apple/identity-token', {
+        identityToken,
+        email,
+        firstName: fullName?.givenName,
+        lastName: fullName?.familyName,
+      });
+      await setTokens(res.accessToken, res.refreshToken);
+    } catch (err: any) {
+      if (err.code === appleAuth.Error.CANCELED) return;
+      const msg = err?.response?.data?.message || err?.message || 'Apple ile giriş başarısız';
+      Alert.alert('Hata', Array.isArray(msg) ? msg[0] : msg);
+    } finally {
+      setAppleLoading(false);
+    }
+  }
+
+  // Animated styles for button presses
+  const loginBtnAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: loginBtnScale.value }],
+  }));
+
+  const googleBtnAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: googleBtnScale.value }],
+  }));
+
+  const appleBtnAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: appleBtnScale.value }],
+  }));
+
+  const onLoginPressIn = useCallback(() => {
+    loginBtnScale.value = withTiming(0.96, { duration: 100 });
+  }, []);
+
+  const onLoginPressOut = useCallback(() => {
+    loginBtnScale.value = withSpring(1, SPRING.snappy);
+  }, []);
+
+  const onGooglePressIn = useCallback(() => {
+    googleBtnScale.value = withTiming(0.97, { duration: 100 });
+  }, []);
+
+  const onGooglePressOut = useCallback(() => {
+    googleBtnScale.value = withSpring(1, SPRING.snappy);
+  }, []);
+
+  const onApplePressIn = useCallback(() => {
+    appleBtnScale.value = withTiming(0.97, { duration: 100 });
+  }, []);
+
+  const onApplePressOut = useCallback(() => {
+    appleBtnScale.value = withSpring(1, SPRING.snappy);
+  }, []);
+
   const isDark = theme.isDark;
   const c = theme.colors;
 
@@ -130,142 +223,241 @@ export default function LoginScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <Animated.View style={[styles.content, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
-            {/* Logo Section */}
-            <View style={styles.logoSection}>
-              <LinearGradient
-                colors={isDark ? ['#16a34a', '#059669'] : ['#16a34a', '#15803d']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.logoGradient}
-              >
-                <Ionicons name="business-outline" size={26} color="#fff" />
-              </LinearGradient>
-              <Text style={[styles.brandName, { color: c.text }]}>
-                Net<Text style={{ color: c.primary }}>Tapu</Text>
-              </Text>
-              <Text style={[styles.tagline, { color: c.textMuted }]}>
-                Arsa & Açık Artırma Platformu
-              </Text>
-            </View>
+          <View style={styles.content}>
+            {/* Logo Section — bouncy spring entrance */}
+            <Animated.View
+              entering={FadeInDown.delay(LOGO_DELAY)
+                .duration(500)
+                .springify()
+                .damping(SPRING.bouncy.damping)
+                .stiffness(SPRING.bouncy.stiffness)
+                .mass(SPRING.bouncy.mass)}
+              style={styles.logoSection}
+            >
+              {settings?.site_logo ? (
+                <Animated.Image 
+                  source={{ uri: settings.site_logo }} 
+                  style={{ width: 140, height: 60, resizeMode: 'contain', marginBottom: 10 }}
+                />
+              ) : (
+                <>
+                  <LinearGradient
+                    colors={isDark ? [c.primaryLight, c.primary] : [c.primary, c.primaryDark]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.logoGradient}
+                  >
+                    <Ionicons name="business-outline" size={26} color="#fff" />
+                  </LinearGradient>
+                  <Text style={[styles.brandName, { color: c.text }]}>
+                    {settings?.site_title ? settings.site_title : <>Net<Text style={{ color: c.primary }}>Tapu</Text></>}
+                  </Text>
+                  <Text style={[styles.tagline, { color: c.textMuted }]}>
+                    Arsa & Açık Artırma Platformu
+                  </Text>
+                </>
+              )}
+            </Animated.View>
 
-            {/* Welcome Text */}
-            <View style={styles.welcomeSection}>
+            {/* Welcome Text — fade in after logo */}
+            <Animated.View
+              entering={FadeInDown.delay(WELCOME_DELAY)
+                .duration(400)
+                .easing(TIMING.entrance.easing)}
+              style={styles.welcomeSection}
+            >
               <Text style={[styles.welcomeTitle, { color: c.text }]}>
                 Tekrar hoş geldiniz
               </Text>
               <Text style={[styles.welcomeDesc, { color: c.textSecondary }]}>
                 Hesabınıza giriş yaparak devam edin
               </Text>
-            </View>
+            </Animated.View>
 
-            {/* Form Container */}
-            <View style={[styles.formContainer, {
-              backgroundColor: isDark ? c.card : '#ffffff',
-              borderColor: isDark ? c.border : '#e8ebe9',
-            }]}>
-              {/* Google Button */}
-              <TouchableOpacity
-                style={[styles.googleBtn, {
-                  backgroundColor: isDark ? c.surface : '#ffffff',
-                  borderColor: isDark ? c.border : '#e2e5e3',
-                }]}
-                onPress={handleGoogleLogin}
-                activeOpacity={0.7}
-                disabled={googleLoading}
+            {/* Form Container — slides up with smooth spring */}
+            <Animated.View
+              entering={SlideInDown.delay(FORM_DELAY)
+                .duration(500)
+                .springify()
+                .damping(SPRING.smooth.damping)
+                .stiffness(SPRING.smooth.stiffness)
+                .mass(SPRING.smooth.mass)}
+              style={[styles.formContainer, {
+                backgroundColor: isDark ? c.card : '#ffffff',
+                borderColor: isDark ? c.border : '#e8ebe9',
+              }]}
+            >
+              {/* Social Buttons */}
+              <Animated.View
+                entering={FadeInDown.delay(FORM_DELAY + FIELD_STAGGER * 0)
+                  .duration(350)
+                  .easing(TIMING.entrance.easing)}
+                style={{ flexDirection: 'row', gap: 12, marginBottom: 20 }}
               >
-                {googleLoading ? (
-                  <ActivityIndicator size="small" color={c.textSecondary} />
-                ) : (
-                  <>
-                    <View style={styles.googleIconContainer}>
-                      <Ionicons name="logo-google" size={18} color="#4285F4" />
-                    </View>
-                    <Text style={[styles.googleLabel, { color: c.text }]}>Google ile devam et</Text>
-                  </>
-                )}
-              </TouchableOpacity>
-
-              {/* Separator */}
-              <View style={styles.separator}>
-                <View style={[styles.separatorLine, { backgroundColor: isDark ? c.border : '#edf0ee' }]} />
-                <View style={[styles.separatorPill, { backgroundColor: isDark ? c.card : '#ffffff' }]}>
-                  <Text style={[styles.separatorText, { color: c.textMuted }]}>veya</Text>
-                </View>
-                <View style={[styles.separatorLine, { backgroundColor: isDark ? c.border : '#edf0ee' }]} />
-              </View>
-
-              {/* Email Field */}
-              <Controller
-                control={control}
-                name="email"
-                render={({ field: { onChange, value } }) => (
-                  <Input
-                    label="E-posta Adresi"
-                    placeholder="ornek@email.com"
-                    leftIcon="mail-outline"
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    value={value}
-                    onChangeText={onChange}
-                    error={errors.email?.message}
-                  />
-                )}
-              />
-
-              {/* Password Field */}
-              <Controller
-                control={control}
-                name="password"
-                render={({ field: { onChange, value } }) => (
-                  <Input
-                    label="Şifre"
-                    placeholder="Şifrenizi girin"
-                    leftIcon="lock-closed-outline"
-                    isPassword
-                    value={value}
-                    onChangeText={onChange}
-                    error={errors.password?.message}
-                  />
-                )}
-              />
-
-              {/* Forgot Password */}
-              <TouchableOpacity
-                onPress={() => navigation.navigate('ForgotPassword')}
-                style={styles.forgotBtn}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <Text style={[styles.forgotText, { color: c.primary }]}>Şifremi unuttum</Text>
-              </TouchableOpacity>
-
-              {/* Login Button */}
-              <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
-                <TouchableOpacity
-                  onPress={handleSubmit(onSubmit)}
-                  activeOpacity={0.85}
-                  disabled={loading}
-                  style={{ borderRadius: 14, overflow: 'hidden' }}
-                >
-                  <LinearGradient
-                    colors={loading ? ['#86efac', '#86efac'] : ['#16a34a', '#15803d']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={styles.loginBtn}
+                {/* Google Button */}
+                <Animated.View style={[googleBtnAnimStyle, { flex: 1 }]}>
+                  <TouchableOpacity
+                    style={[styles.socialBtn, {
+                      backgroundColor: isDark ? c.surface : '#ffffff',
+                      borderColor: isDark ? c.border : '#e2e5e3',
+                    }]}
+                    onPress={handleGoogleLogin}
+                    onPressIn={onGooglePressIn}
+                    onPressOut={onGooglePressOut}
+                    activeOpacity={0.9}
+                    disabled={googleLoading}
                   >
-                    {loading ? (
-                      <ActivityIndicator size="small" color="#fff" />
+                    {googleLoading ? (
+                      <ActivityIndicator size="small" color={c.textSecondary} />
                     ) : (
-                      <Text style={styles.loginBtnText}>Giriş Yap</Text>
+                      <>
+                        <Ionicons name="logo-google" size={18} color="#4285F4" style={{ marginRight: 8 }} />
+                        <Text style={[styles.socialLabel, { color: c.text }]}>Google</Text>
+                      </>
                     )}
-                  </LinearGradient>
+                  </TouchableOpacity>
+                </Animated.View>
+                
+                {/* Apple Button */}
+                {(Platform.OS === 'ios' || appleAuth?.isSupported) && (
+                  <Animated.View style={[appleBtnAnimStyle, { flex: 1 }]}>
+                    <TouchableOpacity
+                      style={[styles.socialBtn, {
+                        backgroundColor: isDark ? c.text : c.text,
+                        borderColor: isDark ? c.border : c.text,
+                      }]}
+                      onPress={handleAppleLogin}
+                      onPressIn={onApplePressIn}
+                      onPressOut={onApplePressOut}
+                      activeOpacity={0.9}
+                      disabled={appleLoading}
+                    >
+                      {appleLoading ? (
+                        <ActivityIndicator size="small" color={c.surface} />
+                      ) : (
+                        <>
+                          <Ionicons name="logo-apple" size={18} color={c.surface} style={{ marginRight: 8 }} />
+                          <Text style={[styles.socialLabel, { color: c.surface }]}>Apple</Text>
+                        </>
+                      )}
+                    </TouchableOpacity>
+                  </Animated.View>
+                )}
+              </Animated.View>
+
+              {/* Separator — stagger index 1 */}
+              <Animated.View
+                entering={FadeIn.delay(FORM_DELAY + FIELD_STAGGER * 1).duration(300)}
+              >
+                <View style={styles.separator}>
+                  <View style={[styles.separatorLine, { backgroundColor: isDark ? c.border : '#edf0ee' }]} />
+                  <View style={[styles.separatorPill, { backgroundColor: isDark ? c.card : '#ffffff' }]}>
+                    <Text style={[styles.separatorText, { color: c.textMuted }]}>veya</Text>
+                  </View>
+                  <View style={[styles.separatorLine, { backgroundColor: isDark ? c.border : '#edf0ee' }]} />
+                </View>
+              </Animated.View>
+
+              {/* Email Field — stagger index 2 */}
+              <Animated.View
+                entering={FadeInDown.delay(FORM_DELAY + FIELD_STAGGER * 2)
+                  .duration(350)
+                  .easing(TIMING.entrance.easing)}
+              >
+                <Controller
+                  control={control}
+                  name="email"
+                  render={({ field: { onChange, value } }) => (
+                    <Input
+                      label="E-posta Adresi"
+                      placeholder="ornek@email.com"
+                      leftIcon="mail-outline"
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      value={value}
+                      onChangeText={onChange}
+                      error={errors.email?.message}
+                    />
+                  )}
+                />
+              </Animated.View>
+
+              {/* Password Field — stagger index 3 */}
+              <Animated.View
+                entering={FadeInDown.delay(FORM_DELAY + FIELD_STAGGER * 3)
+                  .duration(350)
+                  .easing(TIMING.entrance.easing)}
+              >
+                <Controller
+                  control={control}
+                  name="password"
+                  render={({ field: { onChange, value } }) => (
+                    <Input
+                      label="Şifre"
+                      placeholder="Şifrenizi girin"
+                      leftIcon="lock-closed-outline"
+                      isPassword
+                      value={value}
+                      onChangeText={onChange}
+                      error={errors.password?.message}
+                    />
+                  )}
+                />
+              </Animated.View>
+
+              {/* Forgot Password — stagger index 4 */}
+              <Animated.View
+                entering={FadeIn.delay(FORM_DELAY + FIELD_STAGGER * 4).duration(300)}
+              >
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('ForgotPassword')}
+                  style={styles.forgotBtn}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Text style={[styles.forgotText, { color: c.primary }]}>Şifremi unuttum</Text>
                 </TouchableOpacity>
               </Animated.View>
-            </View>
 
-            {/* Footer */}
-            <View style={styles.footer}>
+              {/* Login Button — stagger index 5, with press scale */}
+              <Animated.View
+                entering={FadeInDown.delay(FORM_DELAY + FIELD_STAGGER * 5)
+                  .duration(400)
+                  .easing(TIMING.entrance.easing)}
+              >
+                <Animated.View style={loginBtnAnimStyle}>
+                  <TouchableOpacity
+                    onPress={handleSubmit(onSubmit)}
+                    onPressIn={onLoginPressIn}
+                    onPressOut={onLoginPressOut}
+                    activeOpacity={0.9}
+                    disabled={loading}
+                    style={{ borderRadius: 14, overflow: 'hidden' }}
+                  >
+                    <LinearGradient
+                      colors={loading ? [c.primaryLight, c.primaryLight] : [c.primary, c.primaryDark]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={styles.loginBtn}
+                    >
+                      {loading ? (
+                        <ActivityIndicator size="small" color="#fff" />
+                      ) : (
+                        <Text style={styles.loginBtnText}>Giriş Yap</Text>
+                      )}
+                    </LinearGradient>
+                  </TouchableOpacity>
+                </Animated.View>
+              </Animated.View>
+            </Animated.View>
+
+            {/* Footer — fade in after form */}
+            <Animated.View
+              entering={FadeInDown.delay(FOOTER_DELAY)
+                .duration(400)
+                .easing(TIMING.entrance.easing)}
+              style={styles.footer}
+            >
               <Text style={[styles.footerText, { color: c.textMuted }]}>
                 Henüz hesabınız yok mu?
               </Text>
@@ -275,10 +467,13 @@ export default function LoginScreen() {
               >
                 <Text style={[styles.footerLink, { color: c.primary }]}> Üye Ol</Text>
               </TouchableOpacity>
-            </View>
+            </Animated.View>
 
-            {/* Trust Badges */}
-            <View style={styles.trustRow}>
+            {/* Trust Badges — fade in last */}
+            <Animated.View
+              entering={FadeIn.delay(TRUST_DELAY).duration(500)}
+              style={styles.trustRow}
+            >
               {[
                 { icon: 'shield-checkmark-outline', label: 'SSL Güvenli' },
                 { icon: 'lock-closed-outline', label: 'KVKK Uyumlu' },
@@ -289,8 +484,8 @@ export default function LoginScreen() {
                   <Text style={[styles.trustLabel, { color: c.textMuted }]}>{item.label}</Text>
                 </View>
               ))}
-            </View>
-          </Animated.View>
+            </Animated.View>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -370,26 +565,17 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
 
-  // Google
-  googleBtn: {
+  // Social Buttons
+  socialBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    height: 50,
+    height: 48,
     borderRadius: 12,
     borderWidth: 1.5,
-    marginBottom: 20,
   },
-  googleIconContainer: {
-    width: 22,
-    height: 22,
-    borderRadius: 4,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 10,
-  },
-  googleLabel: {
-    fontSize: 15,
+  socialLabel: {
+    fontSize: 14,
     fontWeight: '600',
   },
 

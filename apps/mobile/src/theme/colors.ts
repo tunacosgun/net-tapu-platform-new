@@ -6,11 +6,11 @@
  */
 export const Colors = {
   light: {
-    primary: '#166534',
-    primaryDark: '#14532d',
-    primaryLight: '#16a34a',
-    primaryBg: '#f0fdf4',
-    primaryMuted: '#bbf7d0',
+    primary: '#7B8C3A',
+    primaryDark: '#62702E',
+    primaryLight: '#9BB04A',
+    primaryBg: '#f4f6ee',
+    primaryMuted: '#d9e0c1',
     accent: '#b45309',
     accentBg: '#fefce8',
     accentLight: '#fbbf24',
@@ -44,11 +44,11 @@ export const Colors = {
     statusLive: '#dc2626',
   },
   dark: {
-    primary: '#4ade80',
-    primaryDark: '#22c55e',
-    primaryLight: '#86efac',
-    primaryBg: 'rgba(74,222,128,0.08)',
-    primaryMuted: 'rgba(74,222,128,0.15)',
+    primary: '#9BB04A',
+    primaryDark: '#7B8C3A',
+    primaryLight: '#B8C96C',
+    primaryBg: 'rgba(155,176,74,0.08)',
+    primaryMuted: 'rgba(155,176,74,0.15)',
     accent: '#fbbf24',
     accentBg: 'rgba(251,191,36,0.08)',
     accentLight: '#fbbf24',

@@ -1,21 +1,40 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, FlatList,
-  Dimensions, Share, Alert, Linking, Platform, Animated, NativeScrollEvent,
-  NativeSyntheticEvent,
+  Dimensions, Share, Alert, Linking, Platform,
+  NativeScrollEvent, NativeSyntheticEvent,
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { BlurView } from '@react-native-community/blur';
+import LinearGradient from 'react-native-linear-gradient';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+  withDelay,
+  interpolate,
+  Extrapolation,
+  FadeInRight,
+  FadeIn,
+  SlideInDown,
+  runOnJS,
+} from 'react-native-reanimated';
 import apiClient from '../../api/client';
 import { useTheme } from '../../theme';
 import { formatPrice, formatArea, resolveImageUrl, formatDate } from '../../lib/format';
-import { StatusBadge, Skeleton } from '../../components/ui';
+import { StatusBadge } from '../../components/ui';
+import { ShimmerPlaceholder } from '../../components/ui';
+import { SPRING, TIMING } from '../../lib/animations';
 import type { RootStackParamList } from '../../navigation/RootNavigator';
 import type { Parcel, ParcelImage } from '../../types';
 
 const { width } = Dimensions.get('window');
+
+const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
 interface ConsultantInfo {
   firstName?: string;
@@ -24,18 +43,43 @@ interface ConsultantInfo {
   phone?: string;
 }
 
+function usePressScale() {
+  const scale = useSharedValue(1);
+  const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  const onPressIn = useCallback(() => {
+    'worklet';
+    scale.value = withSpring(0.9, SPRING.snappy);
+  }, [scale]);
+  const onPressOut = useCallback(() => {
+    'worklet';
+    scale.value = withSpring(1, SPRING.snappy);
+  }, [scale]);
+  return { animStyle, onPressIn, onPressOut };
+}
+
 export default function ParcelDetailScreen() {
   const route = useRoute<RouteProp<RootStackParamList, 'ParcelDetail'>>();
   const navigation = useNavigation();
-  const { colors: c, isDark, shadows, borderRadius: br, spacing: sp } = useTheme();
+  const insets = useSafeAreaInsets();
+  const { colors: c, isDark, shadows, borderRadius: br, spacing: sp, typography: typo } = useTheme();
   const [parcel, setParcel] = useState<Parcel | null>(null);
   const [images, setImages] = useState<ParcelImage[]>([]);
   const [isFavorite, setIsFavorite] = useState(false);
   const [imageIndex, setImageIndex] = useState(0);
   const [showStickyPrice, setShowStickyPrice] = useState(false);
   const [consultant, setConsultant] = useState<ConsultantInfo | null>(null);
-  const stickyAnim = useRef(new Animated.Value(0)).current;
   const priceSectionY = useRef(0);
+
+  // Reanimated shared values
+  const stickyProgress = useSharedValue(0);
+  const galleryScrollX = useSharedValue(0);
+  const priceScale = useSharedValue(0);
+  const heartScale = useSharedValue(1);
+
+  // Press scale hooks for buttons
+  const backBtn = usePressScale();
+  const shareBtn = usePressScale();
+  const favBtn = usePressScale();
 
   useEffect(() => {
     async function load() {
@@ -43,6 +87,8 @@ export default function ParcelDetailScreen() {
         const { data } = await apiClient.get<Parcel>(`/parcels/${route.params.id}`);
         setParcel(data);
         setImages(data.images || []);
+        // Animate price in
+        priceScale.value = withSpring(1, SPRING.bouncy);
         // Load consultant if assigned
         if (data.assignedConsultant) {
           try {
@@ -53,19 +99,34 @@ export default function ParcelDetailScreen() {
       } catch { navigation.goBack(); }
     }
     load();
-  }, [route.params.id, navigation]);
+  }, [route.params.id, navigation, priceScale]);
 
   useEffect(() => {
-    Animated.timing(stickyAnim, {
-      toValue: showStickyPrice ? 1 : 0,
-      duration: 200,
-      useNativeDriver: true,
-    }).start();
-  }, [showStickyPrice, stickyAnim]);
+    stickyProgress.value = withTiming(showStickyPrice ? 1 : 0, TIMING.fast);
+  }, [showStickyPrice, stickyProgress]);
+
+  const stickyBarStyle = useAnimatedStyle(() => ({
+    opacity: stickyProgress.value,
+    transform: [
+      { translateY: interpolate(stickyProgress.value, [0, 1], [-72, 0], Extrapolation.CLAMP) },
+    ],
+  }));
+
+  const priceAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: priceScale.value }],
+  }));
+
+  const heartAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: heartScale.value }],
+  }));
 
   const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const y = e.nativeEvent.contentOffset.y;
     setShowStickyPrice(y > priceSectionY.current + 60);
+  };
+
+  const handleGalleryScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    galleryScrollX.value = e.nativeEvent.contentOffset.x;
   };
 
   async function toggleFavorite() {
@@ -74,6 +135,10 @@ export default function ParcelDetailScreen() {
       if (isFavorite) { await apiClient.delete(`/favorites/${parcel.id}`); }
       else { await apiClient.post('/favorites', { parcelId: parcel.id }); }
       setIsFavorite(!isFavorite);
+      // Heart bounce
+      heartScale.value = withSpring(1.35, SPRING.bouncy, () => {
+        heartScale.value = withSpring(1, SPRING.snappy);
+      });
     } catch { /* silently fail */ }
   }
 
@@ -107,16 +172,66 @@ export default function ParcelDetailScreen() {
     Linking.openURL(`tel:${phone}`).catch(() => Alert.alert('Hata', 'Arama başlatılamadı.'));
   }
 
+  // Animated pagination dot component
+  function PaginationDot({ index }: { index: number }) {
+    const dotStyle = useAnimatedStyle(() => {
+      const scrollPos = galleryScrollX.value / width;
+      const dotWidth = interpolate(
+        scrollPos,
+        [index - 1, index, index + 1],
+        [6, 20, 6],
+        Extrapolation.CLAMP,
+      );
+      const opacity = interpolate(
+        scrollPos,
+        [index - 1, index, index + 1],
+        [0.4, 1, 0.4],
+        Extrapolation.CLAMP,
+      );
+      return { width: dotWidth, opacity };
+    });
+
+    return (
+      <Animated.View
+        style={[styles.galleryDot, { backgroundColor: '#fff' }, dotStyle]}
+      />
+    );
+  }
+
+  // Parallax image item
+  function ParallaxImage({ item, index: imgIndex }: { item: ParcelImage; index: number }) {
+    const parallaxStyle = useAnimatedStyle(() => {
+      const inputRange = [(imgIndex - 1) * width, imgIndex * width, (imgIndex + 1) * width];
+      const translateX = interpolate(
+        galleryScrollX.value,
+        inputRange,
+        [-30, 0, 30],
+        Extrapolation.CLAMP,
+      );
+      return { transform: [{ translateX }] };
+    });
+
+    return (
+      <View style={{ width, height: 380, overflow: 'hidden' }}>
+        <Animated.Image
+          source={{ uri: resolveImageUrl(item) }}
+          style={[{ width: width + 60, height: 380, marginLeft: -30 }, parallaxStyle]}
+          resizeMode="cover"
+        />
+      </View>
+    );
+  }
+
   if (!parcel) return (
     <View style={[styles.loading, { backgroundColor: c.background }]}>
       <View style={{ padding: 20 }}>
-        <Skeleton width={width} height={360} borderRadius={0} />
+        <ShimmerPlaceholder width={width} height={360} borderRadius={0} />
         <View style={{ marginTop: 20, gap: 10 }}>
-          <Skeleton width="60%" height={20} />
-          <Skeleton width="80%" height={16} />
-          <Skeleton width="40%" height={28} style={{ marginTop: 10 }} />
-          <Skeleton width="100%" height={120} borderRadius={16} style={{ marginTop: 16 }} />
-          <Skeleton width="100%" height={200} borderRadius={16} style={{ marginTop: 12 }} />
+          <ShimmerPlaceholder width={width * 0.6} height={20} />
+          <ShimmerPlaceholder width={width * 0.8} height={16} />
+          <ShimmerPlaceholder width={width * 0.4} height={28} style={{ marginTop: 10 }} />
+          <ShimmerPlaceholder width={width - 40} height={120} borderRadius={16} style={{ marginTop: 16 }} />
+          <ShimmerPlaceholder width={width - 40} height={200} borderRadius={16} style={{ marginTop: 12 }} />
         </View>
       </View>
     </View>
@@ -127,40 +242,74 @@ export default function ParcelDetailScreen() {
     { label: 'İlan Tarihi', value: parcel.listedAt ? formatDate(parcel.listedAt, 'date') : '\u2014', icon: 'calendar-outline' },
     { label: 'Emlak Tipi', value: parcel.landType || '\u2014', icon: 'layers-outline' },
     { label: 'İmar Durumu', value: parcel.zoningStatus || '\u2014', icon: 'construct-outline' },
-    { label: 'Alan (m²)', value: formatArea(parcel.areaM2), icon: 'resize-outline' },
+    { label: 'Alan (m\u00B2)', value: formatArea(parcel.areaM2), icon: 'resize-outline' },
     { label: 'Ada', value: parcel.ada || '\u2014', icon: 'grid-outline' },
     { label: 'Parsel', value: parcel.parsel || '\u2014', icon: 'grid-outline' },
   ];
 
+  const canvas = isDark ? c.background : c.skeleton;
+  const galleryTop = Math.max(insets.top, 12) + 6;
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: c.background }} edges={['bottom']}>
-      {/* Sticky Price Bar */}
-      <Animated.View style={[styles.stickyBar, {
-        backgroundColor: c.card,
-        borderBottomColor: c.border,
-        opacity: stickyAnim,
-        transform: [{ translateY: stickyAnim.interpolate({ inputRange: [0, 1], outputRange: [-60, 0] }) }],
-      }, shadows.sm]}>
-        <SafeAreaView edges={['top']} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: sp.screenPadding, paddingVertical: 10 }}>
-          <View>
-            <Text style={{ fontSize: 12, color: c.textMuted, fontWeight: '500' }}>{parcel.title}</Text>
-            <Text style={{ fontSize: 20, fontWeight: '800', color: c.primary, letterSpacing: -0.4 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: canvas }} edges={['bottom']}>
+      {/* Sticky price bar */}
+      <Animated.View
+        style={[
+          styles.stickyBar,
+          stickyBarStyle,
+          {
+            borderBottomWidth: StyleSheet.hairlineWidth,
+            borderBottomColor: c.borderLight,
+            overflow: 'hidden',
+          },
+          Platform.OS === 'ios' ? shadows.md : { elevation: 6 },
+        ]}
+      >
+        {Platform.OS === 'ios' ? (
+          <BlurView
+            style={StyleSheet.absoluteFill}
+            blurType={isDark ? 'chromeMaterialDark' : 'chromeMaterial'}
+            blurAmount={48}
+            reducedTransparencyFallbackColor={isDark ? 'rgba(22,32,48,0.96)' : 'rgba(255,255,255,0.96)'}
+          />
+        ) : (
+          <View style={[StyleSheet.absoluteFill, { backgroundColor: isDark ? 'rgba(26,39,64,0.98)' : 'rgba(255,255,255,0.98)' }]} />
+        )}
+        <SafeAreaView
+          edges={['top']}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            paddingHorizontal: sp.screenPadding,
+            paddingVertical: 12,
+          }}
+        >
+          <View style={{ flex: 1, marginRight: 12 }}>
+            <Text style={[typo.captionMedium, { color: c.textMuted }]} numberOfLines={1}>{parcel.title}</Text>
+            <Text style={[typo.price, { color: c.primary, marginTop: 2, fontSize: 21 }]}>
               {formatPrice(parcel.price)}
             </Text>
           </View>
           <TouchableOpacity
             onPress={() => Alert.alert('Teklif', 'Teklif formu yakında aktif olacak.')}
-            style={{ backgroundColor: c.primary, paddingHorizontal: 20, paddingVertical: 10, borderRadius: br.sm }}
-            activeOpacity={0.85}
+            style={{
+              backgroundColor: c.primary,
+              paddingHorizontal: 18,
+              paddingVertical: 12,
+              borderRadius: Platform.select({ ios: br.xl, default: br.md }),
+              ...(Platform.OS === 'android' ? { elevation: 2 } : {}),
+            }}
+            activeOpacity={0.88}
           >
-            <Text style={{ color: c.textInverse, fontWeight: '700', fontSize: 14 }}>Teklif Ver</Text>
+            <Text style={[typo.captionMedium, { color: c.textInverse, fontWeight: '700' }]}>Teklif Ver</Text>
           </TouchableOpacity>
         </SafeAreaView>
       </Animated.View>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        bounces={false}
+        bounces={Platform.OS === 'ios'}
         onScroll={handleScroll}
         scrollEventThrottle={16}
       >
@@ -169,9 +318,11 @@ export default function ParcelDetailScreen() {
           <FlatList
             data={images}
             horizontal pagingEnabled showsHorizontalScrollIndicator={false}
+            onScroll={handleGalleryScroll}
+            scrollEventThrottle={16}
             onMomentumScrollEnd={(e) => setImageIndex(Math.round(e.nativeEvent.contentOffset.x / width))}
-            renderItem={({ item }) => (
-              <Image source={{ uri: resolveImageUrl(item) }} style={{ width, height: 380 }} resizeMode="cover" />
+            renderItem={({ item, index: idx }) => (
+              <ParallaxImage item={item} index={idx} />
             )}
             keyExtractor={(item) => item.id}
             ListEmptyComponent={
@@ -181,21 +332,20 @@ export default function ParcelDetailScreen() {
             }
           />
 
-          {/* Top gradient */}
-          <View style={[styles.topGradient, { backgroundColor: 'rgba(0,0,0,0.25)' }]} />
+          <LinearGradient
+            colors={['rgba(0,0,0,0.45)', 'transparent']}
+            style={styles.topGradient}
+          />
+          <LinearGradient
+            colors={['transparent', 'rgba(0,0,0,0.55)']}
+            style={styles.bottomGradient}
+          />
 
-          {/* Dot pagination */}
+          {/* Animated dot pagination */}
           {images.length > 1 && (
             <View style={styles.dotsRow}>
               {images.map((_, i) => (
-                <View
-                  key={i}
-                  style={[
-                    styles.galleryDot,
-                    { backgroundColor: i === imageIndex ? '#fff' : 'rgba(255,255,255,0.4)' },
-                    i === imageIndex && { width: 20 },
-                  ]}
-                />
+                <PaginationDot key={i} index={i} />
               ))}
             </View>
           )}
@@ -208,156 +358,258 @@ export default function ParcelDetailScreen() {
             </View>
           )}
 
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <Ionicons name="chevron-back" size={22} color="#fff" />
-          </TouchableOpacity>
-          <View style={styles.topActions}>
-            <TouchableOpacity onPress={handleShare} style={styles.topActionBtn}>
-              <Ionicons name="share-outline" size={18} color="#fff" />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={toggleFavorite} style={[styles.topActionBtn, isFavorite && { backgroundColor: 'rgba(220,38,38,0.6)' }]}>
-              <Ionicons name={isFavorite ? 'heart' : 'heart-outline'} size={18} color="#fff" />
-            </TouchableOpacity>
+          {/* Back button with press scale */}
+          <AnimatedTouchable
+            onPress={() => navigation.goBack()}
+            onPressIn={backBtn.onPressIn}
+            onPressOut={backBtn.onPressOut}
+            style={[
+              styles.galleryRoundBtn,
+              { top: galleryTop, left: 16 },
+              Platform.OS === 'android' && { backgroundColor: 'rgba(0,0,0,0.42)' },
+              backBtn.animStyle,
+            ]}
+            activeOpacity={0.85}
+          >
+            {Platform.OS === 'ios' ? (
+              <BlurView
+                style={StyleSheet.absoluteFill}
+                blurType={isDark ? 'dark' : 'light'}
+                blurAmount={28}
+                reducedTransparencyFallbackColor="rgba(0,0,0,0.4)"
+              />
+            ) : null}
+            <Ionicons name="chevron-back" size={22} color="#fff" style={styles.galleryRoundBtnIcon} />
+          </AnimatedTouchable>
+
+          <View style={[styles.topActions, { top: galleryTop }]}>
+            {/* Share button with press scale */}
+            <AnimatedTouchable
+              onPress={handleShare}
+              onPressIn={shareBtn.onPressIn}
+              onPressOut={shareBtn.onPressOut}
+              style={[
+                styles.topActionBtn,
+                Platform.OS === 'android' && { backgroundColor: 'rgba(0,0,0,0.42)' },
+                shareBtn.animStyle,
+              ]}
+              activeOpacity={0.85}
+            >
+              {Platform.OS === 'ios' ? (
+                <BlurView
+                  style={StyleSheet.absoluteFill}
+                  blurType={isDark ? 'dark' : 'light'}
+                  blurAmount={28}
+                  reducedTransparencyFallbackColor="rgba(0,0,0,0.4)"
+                />
+              ) : null}
+              <Ionicons name="share-outline" size={18} color="#fff" style={styles.galleryRoundBtnIcon} />
+            </AnimatedTouchable>
+
+            {/* Favorite button with press scale + heart bounce */}
+            <AnimatedTouchable
+              onPress={toggleFavorite}
+              onPressIn={favBtn.onPressIn}
+              onPressOut={favBtn.onPressOut}
+              style={[
+                styles.topActionBtn,
+                isFavorite && { backgroundColor: 'rgba(220,38,38,0.72)' },
+                Platform.OS === 'android' && !isFavorite && { backgroundColor: 'rgba(0,0,0,0.42)' },
+                favBtn.animStyle,
+              ]}
+              activeOpacity={0.85}
+            >
+              {Platform.OS === 'ios' && !isFavorite ? (
+                <BlurView
+                  style={StyleSheet.absoluteFill}
+                  blurType={isDark ? 'dark' : 'light'}
+                  blurAmount={28}
+                  reducedTransparencyFallbackColor="rgba(0,0,0,0.4)"
+                />
+              ) : null}
+              <Animated.View style={heartAnimStyle}>
+                <Ionicons name={isFavorite ? 'heart' : 'heart-outline'} size={18} color="#fff" style={styles.galleryRoundBtnIcon} />
+              </Animated.View>
+            </AnimatedTouchable>
           </View>
         </View>
 
-        <View style={styles.content}>
-          <StatusBadge status={parcel.status} />
-          <Text style={[styles.title, { color: c.text }]}>{parcel.title}</Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4, marginBottom: 20 }}>
-            <Ionicons name="location-outline" size={14} color={c.textMuted} />
-            <Text style={{ fontSize: 14, color: c.textMuted }}>
-              {parcel.city}, {parcel.district}{parcel.neighborhood ? `, ${parcel.neighborhood}` : ''}
-            </Text>
-          </View>
-
-          {/* Price Section */}
+        <View style={[styles.contentSheet, { backgroundColor: canvas }]}>
           <View
-            onLayout={(e) => { priceSectionY.current = e.nativeEvent.layout.y; }}
-            style={[styles.priceSection, {
-              backgroundColor: isDark ? c.primaryBg : c.primaryBg,
-              borderColor: isDark ? c.borderLight : c.primaryMuted,
-            }]}
+            style={[
+              styles.sheetInner,
+              {
+                backgroundColor: c.card,
+                borderTopLeftRadius: 22,
+                borderTopRightRadius: 22,
+                ...shadows.md,
+              },
+            ]}
           >
-            <View>
-              <Text style={{ fontSize: 11, fontWeight: '600', letterSpacing: 0.5, marginBottom: 4, color: c.textMuted }}>FİYAT</Text>
-              <Text style={{ fontSize: 30, fontWeight: '800', letterSpacing: -0.5, color: c.primary }}>{formatPrice(parcel.price)}</Text>
+            <View style={{ paddingHorizontal: sp.screenPadding, paddingTop: 18, paddingBottom: 6 }}>
+              <StatusBadge status={parcel.status} />
             </View>
-            {parcel.pricePerM2 && (
-              <View>
-                <Text style={{ fontSize: 11, fontWeight: '600', letterSpacing: 0.5, marginBottom: 4, color: c.textMuted }}>m² BİRİM</Text>
-                <Text style={{ fontSize: 18, fontWeight: '700', letterSpacing: -0.3, color: c.text }}>{formatPrice(parcel.pricePerM2)}</Text>
-              </View>
-            )}
-          </View>
 
-          {/* Info Table (sahibinden style) */}
-          <View style={[styles.detailsCard, { backgroundColor: c.card, borderColor: isDark ? c.borderLight : c.border }, shadows.sm]}>
-            <Text style={[styles.sectionTitle, { color: c.text }]}>İlan Bilgileri</Text>
-            {infoRows.map((row, i, arr) => (
-              <View key={row.label} style={[
-                styles.detailRow,
-                { backgroundColor: i % 2 === 0 ? (isDark ? 'rgba(255,255,255,0.02)' : '#fafbfc') : 'transparent' },
-                i < arr.length - 1 && { borderBottomWidth: 1, borderBottomColor: isDark ? c.borderLight : '#f1f5f9' },
-              ]}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <Ionicons name={row.icon as any} size={15} color={c.textMuted} />
-                  <Text style={{ fontSize: 14, color: c.textSecondary }}>{row.label}</Text>
-                </View>
-                <Text style={{ fontSize: 14, fontWeight: '700', color: c.text }}>{row.value}</Text>
+            {/* Price section with scale spring */}
+            <Animated.View
+              onLayout={(e) => { priceSectionY.current = e.nativeEvent.layout.y; }}
+              style={[
+                priceAnimStyle,
+                {
+                  paddingHorizontal: sp.screenPadding,
+                  paddingBottom: 20,
+                  borderBottomWidth: StyleSheet.hairlineWidth,
+                  borderBottomColor: c.borderLight,
+                },
+              ]}
+            >
+              <Text style={[typo.priceLarge, { color: c.primary }]}>
+                {formatPrice(parcel.price)}
+              </Text>
+              <Text style={[typo.h3, { color: c.text, marginTop: 8, lineHeight: 24 }]}>
+                {parcel.title}
+              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10 }}>
+                <Ionicons name="location-outline" size={16} color={c.primary} />
+                <Text style={[typo.bodySmall, { color: c.textSecondary, fontWeight: '500' }]}>
+                  {parcel.city}, {parcel.district}{parcel.neighborhood ? `, ${parcel.neighborhood}` : ''}
+                </Text>
               </View>
-            ))}
-          </View>
+            </Animated.View>
 
-          {/* Consultant Card */}
-          {consultant && (
-            <View style={[styles.consultantCard, { backgroundColor: c.card, borderColor: isDark ? c.borderLight : c.border }, shadows.sm]}>
-              <Text style={[styles.sectionTitle, { color: c.text }]}>Danışman</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-                <View style={{
-                  width: 50, height: 50, borderRadius: 16,
-                  backgroundColor: isDark ? c.surface : c.primaryBg,
-                  alignItems: 'center', justifyContent: 'center',
-                }}>
-                  <Text style={{ fontSize: 20, fontWeight: '700', color: c.primary }}>
-                    {(consultant.firstName || '?')[0].toUpperCase()}
-                  </Text>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 16, fontWeight: '700', color: c.text }}>
-                    {consultant.firstName} {consultant.lastName}
-                  </Text>
-                  {consultant.email && (
-                    <Text style={{ fontSize: 13, color: c.textMuted, marginTop: 2 }}>{consultant.email}</Text>
-                  )}
-                </View>
-              </View>
-              <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
-                <TouchableOpacity
-                  onPress={handleCall}
-                  style={[styles.consultantBtn, { backgroundColor: c.primary }]}
-                  activeOpacity={0.85}
+            {/* Info rows with staggered FadeInRight */}
+            <View style={{ paddingVertical: 6 }}>
+              <Text style={[typo.overline, { color: c.textMuted, paddingHorizontal: sp.screenPadding, marginBottom: 6, marginTop: 8 }]}>
+                İlan bilgileri
+              </Text>
+              {infoRows.map((row, i, arr) => (
+                <Animated.View
+                  key={row.label}
+                  entering={FadeInRight.delay(i * 40).springify().damping(18).stiffness(200)}
+                  style={[
+                    styles.detailRowPro,
+                    i < arr.length - 1 && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: c.borderLight },
+                  ]}
                 >
-                  <Ionicons name="call-outline" size={16} color="#fff" />
-                  <Text style={{ color: '#fff', fontWeight: '600', fontSize: 13 }}>Ara</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={handleWhatsApp}
-                  style={[styles.consultantBtn, { backgroundColor: '#25d366' }]}
-                  activeOpacity={0.85}
-                >
-                  <Ionicons name="logo-whatsapp" size={16} color="#fff" />
-                  <Text style={{ color: '#fff', fontWeight: '600', fontSize: 13 }}>WhatsApp</Text>
-                </TouchableOpacity>
+                  <View style={[styles.detailRowLeft, { backgroundColor: isDark ? c.elevated : c.primaryBg }]}>
+                    <Ionicons name={row.icon as React.ComponentProps<typeof Ionicons>['name']} size={17} color={c.primary} />
+                  </View>
+                  <View style={{ flex: 1, marginLeft: 12 }}>
+                    <Text style={[typo.caption, { color: c.textMuted }]}>{row.label}</Text>
+                    <Text style={[typo.bodySmall, { color: c.text, fontWeight: '600', marginTop: 2 }]}>{row.value}</Text>
+                  </View>
+                </Animated.View>
+              ))}
+            </View>
+
+            {parcel.description ? (
+              <View
+                style={{
+                  paddingHorizontal: sp.screenPadding,
+                  paddingVertical: 18,
+                  borderTopWidth: StyleSheet.hairlineWidth,
+                  borderTopColor: c.borderLight,
+                }}
+              >
+                <Text style={[typo.overline, { color: c.textMuted, marginBottom: 10 }]}>Açıklama</Text>
+                <Text style={[typo.body, { color: c.textSecondary }]}>{parcel.description}</Text>
               </View>
-            </View>
-          )}
+            ) : null}
 
-          {/* Description */}
-          {parcel.description && (
-            <View style={[styles.detailsCard, { backgroundColor: c.card, borderColor: isDark ? c.borderLight : c.border }, shadows.sm]}>
-              <Text style={[styles.sectionTitle, { color: c.text }]}>Açıklama</Text>
-              <Text style={{ fontSize: 15, lineHeight: 24, color: c.textSecondary }}>{parcel.description}</Text>
-            </View>
-          )}
-
-          {/* CTA Buttons */}
-          <View style={{ marginTop: 8, gap: 10, paddingBottom: 40 }}>
-            <TouchableOpacity
-              onPress={() => Alert.alert('Teklif', 'Teklif formu yakında aktif olacak.')}
-              style={[styles.ctaBtn, { backgroundColor: c.primary }]}
-              activeOpacity={0.85}
-            >
-              <Ionicons name="pricetag-outline" size={18} color="#fff" />
-              <Text style={styles.ctaBtnText}>Teklif Ver</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={handleCall}
-              style={[styles.ctaBtn, { backgroundColor: isDark ? c.surface : c.card, borderWidth: 1, borderColor: c.border }]}
-              activeOpacity={0.85}
-            >
-              <Ionicons name="call-outline" size={18} color={c.primary} />
-              <Text style={[styles.ctaBtnText, { color: c.text }]}>Sizi Arayalım</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={handleWhatsApp}
-              style={[styles.whatsappBtn, { borderColor: isDark ? c.borderLight : '#dcfce7', backgroundColor: isDark ? c.surface : c.primaryBg }]}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="logo-whatsapp" size={18} color="#25d366" />
-              <Text style={{ fontSize: 16, fontWeight: '600', color: c.text }}>WhatsApp ile İletişim</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={handleShare}
-              style={[styles.shareBtn, { backgroundColor: isDark ? c.surface : c.infoBg, borderWidth: 1, borderColor: isDark ? c.borderLight : c.border }]}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="share-social-outline" size={18} color={c.info} />
-              <Text style={{ fontSize: 15, fontWeight: '600', color: c.textSecondary }}>Paylaş</Text>
-            </TouchableOpacity>
+            {/* Consultant section with fade in */}
+            {consultant ? (
+              <Animated.View
+                entering={FadeIn.delay(300).duration(400)}
+                style={{
+                  marginHorizontal: sp.screenPadding,
+                  marginBottom: 16,
+                  marginTop: 4,
+                  padding: 16,
+                  borderRadius: br.xl,
+                  backgroundColor: isDark ? c.elevated : c.primaryBg,
+                  borderWidth: StyleSheet.hairlineWidth,
+                  borderColor: isDark ? c.borderLight : c.primaryMuted,
+                }}
+              >
+                <Text style={[typo.overline, { color: c.textMuted, marginBottom: 12 }]}>Danışman</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+                  <View
+                    style={{
+                      width: 52,
+                      height: 52,
+                      borderRadius: 26,
+                      backgroundColor: isDark ? c.surface : c.card,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      ...(Platform.OS === 'ios' ? shadows.sm : { elevation: 1 }),
+                    }}
+                  >
+                    <Text style={[typo.h3, { color: c.primary }]}>
+                      {(consultant.firstName || '?')[0].toUpperCase()}
+                    </Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[typo.h4, { color: c.text }]}>
+                      {consultant.firstName} {consultant.lastName}
+                    </Text>
+                    <Text style={[typo.caption, { color: c.textSecondary, marginTop: 2 }]}>NetTapu danışmanı</Text>
+                  </View>
+                </View>
+              </Animated.View>
+            ) : null}
+            <View style={{ height: Platform.OS === 'ios' ? 110 : 96 }} />
           </View>
         </View>
       </ScrollView>
+
+      {/* Bottom action bar with slide up entrance */}
+      <Animated.View
+        entering={SlideInDown.springify().damping(18).stiffness(180).delay(200)}
+        style={[styles.bottomBar, { borderTopColor: c.borderLight }]}
+      >
+        {Platform.OS === 'ios' ? (
+          <BlurView
+            style={StyleSheet.absoluteFill}
+            blurType={isDark ? 'chromeMaterialDark' : 'chromeMaterial'}
+            blurAmount={56}
+            reducedTransparencyFallbackColor={isDark ? 'rgba(22,32,48,0.94)' : 'rgba(255,255,255,0.94)'}
+          />
+        ) : (
+          <View style={[StyleSheet.absoluteFill, { backgroundColor: isDark ? 'rgba(26,39,64,0.98)' : '#ffffff' }]} />
+        )}
+        <SafeAreaView edges={['bottom']} style={{ flexDirection: 'row', paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8, gap: 10 }}>
+          <TouchableOpacity
+            onPress={handleCall}
+            style={[
+              styles.bottomBtn,
+              {
+                backgroundColor: c.primary,
+                flex: 1,
+                borderRadius: Platform.select({ ios: br.xl, default: br.md }),
+              },
+            ]}
+            activeOpacity={0.88}
+          >
+            <Ionicons name="call" size={19} color={c.textInverse} />
+            <Text style={[styles.bottomBtnText, { color: c.textInverse }]}>Ara</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={handleWhatsApp}
+            style={[
+              styles.bottomBtn,
+              {
+                backgroundColor: '#25D366',
+                flex: 1,
+                borderRadius: Platform.select({ ios: br.xl, default: br.md }),
+              },
+            ]}
+            activeOpacity={0.88}
+          >
+            <Ionicons name="logo-whatsapp" size={19} color="#fff" />
+            <Text style={styles.bottomBtnText}>WhatsApp</Text>
+          </TouchableOpacity>
+        </SafeAreaView>
+      </Animated.View>
     </SafeAreaView>
   );
 }
@@ -367,7 +619,8 @@ const styles = StyleSheet.create({
 
   gallery: { position: 'relative' },
   noImage: { width, height: 380, alignItems: 'center', justifyContent: 'center' },
-  topGradient: { position: 'absolute', top: 0, left: 0, right: 0, height: 120 },
+  topGradient: { position: 'absolute', top: 0, left: 0, right: 0, height: 140 },
+  bottomGradient: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 160 },
   dotsRow: {
     position: 'absolute', bottom: 20, left: 0, right: 0,
     flexDirection: 'row', justifyContent: 'center', gap: 5,
@@ -378,57 +631,71 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 4,
     backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10,
   },
-  backBtn: {
-    position: 'absolute', top: Platform.OS === 'ios' ? 56 : 16, left: 16,
-    width: 40, height: 40, borderRadius: 14, backgroundColor: 'rgba(0,0,0,0.35)',
-    alignItems: 'center', justifyContent: 'center',
+  galleryRoundBtn: {
+    position: 'absolute',
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
   },
+  galleryRoundBtnIcon: { zIndex: 2 },
   topActions: {
-    position: 'absolute', top: Platform.OS === 'ios' ? 56 : 16, right: 16,
-    flexDirection: 'row', gap: 8,
+    position: 'absolute',
+    right: 16,
+    flexDirection: 'row',
+    gap: 10,
   },
   topActionBtn: {
-    width: 40, height: 40, borderRadius: 14, backgroundColor: 'rgba(0,0,0,0.35)',
-    alignItems: 'center', justifyContent: 'center',
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
   },
 
   stickyBar: {
-    position: 'absolute', top: 0, left: 0, right: 0, zIndex: 100,
-    borderBottomWidth: 1,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 100,
   },
 
-  content: { padding: 20 },
-  title: { fontSize: 24, fontWeight: '800', marginTop: 10, letterSpacing: -0.4, lineHeight: 30 },
+  contentSheet: { marginTop: -20, flex: 1 },
+  sheetInner: { overflow: 'hidden' },
 
-  priceSection: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingVertical: 20, paddingHorizontal: 18, borderRadius: 16, borderWidth: 1, marginBottom: 24,
+  detailRowPro: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
   },
-
-  detailsCard: { borderRadius: 20, borderWidth: 1, padding: 18, marginBottom: 14, overflow: 'hidden' },
-  sectionTitle: { fontSize: 17, fontWeight: '800', marginBottom: 12, letterSpacing: -0.2 },
-  detailRow: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingVertical: 12, paddingHorizontal: 8, borderRadius: 8,
-  },
-
-  consultantCard: { borderRadius: 20, borderWidth: 1, padding: 18, marginBottom: 14 },
-  consultantBtn: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    paddingVertical: 12, borderRadius: 12, gap: 6,
+  detailRowLeft: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 
-  ctaBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    paddingVertical: 17, borderRadius: 16, gap: 8,
+  bottomBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 40,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    overflow: 'hidden',
   },
-  ctaBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
-  whatsappBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    paddingVertical: 16, borderRadius: 16, borderWidth: 1, gap: 8,
+  bottomBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 15,
+    gap: 8,
   },
-  shareBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    paddingVertical: 14, borderRadius: 16, gap: 8,
-  },
+  bottomBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
 });

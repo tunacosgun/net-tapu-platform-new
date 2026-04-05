@@ -1,12 +1,42 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, FlatList, RefreshControl, StyleSheet } from 'react-native';
+import Animated, {
+  FadeInUp, FadeIn, useSharedValue, useAnimatedStyle,
+  withRepeat, withSequence, withSpring, withTiming,
+} from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import apiClient from '../../api/client';
 import { useTheme } from '../../theme';
 import { ParcelCard } from '../../components/parcel/ParcelCard';
+import { SPRING } from '../../lib/animations';
 import type { Parcel } from '../../types';
+
+function BouncingHeart({ color }: { color: string }) {
+  const scale = useSharedValue(1);
+
+  useEffect(() => {
+    scale.value = withRepeat(
+      withSequence(
+        withSpring(1.2, SPRING.bouncy),
+        withSpring(1, SPRING.bouncy),
+      ),
+      -1,
+      false,
+    );
+  }, []);
+
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <Animated.View style={animStyle}>
+      <Ionicons name="heart-outline" size={48} color={color} />
+    </Animated.View>
+  );
+}
 
 export default function FavoritesScreen() {
   const navigation = useNavigation<any>();
@@ -28,21 +58,21 @@ export default function FavoritesScreen() {
       <Text style={[styles.title, { color: c.text }]}>Favorilerim</Text>
       <FlatList
         data={favorites}
-        renderItem={({ item }) => (
-          <View style={{ paddingHorizontal: 20 }}>
+        renderItem={({ item, index }) => (
+          <Animated.View entering={FadeInUp.delay(index * 60).springify()} style={{ paddingHorizontal: 20 }}>
             <ParcelCard parcel={item} onPress={() => navigation.navigate('ParcelDetail', { id: item.id })} />
-          </View>
+          </Animated.View>
         )}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={c.primary} />}
         ListEmptyComponent={!loading ? (
-          <View style={styles.empty}>
-            <Ionicons name="heart-outline" size={48} color={c.textMuted} />
+          <Animated.View entering={FadeIn.delay(200).duration(500)} style={styles.empty}>
+            <BouncingHeart color={c.textMuted} />
             <Text style={[styles.emptyTitle, { color: c.text }]}>Henüz favori ilanınız yok</Text>
             <Text style={[styles.emptyDesc, { color: c.textSecondary }]}>Beğendiğiniz ilanları favorilere ekleyerek takip edin</Text>
-          </View>
+          </Animated.View>
         ) : null}
       />
     </SafeAreaView>

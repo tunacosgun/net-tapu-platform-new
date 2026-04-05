@@ -1,17 +1,24 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { createBottomTabNavigator, BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import {
   StyleSheet,
   View,
-  TouchableOpacity,
-  Text,
+  Pressable,
   Platform,
-  Animated,
   Dimensions,
 } from 'react-native';
-import { BlurView } from '@react-native-community/blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+  interpolateColor,
+  useDerivedValue,
+} from 'react-native-reanimated';
+import { BlurView } from '@react-native-community/blur';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { SPRING } from '../lib/animations';
 import { useTheme } from '../theme';
 
 import HomeScreen from '../screens/home/HomeScreen';
@@ -28,145 +35,216 @@ const TAB_CONFIG = [
   { name: 'Profile', label: 'Profil', icon: 'person', iconOutline: 'person-outline' },
 ];
 
-/* ─── Glass Tab Bar (iOS 26 liquid glass style) ─── */
-function GlassTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
-  const { colors: c, isDark } = useTheme();
-  const insets = useSafeAreaInsets();
-  const tabCount = state.routes.length;
+const TAB_COUNT = TAB_CONFIG.length;
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const TAB_WIDTH = SCREEN_WIDTH / TAB_COUNT;
+const INDICATOR_WIDTH = 32;
+const INDICATOR_HEIGHT = 3;
 
-  const bubbleAnim = useRef(new Animated.Value(state.index)).current;
-  const scaleAnims = useRef(state.routes.map(() => new Animated.Value(1))).current;
+/* ─── Animated Tab Item ─── */
+interface TabItemProps {
+  index: number;
+  isFocused: boolean;
+  label: string;
+  iconFilled: string;
+  iconOutline: string;
+  primaryColor: string;
+  mutedColor: string;
+  onPress: () => void;
+  onLongPress: () => void;
+}
+
+function AnimatedTabItem({
+  index,
+  isFocused,
+  label,
+  iconFilled,
+  iconOutline,
+  primaryColor,
+  mutedColor,
+  onPress,
+  onLongPress,
+}: TabItemProps) {
+  const scale = useSharedValue(1);
+  const focusProgress = useSharedValue(isFocused ? 1 : 0);
 
   useEffect(() => {
-    Animated.spring(bubbleAnim, {
-      toValue: state.index,
-      useNativeDriver: true,
-      damping: 20,
-      stiffness: 200,
-      mass: 0.7,
-    }).start();
+    focusProgress.value = withTiming(isFocused ? 1 : 0, { duration: 200 });
+    if (isFocused) {
+      scale.value = withSpring(1.15, SPRING.snappy);
+    } else {
+      scale.value = withSpring(1, SPRING.smooth);
+    }
+  }, [isFocused]);
 
-    scaleAnims.forEach((anim, i) => {
-      Animated.spring(anim, {
-        toValue: i === state.index ? 1.08 : 1,
-        useNativeDriver: true,
-        damping: 15,
-        stiffness: 200,
-      }).start();
-    });
-  }, [state.index]);
+  const iconAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
 
-  const screenWidth = Dimensions.get('window').width;
-  const barHorizontalMargin = 20;
-  const barWidth = screenWidth - barHorizontalMargin * 2;
-  const tabWidth = barWidth / tabCount;
-  const bubblePadding = 6;
-  const bubbleWidth = tabWidth - bubblePadding * 2;
-  const barHeight = Platform.OS === 'ios' ? 62 : 58;
-  const bottomMargin = Platform.OS === 'ios' ? Math.max(insets.bottom - 4, 12) : 14;
-  const bubbleHeight = barHeight - 12;
+  const labelAnimStyle = useAnimatedStyle(() => ({
+    opacity: withTiming(isFocused ? 1 : 0.6, { duration: 200 }),
+  }));
 
-  const translateX = bubbleAnim.interpolate({
-    inputRange: Array.from({ length: tabCount }, (_, i) => i),
-    outputRange: Array.from({ length: tabCount }, (_, i) => i * tabWidth + bubblePadding),
+  const colorAnimStyle = useAnimatedStyle(() => {
+    const color = interpolateColor(
+      focusProgress.value,
+      [0, 1],
+      [mutedColor, primaryColor],
+    );
+    return { color };
   });
 
-  return (
-    <View
-      style={[
-        styles.barContainer,
-        {
-          bottom: bottomMargin,
-          left: barHorizontalMargin,
-          right: barHorizontalMargin,
-          height: barHeight,
-          borderRadius: barHeight / 2,
-        },
-      ]}
-    >
-      {/* Glass background */}
-      <View style={[styles.blurContainer, { borderRadius: barHeight / 2 }]}>
-        {Platform.OS === 'ios' ? (
-          <BlurView
-            style={StyleSheet.absoluteFill}
-            blurType={isDark ? 'chromeMaterialDark' : 'chromeMaterial'}
-            blurAmount={80}
-            reducedTransparencyFallbackColor={isDark ? 'rgba(30,30,30,0.95)' : 'rgba(255,255,255,0.95)'}
-          />
-        ) : (
-          <View style={[StyleSheet.absoluteFill, { backgroundColor: isDark ? 'rgba(28,28,30,0.97)' : 'rgba(248,248,250,0.97)' }]} />
-        )}
-        <View style={[StyleSheet.absoluteFill, { backgroundColor: isDark ? 'rgba(40,40,40,0.2)' : 'rgba(255,255,255,0.4)' }]} />
-      </View>
+  const iconName = isFocused ? iconFilled : iconOutline;
 
-      {/* Animated glass bubble indicator */}
+  return (
+    <Pressable
+      onPress={onPress}
+      onLongPress={onLongPress}
+      style={styles.tabItem}
+      accessibilityRole="tab"
+      accessibilityState={{ selected: isFocused }}
+      accessibilityLabel={label}
+    >
+      <Animated.View style={iconAnimStyle}>
+        <Ionicons
+          name={iconName}
+          size={24}
+          color={isFocused ? primaryColor : mutedColor}
+        />
+      </Animated.View>
+      <Animated.Text
+        style={[
+          styles.tabLabel,
+          { fontWeight: isFocused ? '600' : '400' },
+          colorAnimStyle,
+          labelAnimStyle,
+        ]}
+        numberOfLines={1}
+      >
+        {label}
+      </Animated.Text>
+    </Pressable>
+  );
+}
+
+/* ─── Animated Tab Bar ─── */
+function AnimatedTabBar({ state, navigation, descriptors }: BottomTabBarProps) {
+  const { colors: c, isDark } = useTheme();
+  const insets = useSafeAreaInsets();
+
+  const indicatorX = useSharedValue(state.index * TAB_WIDTH + (TAB_WIDTH - INDICATOR_WIDTH) / 2);
+
+  useEffect(() => {
+    indicatorX.value = withSpring(
+      state.index * TAB_WIDTH + (TAB_WIDTH - INDICATOR_WIDTH) / 2,
+      SPRING.snappy,
+    );
+  }, [state.index]);
+
+  const indicatorStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: indicatorX.value }],
+  }));
+
+  const mutedColor = isDark ? 'rgba(255,255,255,0.45)' : '#94a3b8';
+  const bgColor = isDark ? 'rgba(15,15,20,0.85)' : 'rgba(255,255,255,0.92)';
+
+  const barContent = (
+    <>
+      {/* Sliding indicator */}
       <Animated.View
         style={[
-          styles.bubble,
-          {
-            width: bubbleWidth,
-            height: bubbleHeight,
-            borderRadius: bubbleHeight / 2,
-            transform: [{ translateX }],
-            top: 6,
-          },
+          styles.indicator,
+          { backgroundColor: c.primary },
+          indicatorStyle,
         ]}
-      >
-        {Platform.OS === 'ios' ? (
-          <View style={[StyleSheet.absoluteFill, { borderRadius: bubbleHeight / 2, overflow: 'hidden' }]}>
-            <BlurView
-              style={StyleSheet.absoluteFill}
-              blurType={isDark ? 'ultraThinMaterialDark' : 'ultraThinMaterial'}
-              blurAmount={40}
-              reducedTransparencyFallbackColor={isDark ? 'rgba(60,60,60,0.4)' : 'rgba(200,200,200,0.3)'}
-            />
-            <View style={[StyleSheet.absoluteFill, { backgroundColor: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.6)' }]} />
-          </View>
-        ) : (
-          <View style={[StyleSheet.absoluteFill, { borderRadius: bubbleHeight / 2, backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }]} />
-        )}
-      </Animated.View>
+      />
 
       {/* Tab items */}
       <View style={styles.tabRow}>
         {state.routes.map((route, index) => {
           const isFocused = state.index === index;
           const config = TAB_CONFIG.find(t => t.name === route.name) || TAB_CONFIG[0];
-          const iconName = isFocused ? config.icon : config.iconOutline;
-          const color = isFocused
-            ? (isDark ? '#ffffff' : '#000000')
-            : (isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.3)');
+
+          const onPress = () => {
+            const event = navigation.emit({
+              type: 'tabPress',
+              target: route.key,
+              canPreventDefault: true,
+            });
+            if (!isFocused && !event.defaultPrevented) {
+              navigation.navigate(route.name);
+            }
+          };
+
+          const onLongPress = () => {
+            navigation.emit({ type: 'tabLongPress', target: route.key });
+          };
 
           return (
-            <Animated.View key={route.key} style={[styles.tabItem, { transform: [{ scale: scaleAnims[index] }] }]}>
-              <TouchableOpacity
-                onPress={() => {
-                  const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
-                  if (!isFocused && !event.defaultPrevented) navigation.navigate(route.name);
-                }}
-                activeOpacity={0.7}
-                style={styles.tabItemInner}
-                accessibilityRole="tab"
-                accessibilityState={{ selected: isFocused }}
-                accessibilityLabel={config.label}
-              >
-                <Ionicons name={iconName} size={21} color={color} />
-                <Text style={[styles.tabLabel, { color, fontWeight: isFocused ? '600' : '400' }]} numberOfLines={1}>
-                  {config.label}
-                </Text>
-              </TouchableOpacity>
-            </Animated.View>
+            <AnimatedTabItem
+              key={route.key}
+              index={index}
+              isFocused={isFocused}
+              label={config.label}
+              iconFilled={config.icon}
+              iconOutline={config.iconOutline}
+              primaryColor={c.primary}
+              mutedColor={mutedColor}
+              onPress={onPress}
+              onLongPress={onLongPress}
+            />
           );
         })}
       </View>
+    </>
+  );
+
+  return (
+    <View
+      style={[
+        styles.barOuter,
+        { paddingBottom: Math.max(insets.bottom, 8) },
+      ]}
+    >
+      {Platform.OS === 'ios' ? (
+        <BlurView
+          style={StyleSheet.absoluteFill}
+          blurType={isDark ? 'dark' : 'light'}
+          blurAmount={24}
+          reducedTransparencyFallbackColor={isDark ? '#0f0f14' : '#ffffff'}
+        />
+      ) : null}
+
+      {/* Solid fallback background (Android always, iOS as tint overlay) */}
+      <View
+        style={[
+          StyleSheet.absoluteFill,
+          {
+            backgroundColor: Platform.OS === 'ios'
+              ? (isDark ? 'rgba(15,15,20,0.4)' : 'rgba(255,255,255,0.3)')
+              : bgColor,
+          },
+        ]}
+      />
+
+      {/* Top border */}
+      <View
+        style={[
+          styles.topBorder,
+          { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' },
+        ]}
+      />
+
+      {barContent}
     </View>
   );
 }
 
+/* ─── Navigator ─── */
 export default function MainTabs() {
   return (
     <Tab.Navigator
-      tabBar={(props) => <GlassTabBar {...props} />}
+      tabBar={(props) => <AnimatedTabBar {...props} />}
       screenOptions={{ headerShown: false }}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
@@ -177,19 +255,54 @@ export default function MainTabs() {
   );
 }
 
+/* ─── Styles ─── */
 const styles = StyleSheet.create({
-  barContainer: {
+  barOuter: {
     position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     overflow: 'hidden',
     ...Platform.select({
-      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 24 },
-      android: { elevation: 16 },
+      android: {
+        elevation: 12,
+        shadowColor: '#000',
+      },
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: -4 },
+        shadowOpacity: 0.08,
+        shadowRadius: 12,
+      },
     }),
   },
-  blurContainer: { ...StyleSheet.absoluteFillObject, overflow: 'hidden' },
-  bubble: { position: 'absolute', left: 0, overflow: 'hidden' },
-  tabRow: { flex: 1, flexDirection: 'row', alignItems: 'center' },
-  tabItem: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  tabItemInner: { alignItems: 'center', justifyContent: 'center', paddingVertical: 4 },
-  tabLabel: { fontSize: 10, marginTop: 2, letterSpacing: 0.1 },
+  topBorder: {
+    height: StyleSheet.hairlineWidth,
+    width: '100%',
+  },
+  indicator: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: INDICATOR_WIDTH,
+    height: INDICATOR_HEIGHT,
+    borderBottomLeftRadius: 2,
+    borderBottomRightRadius: 2,
+  },
+  tabRow: {
+    flexDirection: 'row',
+    paddingTop: 8,
+    paddingBottom: 2,
+  },
+  tabItem: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 4,
+  },
+  tabLabel: {
+    fontSize: 10,
+    marginTop: 4,
+    letterSpacing: 0.3,
+  },
 });

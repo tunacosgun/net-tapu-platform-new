@@ -1,15 +1,68 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import Animated, {
+  FadeInDown, FadeIn, SlideInUp,
+  useSharedValue, useAnimatedStyle, withSpring, withRepeat, withSequence, withTiming, withDelay,
+} from 'react-native-reanimated';
 import { useRoute, useNavigation, CommonActions } from '@react-navigation/native';
 import type { RouteProp, NavigationProp } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import apiClient from '../../api/client';
 import { useTheme } from '../../theme';
 import { formatPrice } from '../../lib/format';
+import { SPRING } from '../../lib/animations';
 import { useAuctionStore } from '../../stores/auction-store';
 import type { RootStackParamList } from '../../navigation/RootNavigator';
 
 type ResultStatus = 'polling' | 'success' | 'failed' | 'timeout';
+
+function AnimatedDots({ color }: { color: string }) {
+  const dot0 = useSharedValue(0.3);
+  const dot1 = useSharedValue(0.3);
+  const dot2 = useSharedValue(0.3);
+
+  useEffect(() => {
+    dot0.value = withRepeat(
+      withSequence(
+        withTiming(1, { duration: 400 }),
+        withTiming(0.3, { duration: 400 }),
+      ),
+      -1,
+    );
+    dot1.value = withDelay(
+      200,
+      withRepeat(
+        withSequence(
+          withTiming(1, { duration: 400 }),
+          withTiming(0.3, { duration: 400 }),
+        ),
+        -1,
+      ),
+    );
+    dot2.value = withDelay(
+      400,
+      withRepeat(
+        withSequence(
+          withTiming(1, { duration: 400 }),
+          withTiming(0.3, { duration: 400 }),
+        ),
+        -1,
+      ),
+    );
+  }, []);
+
+  const s0 = useAnimatedStyle(() => ({ transform: [{ scale: dot0.value }], opacity: dot0.value }));
+  const s1 = useAnimatedStyle(() => ({ transform: [{ scale: dot1.value }], opacity: dot1.value }));
+  const s2 = useAnimatedStyle(() => ({ transform: [{ scale: dot2.value }], opacity: dot2.value }));
+
+  return (
+    <View style={styles.progressDots}>
+      <Animated.View style={[styles.dot, { backgroundColor: color }, s0]} />
+      <Animated.View style={[styles.dot, { backgroundColor: color }, s1]} />
+      <Animated.View style={[styles.dot, { backgroundColor: color }, s2]} />
+    </View>
+  );
+}
 
 export default function PaymentResultScreen() {
   const route = useRoute<RouteProp<RootStackParamList, 'PaymentResult'>>();
@@ -23,6 +76,53 @@ export default function PaymentResultScreen() {
   const [paymentAmount, setPaymentAmount] = useState<string | null>(null);
   const pollCount = useRef(0);
   const pollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Success: bounce in
+  const successScale = useSharedValue(0);
+  // Failed: shake
+  const failShakeX = useSharedValue(0);
+  // Timeout: pulse
+  const timeoutScale = useSharedValue(1);
+
+  useEffect(() => {
+    if (resultStatus === 'success') {
+      successScale.value = withSequence(
+        withSpring(1.2, SPRING.bouncy),
+        withSpring(1, SPRING.snappy),
+      );
+    } else if (resultStatus === 'failed') {
+      failShakeX.value = withSequence(
+        withTiming(-12, { duration: 60 }),
+        withTiming(12, { duration: 60 }),
+        withTiming(-10, { duration: 60 }),
+        withTiming(10, { duration: 60 }),
+        withTiming(-6, { duration: 60 }),
+        withTiming(6, { duration: 60 }),
+        withTiming(0, { duration: 60 }),
+      );
+    } else if (resultStatus === 'timeout') {
+      timeoutScale.value = withRepeat(
+        withSequence(
+          withTiming(1.1, { duration: 1000 }),
+          withTiming(1, { duration: 1000 }),
+        ),
+        -1,
+        true,
+      );
+    }
+  }, [resultStatus]);
+
+  const successCircleStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: successScale.value }],
+  }));
+
+  const failCircleStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: failShakeX.value }],
+  }));
+
+  const timeoutCircleStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: timeoutScale.value }],
+  }));
 
   useEffect(() => {
     if (resultStatus !== 'polling') return;
@@ -84,90 +184,88 @@ export default function PaymentResultScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <View style={styles.center}>
         {resultStatus === 'polling' && (
-          <>
+          <Animated.View entering={FadeIn.duration(400)} style={styles.statusWrap}>
             <ActivityIndicator size="large" color={theme.colors.primary} style={{ marginBottom: 20 }} />
             <Text style={[styles.title, { color: theme.colors.text }]}>Ödeme İşleniyor</Text>
             <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
               Bankanızdan onay bekleniyor...{'\n'}Lütfen bu ekrandan ayrılmayın.
             </Text>
-            <View style={styles.progressDots}>
-              {[0, 1, 2].map((i) => (
-                <View
-                  key={i}
-                  style={[
-                    styles.dot,
-                    { backgroundColor: theme.colors.primary, opacity: pollCount.current % 3 === i ? 1 : 0.3 },
-                  ]}
-                />
-              ))}
-            </View>
-          </>
+            <AnimatedDots color={theme.colors.primary} />
+          </Animated.View>
         )}
 
         {resultStatus === 'success' && (
-          <>
-            <View style={styles.successCircle}>
+          <Animated.View entering={FadeIn.duration(300)} style={styles.statusWrap}>
+            <Animated.View style={[styles.successCircle, successCircleStyle]}>
               <Text style={styles.successIcon}>✓</Text>
-            </View>
-            <Text style={[styles.title, { color: '#15803d' }]}>Ödeme Başarılı!</Text>
-            <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
+            </Animated.View>
+            <Animated.Text entering={FadeInDown.delay(200).duration(400)} style={[styles.title, { color: '#15803d' }]}>Ödeme Başarılı!</Animated.Text>
+            <Animated.Text entering={FadeInDown.delay(300).duration(400)} style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
               Kaparonuz başarıyla yatırıldı.{'\n'}Artık ihaleye teklif verebilirsiniz.
-            </Text>
+            </Animated.Text>
             {paymentAmount && (
-              <Text style={[styles.amount, { color: theme.colors.primary }]}>
+              <Animated.Text entering={FadeInDown.delay(400).duration(400)} style={[styles.amount, { color: theme.colors.primary }]}>
                 {formatPrice(paymentAmount)}
-              </Text>
+              </Animated.Text>
             )}
-            <TouchableOpacity
-              style={[styles.primaryBtn, { backgroundColor: theme.colors.primary }]}
-              onPress={goToAuction}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.primaryBtnText}>İhaleye Dön</Text>
-            </TouchableOpacity>
-          </>
+            <Animated.View entering={FadeInDown.delay(500).duration(400)}>
+              <TouchableOpacity
+                style={[styles.primaryBtn, { backgroundColor: theme.colors.primary }]}
+                onPress={goToAuction}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.primaryBtnText}>İhaleye Dön</Text>
+              </TouchableOpacity>
+            </Animated.View>
+          </Animated.View>
         )}
 
         {resultStatus === 'failed' && (
-          <>
-            <View style={styles.failCircle}>
+          <Animated.View entering={FadeIn.duration(300)} style={styles.statusWrap}>
+            <Animated.View style={[styles.failCircle, failCircleStyle]}>
               <Text style={styles.failIcon}>✕</Text>
-            </View>
-            <Text style={[styles.title, { color: '#dc2626' }]}>Ödeme Başarısız</Text>
-            <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
+            </Animated.View>
+            <Animated.Text entering={FadeInDown.delay(200).duration(400)} style={[styles.title, { color: '#dc2626' }]}>Ödeme Başarısız</Animated.Text>
+            <Animated.Text entering={FadeInDown.delay(300).duration(400)} style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
               Ödemeniz gerçekleştirilemedi.{'\n'}Lütfen kart bilgilerinizi kontrol edip tekrar deneyin.
-            </Text>
-            <TouchableOpacity
-              style={[styles.primaryBtn, { backgroundColor: theme.colors.primary }]}
-              onPress={goBack}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.primaryBtnText}>Tekrar Dene</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.secondaryBtn} onPress={goToAuction}>
-              <Text style={[styles.secondaryBtnText, { color: theme.colors.textSecondary }]}>İhaleye Dön</Text>
-            </TouchableOpacity>
-          </>
+            </Animated.Text>
+            <Animated.View entering={FadeInDown.delay(400).duration(400)}>
+              <TouchableOpacity
+                style={[styles.primaryBtn, { backgroundColor: theme.colors.primary }]}
+                onPress={goBack}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.primaryBtnText}>Tekrar Dene</Text>
+              </TouchableOpacity>
+            </Animated.View>
+            <Animated.View entering={FadeInDown.delay(500).duration(400)}>
+              <TouchableOpacity style={styles.secondaryBtn} onPress={goToAuction}>
+                <Text style={[styles.secondaryBtnText, { color: theme.colors.textSecondary }]}>İhaleye Dön</Text>
+              </TouchableOpacity>
+            </Animated.View>
+          </Animated.View>
         )}
 
         {resultStatus === 'timeout' && (
-          <>
-            <View style={[styles.failCircle, { backgroundColor: '#fef3c7', borderColor: '#fbbf24' }]}>
+          <Animated.View entering={FadeIn.duration(300)} style={styles.statusWrap}>
+            <Animated.View style={[styles.failCircle, { backgroundColor: '#fef3c7', borderColor: '#fbbf24' }, timeoutCircleStyle]}>
               <Text style={[styles.failIcon, { color: '#d97706' }]}>⏳</Text>
-            </View>
-            <Text style={[styles.title, { color: '#d97706' }]}>İşlem Sürüyor</Text>
-            <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
+            </Animated.View>
+            <Animated.Text entering={FadeInDown.delay(200).duration(400)} style={[styles.title, { color: '#d97706' }]}>İşlem Sürüyor</Animated.Text>
+            <Animated.Text entering={FadeInDown.delay(300).duration(400)} style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
               Ödeme onayı henüz alınamadı. İşleminiz arka planda devam ediyor olabilir.
               Ödemelerim sayfasından durumu kontrol edebilirsiniz.
-            </Text>
-            <TouchableOpacity
-              style={[styles.primaryBtn, { backgroundColor: theme.colors.primary }]}
-              onPress={goToAuction}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.primaryBtnText}>İhaleye Dön</Text>
-            </TouchableOpacity>
-          </>
+            </Animated.Text>
+            <Animated.View entering={FadeInDown.delay(400).duration(400)}>
+              <TouchableOpacity
+                style={[styles.primaryBtn, { backgroundColor: theme.colors.primary }]}
+                onPress={goToAuction}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.primaryBtnText}>İhaleye Dön</Text>
+              </TouchableOpacity>
+            </Animated.View>
+          </Animated.View>
         )}
       </View>
     </SafeAreaView>
@@ -177,13 +275,14 @@ export default function PaymentResultScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 },
+  statusWrap: { alignItems: 'center', width: '100%' },
 
   title: { fontSize: 24, fontWeight: '800', marginBottom: 12, textAlign: 'center' },
   subtitle: { fontSize: 15, textAlign: 'center', lineHeight: 22, marginBottom: 24 },
   amount: { fontSize: 28, fontWeight: '800', marginBottom: 24 },
 
   progressDots: { flexDirection: 'row', gap: 8, marginTop: 16 },
-  dot: { width: 8, height: 8, borderRadius: 4 },
+  dot: { width: 10, height: 10, borderRadius: 5 },
 
   successCircle: {
     width: 80, height: 80, borderRadius: 40,
