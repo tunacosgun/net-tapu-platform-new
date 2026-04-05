@@ -45,44 +45,22 @@ export function burnWatermark(
           ctx.fillText(watermarkText, 0, 0);
           ctx.restore();
 
-          // 3. Listing number burned at top-left (scales with image, always visible)
+          // 3. Listing ID — subtle text-only label at top-left (no box, scales with image)
           if (listingNumber) {
-            const pad = Math.max(6, W * 0.012);
-            const idFontSize = Math.max(11, W * 0.022);
-            ctx.font = `600 ${idFontSize}px Arial, sans-serif`;
-            const textW = ctx.measureText(listingNumber).width;
-            const boxW = textW + pad * 2;
-            const boxH = idFontSize * 1.6;
-            const bx = pad;
-            const by = pad;
-            const r = 4;
-
-            // Rounded pill background
+            const pad = Math.max(8, W * 0.014);
+            const idFontSize = Math.max(10, W * 0.018);
             ctx.save();
-            ctx.globalAlpha = 0.65;
-            ctx.fillStyle = '#111827';
-            ctx.beginPath();
-            ctx.moveTo(bx + r, by);
-            ctx.lineTo(bx + boxW - r, by);
-            ctx.arcTo(bx + boxW, by, bx + boxW, by + r, r);
-            ctx.lineTo(bx + boxW, by + boxH - r);
-            ctx.arcTo(bx + boxW, by + boxH, bx + boxW - r, by + boxH, r);
-            ctx.lineTo(bx + r, by + boxH);
-            ctx.arcTo(bx, by + boxH, bx, by + boxH - r, r);
-            ctx.lineTo(bx, by + r);
-            ctx.arcTo(bx, by, bx + r, by, r);
-            ctx.closePath();
-            ctx.fill();
-            ctx.restore();
-
-            // White text on top
-            ctx.save();
-            ctx.globalAlpha = 1;
-            ctx.fillStyle = '#ffffff';
-            ctx.font = `600 ${idFontSize}px Arial, sans-serif`;
-            ctx.textBaseline = 'middle';
+            ctx.globalAlpha = 0.72;
+            ctx.font = `500 ${idFontSize}px Arial, sans-serif`;
+            ctx.textBaseline = 'top';
             ctx.textAlign = 'left';
-            ctx.fillText(listingNumber, bx + pad, by + boxH / 2);
+            // Soft shadow for readability on any background
+            ctx.shadowColor = 'rgba(0,0,0,0.65)';
+            ctx.shadowBlur = idFontSize * 0.5;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 1;
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(`#${listingNumber}`, pad, pad);
             ctx.restore();
           }
 

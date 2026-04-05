@@ -76,11 +76,14 @@ export function ParcelImageGallery({ images, wmImages, title, listingId }: Parce
             draggable={false}
           />
 
-          {/* Listing ID overlay — top left, scales with container */}
+          {/* Listing ID — subtle top-left label, no box */}
           {listingId && (
-            <div className="absolute top-3 left-3 z-10 flex items-center rounded-md bg-black/60 backdrop-blur-sm px-2.5 py-1 text-[11px] font-mono font-semibold text-white/90 select-none">
-              {listingId}
-            </div>
+            <span
+              className="absolute top-2.5 left-3 z-10 text-[10px] font-medium text-white/70 select-none pointer-events-none"
+              style={{ textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}
+            >
+              #{listingId}
+            </span>
           )}
 
           {/* Image counter — bottom left */}
@@ -147,22 +150,37 @@ export function ParcelImageGallery({ images, wmImages, title, listingId }: Parce
         )}
       </div>
 
-      {/* ── Lightbox ── */}
+      {/* ── Lightbox — bokeh background ── */}
       {lightboxOpen && (
         <div
           id="parcel-lightbox"
-          className="fixed inset-0 z-[100] flex flex-col bg-black/95 print:hidden select-none"
+          className="fixed inset-0 z-[100] flex flex-col print:hidden select-none overflow-hidden"
           onContextMenu={(e) => e.preventDefault()}
         >
+          {/* Bokeh background: same image, heavily blurred + dark overlay */}
+          <div className="absolute inset-0 z-0">
+            <img
+              src={currentSrc}
+              alt=""
+              className="h-full w-full object-cover scale-110"
+              style={{ filter: 'blur(24px)', transform: 'scale(1.15)' }}
+              draggable={false}
+            />
+            <div className="absolute inset-0 bg-black/40" />
+          </div>
+
           {/* Header */}
-          <div className="relative flex items-center justify-between px-5 py-3 shrink-0 border-b border-white/10">
+          <div className="relative z-10 flex items-center justify-between px-5 py-3 shrink-0">
             <div className="flex items-center gap-3">
               {listingId && (
-                <span className="rounded-md bg-white/10 px-2.5 py-1 text-xs font-mono font-semibold text-white/80">
-                  {listingId}
+                <span
+                  className="text-[10px] font-medium text-white/60 select-none"
+                  style={{ textShadow: '0 1px 3px rgba(0,0,0,0.7)' }}
+                >
+                  #{listingId}
                 </span>
               )}
-              <span className="text-sm font-medium text-white/80 truncate max-w-[50vw]">{title}</span>
+              <span className="text-sm font-medium text-white/80 truncate max-w-[50vw]" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>{title}</span>
             </div>
             <div className="flex items-center gap-1">
               <button
@@ -172,14 +190,14 @@ export function ParcelImageGallery({ images, wmImages, title, listingId }: Parce
                   if (document.fullscreenElement) document.exitFullscreen();
                   else el.requestFullscreen().catch(() => {});
                 }}
-                className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-white/60 hover:text-white hover:bg-white/10 transition-all"
+                className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-white/70 hover:text-white hover:bg-white/10 transition-all backdrop-blur-sm"
               >
                 <Maximize2 className="h-4 w-4" />
                 <span className="hidden sm:inline">Tam Ekran</span>
               </button>
               <button
                 onClick={() => setLightboxOpen(false)}
-                className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-white/60 hover:text-white hover:bg-white/10 transition-all"
+                className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-white/70 hover:text-white hover:bg-white/10 transition-all backdrop-blur-sm"
               >
                 <X className="h-4 w-4" />
                 <span className="hidden sm:inline">Kapat</span>
@@ -187,47 +205,56 @@ export function ParcelImageGallery({ images, wmImages, title, listingId }: Parce
             </div>
           </div>
 
-          {/* Image area — object-contain so full image visible, dark bg, no crop */}
-          <div className="relative flex flex-1 min-h-0 items-center justify-center px-16 py-4">
+          {/* Main image — centered, not cropped, original aspect ratio */}
+          <div className="relative z-10 flex flex-1 min-h-0 items-center justify-center px-16 py-2">
             {images.length > 1 && (
               <button
                 onClick={goPrev}
-                className="absolute left-3 top-1/2 -translate-y-1/2 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-all"
+                className="absolute left-3 top-1/2 -translate-y-1/2 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-black/30 backdrop-blur-sm text-white hover:bg-black/50 transition-all"
               >
-                <ChevronLeft className="h-7 w-7" />
+                <ChevronLeft className="h-6 w-6" />
               </button>
             )}
 
-            <div className="relative flex h-full w-full items-center justify-center">
+            <div className="relative flex items-center justify-center max-h-full max-w-full">
               <img
                 src={currentSrc}
                 alt={title}
-                className="max-h-full max-w-full object-contain"
+                className="max-h-full max-w-full object-contain rounded-lg"
                 draggable={false}
-                style={{ userSelect: 'none' }}
+                style={{
+                  userSelect: 'none',
+                  boxShadow: '0 8px 40px rgba(0,0,0,0.5), 0 2px 12px rgba(0,0,0,0.3)',
+                  maxHeight: 'calc(100vh - 160px)',
+                }}
               />
-              {/* Listing ID overlay — always visible in lightbox too */}
+              {/* Subtle listing ID on image — same style as main view */}
               {listingId && (
-                <div className="absolute top-3 left-3 flex items-center rounded-md bg-black/60 backdrop-blur-sm px-2.5 py-1 text-[11px] font-mono font-semibold text-white/90">
-                  {listingId}
-                </div>
+                <span
+                  className="absolute top-3 left-3 text-[10px] font-medium text-white/70 select-none pointer-events-none"
+                  style={{ textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}
+                >
+                  #{listingId}
+                </span>
               )}
             </div>
 
             {images.length > 1 && (
               <button
                 onClick={goNext}
-                className="absolute right-3 top-1/2 -translate-y-1/2 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-all"
+                className="absolute right-3 top-1/2 -translate-y-1/2 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-black/30 backdrop-blur-sm text-white hover:bg-black/50 transition-all"
               >
-                <ChevronRight className="h-7 w-7" />
+                <ChevronRight className="h-6 w-6" />
               </button>
             )}
           </div>
 
-          {/* Footer: counter + thumbnails strip */}
-          <div className="shrink-0 border-t border-white/10 px-4 py-3 space-y-2">
-            <p className="text-center text-sm text-white/50">
-              <span className="font-bold text-white">{selectedIdx + 1}</span> / {images.length}
+          {/* Footer: counter + thumbnails */}
+          <div className="relative z-10 shrink-0 px-4 py-3 space-y-2">
+            <p className="text-center text-xs text-white/50">
+              <span className="font-semibold text-white/80">{selectedIdx + 1}</span>
+              <span className="mx-1">/</span>
+              {images.length}
             </p>
             {images.length > 1 && (
               <div className="flex justify-center gap-1.5 overflow-x-auto">
@@ -237,8 +264,10 @@ export function ParcelImageGallery({ images, wmImages, title, listingId }: Parce
                     <button
                       key={img.id}
                       onClick={() => setSelectedIdx(idx)}
-                      className={`shrink-0 h-12 w-16 rounded overflow-hidden border-2 transition-all ${
-                        idx === selectedIdx ? 'border-white opacity-100' : 'border-white/20 opacity-40 hover:opacity-80'
+                      className={`shrink-0 h-11 w-16 rounded-md overflow-hidden border-2 transition-all ${
+                        idx === selectedIdx
+                          ? 'border-white/90 opacity-100 shadow-md'
+                          : 'border-white/20 opacity-40 hover:opacity-75'
                       }`}
                     >
                       <img src={thumbSrc} alt="" className="h-full w-full object-cover" loading="lazy" draggable={false} />
