@@ -45,17 +45,20 @@ export function burnWatermark(
           ctx.fillText(watermarkText, 0, 0);
           ctx.restore();
 
-          // 3. Listing ID — subtle top-left, no box
+          // 3. Listing ID — top-left, clearly readable at any display size
           if (listingNumber) {
-            const pad = Math.max(8, W * 0.012);
-            const idSize = Math.max(10, W * 0.016);
+            const pad = Math.max(12, W * 0.018);
+            const idSize = Math.max(16, W * 0.032); // bigger so visible when scaled down
             ctx.save();
-            ctx.globalAlpha = 0.65;
-            ctx.font = `500 ${idSize}px Arial, sans-serif`;
+            ctx.globalAlpha = 0.88;
+            ctx.font = `700 ${idSize}px Arial, sans-serif`;
             ctx.textBaseline = 'top';
             ctx.textAlign = 'left';
-            ctx.shadowColor = 'rgba(0,0,0,0.7)';
-            ctx.shadowBlur = idSize * 0.6;
+            // Strong shadow for contrast on any background
+            ctx.shadowColor = 'rgba(0,0,0,0.85)';
+            ctx.shadowBlur = idSize * 0.8;
+            ctx.shadowOffsetX = 1;
+            ctx.shadowOffsetY = 1;
             ctx.fillStyle = '#ffffff';
             ctx.fillText(`#${listingNumber}`, pad, pad);
             ctx.restore();
