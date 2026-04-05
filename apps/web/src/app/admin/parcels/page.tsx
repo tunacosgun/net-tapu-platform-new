@@ -28,13 +28,24 @@ const statusColors: Record<string, string> = {
   draft: 'bg-gray-100 text-gray-500',
 };
 
+const SESSION_KEY = 'admin_parcels_state';
+
+function restoreState() {
+  try {
+    const saved = sessionStorage.getItem(SESSION_KEY);
+    if (saved) return JSON.parse(saved) as { page: number; status: string; search: string };
+  } catch {}
+  return null;
+}
+
 export default function AdminParcelsPage() {
+  const saved = restoreState();
   const [data, setData] = useState<PaginatedResponse<Parcel> | null>(null);
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
-  const [statusFilter, setStatusFilter] = useState('');
-  const [searchInput, setSearchInput] = useState('');
-  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(saved?.page ?? 1);
+  const [statusFilter, setStatusFilter] = useState(saved?.status ?? '');
+  const [searchInput, setSearchInput] = useState(saved?.search ?? '');
+  const [search, setSearch] = useState(saved?.search ?? '');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showBulkPrice, setShowBulkPrice] = useState(false);
   const [showImport, setShowImport] = useState(false);
@@ -65,6 +76,13 @@ export default function AdminParcelsPage() {
   useEffect(() => {
     fetchParcels();
   }, [fetchParcels]);
+
+  // Persist list state so "back" from edit page restores position
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify({ page, status: statusFilter, search }));
+    } catch {}
+  }, [page, statusFilter, search]);
 
   useEffect(() => {
     if (editRef.current) editRef.current.focus();

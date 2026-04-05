@@ -331,6 +331,16 @@ export default function AdminNewParcelPage() {
           </div>
         </div>
         <div className="grid grid-cols-3 gap-4">
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-gray-700">Yol Durumu</label>
+            <select {...register('roadAccess')} className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+              <option value="">Belirtilmemiş</option>
+              <option value="yes">Yolu Var</option>
+              <option value="no">Yolu Yok</option>
+            </select>
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-4">
           <FormField
             label="Arazi Türü"
             error={errors.landType?.message}
@@ -370,13 +380,14 @@ export default function AdminNewParcelPage() {
           )}
         </div>
 
-        <div className="flex gap-6">
+        <div className="flex gap-6 flex-wrap">
           <FormCheckbox
             label="Açık Artırmaya Uygun"
             {...register('isAuctionEligible')}
           />
           <FormCheckbox label="Öne Çıkan" {...register('isFeatured')} />
           <FormCheckbox label="İlan Tarihini Göster" {...register('showListingDate')} />
+          <FormCheckbox label="Köşe Parsel" {...register('isCornerParcel')} />
         </div>
         <FormTextarea
           label="Açıklama"

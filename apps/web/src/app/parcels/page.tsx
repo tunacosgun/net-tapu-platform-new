@@ -76,6 +76,8 @@ function ParcelsContent() {
   const [priceRange, setPriceRange] = useState({ min: '', max: '' });
   const [areaRange, setAreaRange] = useState({ min: '', max: '' });
   const [isFeatured, setIsFeatured] = useState(false);
+  const [zoningFilter, setZoningFilter] = useState(searchParams.get('zoning') || '');
+  const [roadFilter, setRoadFilter] = useState(searchParams.get('road') || '');
 
   const fetchParcels = useCallback(async () => {
     setLoading(true);
@@ -97,6 +99,8 @@ function ParcelsContent() {
       if (priceRange.max) params.maxPrice = priceRange.max;
       if (areaRange.min) params.minArea = areaRange.min;
       if (areaRange.max) params.maxArea = areaRange.max;
+      if (zoningFilter) params.zoningStatus = zoningFilter;
+      if (roadFilter) params.roadAccess = roadFilter;
 
       const { data: res } = await apiClient.get<PaginatedResponse<Parcel>>('/parcels', { params });
       setData(res);
@@ -105,7 +109,7 @@ function ParcelsContent() {
     } finally {
       setLoading(false);
     }
-  }, [page, selectedCity, search, statusFilter, viewMode, sortParam, isFeatured, priceRange, areaRange]);
+  }, [page, selectedCity, search, statusFilter, viewMode, sortParam, isFeatured, priceRange, areaRange, zoningFilter, roadFilter]);
 
   useEffect(() => { fetchParcels(); }, [fetchParcels]);
 
@@ -142,6 +146,8 @@ function ParcelsContent() {
     setPriceRange({ min: '', max: '' });
     setAreaRange({ min: '', max: '' });
     setIsFeatured(false);
+    setZoningFilter('');
+    setRoadFilter('');
     router.push('/parcels?status=active');
   }
 
@@ -152,6 +158,8 @@ function ParcelsContent() {
     areaRange.min,
     areaRange.max,
     isFeatured,
+    zoningFilter,
+    roadFilter,
   ].filter(Boolean).length;
 
   return (
@@ -261,6 +269,12 @@ function ParcelsContent() {
                 )}
                 {isFeatured && (
                   <FilterPill label="Öne Çıkan" onRemove={() => setIsFeatured(false)} />
+                )}
+                {zoningFilter && (
+                  <FilterPill label={`İmar: ${zoningFilter}`} onRemove={() => setZoningFilter('')} />
+                )}
+                {roadFilter && (
+                  <FilterPill label={roadFilter === 'yes' ? 'Yolu Var' : 'Yolu Yok'} onRemove={() => setRoadFilter('')} />
                 )}
                 <button
                   onClick={clearAllFilters}
@@ -398,6 +412,50 @@ function ParcelsContent() {
                         >
                           Uygula
                         </button>
+                      </div>
+                    </FilterSection>
+
+                    {/* Zoning filter */}
+                    <FilterSection title="İmar Durumu">
+                      <div className="space-y-1.5">
+                        {['', 'İmarlı', 'İmarsız', 'Tarla', 'Bağ & Bahçe', 'Konut İmarlı', 'Ticari İmarlı'].map((z) => (
+                          <button
+                            key={z || 'all'}
+                            onClick={() => setZoningFilter(z)}
+                            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                              zoningFilter === z
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                : 'text-slate-600 hover:bg-slate-50 border border-transparent'
+                            }`}
+                          >
+                            <span>{z || 'Tümü'}</span>
+                            {zoningFilter === z && <Check className="h-4 w-4" />}
+                          </button>
+                        ))}
+                      </div>
+                    </FilterSection>
+
+                    {/* Road access filter */}
+                    <FilterSection title="Yol Durumu">
+                      <div className="space-y-1.5">
+                        {[
+                          { value: '', label: 'Tümü' },
+                          { value: 'yes', label: 'Yolu Var' },
+                          { value: 'no', label: 'Yolu Yok' },
+                        ].map((opt) => (
+                          <button
+                            key={opt.value || 'all'}
+                            onClick={() => setRoadFilter(opt.value)}
+                            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                              roadFilter === opt.value
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                : 'text-slate-600 hover:bg-slate-50 border border-transparent'
+                            }`}
+                          >
+                            <span>{opt.label}</span>
+                            {roadFilter === opt.value && <Check className="h-4 w-4" />}
+                          </button>
+                        ))}
                       </div>
                     </FilterSection>
                   </div>

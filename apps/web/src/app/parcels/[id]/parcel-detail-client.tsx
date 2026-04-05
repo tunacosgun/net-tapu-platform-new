@@ -418,7 +418,7 @@ export default function ParcelDetailClient() {
     try {
       await apiClient.post('/crm/offers', {
         parcelId: parcel.id,
-        amount: offerAmount.replace(/\./g, '').replace(',', '.'),
+        amount: offerAmount.replace(/\./g, '').replace(',', '') || offerAmount,
         message: offerMessage || undefined,
       });
       alert('Teklifiniz başarıyla gönderildi!');
@@ -474,6 +474,9 @@ export default function ParcelDetailClient() {
   if (parcel.landType) detailRows.push({ label: 'Arazi Türü', value: parcel.landType });
   if (parcel.isAuctionEligible) detailRows.push({ label: 'Açık Artırma', value: 'Uygun' });
   if (parcel.isFeatured) detailRows.push({ label: 'Öne Çıkan', value: 'Evet' });
+  if ((parcel as Record<string, unknown>).deedType) detailRows.push({ label: 'Tapu Türü', value: String((parcel as Record<string, unknown>).deedType) });
+  if ((parcel as Record<string, unknown>).vatRate !== undefined && (parcel as Record<string, unknown>).vatRate !== null) detailRows.push({ label: 'KDV Oranı', value: `%${(parcel as Record<string, unknown>).vatRate}` });
+  detailRows.push({ label: 'Tapu Harcı', value: 'Alıcı Öder' });
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-4 print:px-0 print:py-0">
@@ -866,9 +869,13 @@ export default function ParcelDetailClient() {
                 <label className="mb-1.5 block text-sm font-medium text-slate-900">Teklif Tutarı (TL) *</label>
                 <input
                   type="text"
+                  inputMode="numeric"
                   value={offerAmount}
-                  onChange={(e) => setOfferAmount(e.target.value.replace(/[^0-9.,]/g, ''))}
-                  placeholder="Örn: 5000000"
+                  onChange={(e) => {
+                    const raw = e.target.value.replace(/[^0-9]/g, '');
+                    setOfferAmount(raw ? Number(raw).toLocaleString('tr-TR') : '');
+                  }}
+                  placeholder="Örn: 5.000.000"
                   className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 />
               </div>

@@ -83,6 +83,8 @@ export const parcelSchema = z.object({
   description: z.string().optional().or(z.literal('')),
   deedType: z.string().optional().or(z.literal('')),
   vatRate: z.string().optional().or(z.literal('')),
+  roadAccess: z.string().optional().or(z.literal('')),
+  isCornerParcel: z.boolean().optional(),
 });
 export type ParcelFormData = z.infer<typeof parcelSchema>;
 

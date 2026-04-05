@@ -87,6 +87,10 @@ export default function AdminEditParcelPage() {
             isFeatured: parcelData.isFeatured,
             showListingDate: parcelData.showListingDate !== false,
             description: parcelData.description || '',
+            deedType: (parcelData as Record<string, unknown>).deedType as string || '',
+            vatRate: String((parcelData as Record<string, unknown>).vatRate ?? '0'),
+            roadAccess: (parcelData as Record<string, unknown>).roadAccess as string || '',
+            isCornerParcel: Boolean((parcelData as Record<string, unknown>).isCornerParcel),
           });
           setLoading(false);
         }
@@ -277,6 +281,37 @@ export default function AdminEditParcelPage() {
           />
         </div>
         <div className="grid grid-cols-3 gap-4">
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-gray-700">Tapu Tipi</label>
+            <select {...register('deedType')} className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+              <option value="">Seçiniz</option>
+              <option value="mustakil">Müstakil Tapu</option>
+              <option value="hisseli">Hisseli Tapu</option>
+              <option value="kat_irtifaki">Kat İrtifakı</option>
+              <option value="kat_mulkiyeti">Kat Mülkiyeti</option>
+              <option value="devremulk">Devremülk</option>
+              <option value="kooperatif_hisseli">Kooperatif Hisseli Tapu</option>
+            </select>
+          </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-gray-700">KDV Oranı</label>
+            <select {...register('vatRate')} className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+              <option value="0">%0</option>
+              <option value="1">%1</option>
+              <option value="10">%10</option>
+              <option value="20">%20</option>
+            </select>
+          </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-gray-700">Yol Durumu</label>
+            <select {...register('roadAccess')} className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+              <option value="">Belirtilmemiş</option>
+              <option value="yes">Yolu Var</option>
+              <option value="no">Yolu Yok</option>
+            </select>
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-4">
           <FormField
             label="Arazi Turu"
             error={errors.landType?.message}
@@ -333,13 +368,14 @@ export default function AdminEditParcelPage() {
           </select>
         </div>
 
-        <div className="flex gap-6">
+        <div className="flex gap-6 flex-wrap">
           <FormCheckbox
             label="Açık Artırmaya Uygun"
             {...register('isAuctionEligible')}
           />
           <FormCheckbox label="Öne Çıkan" {...register('isFeatured')} />
           <FormCheckbox label="İlan Tarihini Göster" {...register('showListingDate')} />
+          <FormCheckbox label="Köşe Parsel" {...register('isCornerParcel')} />
         </div>
         <FormTextarea
           label="Açıklama"
