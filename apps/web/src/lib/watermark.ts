@@ -1,14 +1,13 @@
 /**
- * Burns a single centered watermark text into an image using canvas.
- * Also adds the listing number in the top-left corner.
- * Returns a data URL with the watermark permanently rendered on the image.
+ * Burns a diagonal centered watermark + listing ID overlay into an image using canvas.
+ * Returns a data URL with everything permanently rendered (visible in fullscreen/new tab).
  */
 export function burnWatermark(
   imageUrl: string,
   watermarkText: string,
   options?: { opacity?: number; fontSize?: number; listingNumber?: string },
 ): Promise<string> {
-  const { opacity = 0.15, fontSize = 48 } = options || {};
+  const { opacity = 0.12 } = options || {};
   const listingNumber = options?.listingNumber;
 
   return new Promise((resolve) => {
@@ -17,33 +16,75 @@ export function burnWatermark(
       .then((blob) => {
         const blobUrl = URL.createObjectURL(blob);
         const img = new window.Image();
+        img.crossOrigin = 'anonymous';
         img.onload = () => {
+          const W = img.naturalWidth;
+          const H = img.naturalHeight;
           const canvas = document.createElement('canvas');
-          canvas.width = img.naturalWidth;
-          canvas.height = img.naturalHeight;
+          canvas.width = W;
+          canvas.height = H;
           const ctx = canvas.getContext('2d');
           if (!ctx) { URL.revokeObjectURL(blobUrl); resolve(imageUrl); return; }
 
-          // Draw original image
+          // 1. Draw original image at full resolution
           ctx.drawImage(img, 0, 0);
 
-          // Draw single centered watermark
+          // 2. Diagonal centered watermark — rotated ~-30deg, centered
           ctx.save();
           ctx.globalAlpha = opacity;
-          const scaledFontSize = Math.max(fontSize, Math.min(canvas.width, canvas.height) * 0.06);
+          const scaledFontSize = Math.max(20, Math.min(W, H) * 0.07);
           ctx.font = `bold ${scaledFontSize}px Arial, sans-serif`;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
-          ctx.fillStyle = 'rgba(255,255,255,0.8)';
-          ctx.strokeStyle = 'rgba(0,0,0,0.3)';
-          ctx.lineWidth = 2;
-          const cx = canvas.width / 2;
-          const cy = canvas.height / 2;
-          ctx.strokeText(watermarkText, cx, cy);
-          ctx.fillText(watermarkText, cx, cy);
+          ctx.fillStyle = 'rgba(255,255,255,0.9)';
+          ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+          ctx.lineWidth = Math.max(1, scaledFontSize * 0.04);
+          ctx.translate(W / 2, H / 2);
+          ctx.rotate((-30 * Math.PI) / 180);
+          ctx.strokeText(watermarkText, 0, 0);
+          ctx.fillText(watermarkText, 0, 0);
           ctx.restore();
 
-          // Listing number is now shown via CSS overlay, not burned into image
+          // 3. Listing number burned at top-left (scales with image, always visible)
+          if (listingNumber) {
+            const pad = Math.max(6, W * 0.012);
+            const idFontSize = Math.max(11, W * 0.022);
+            ctx.font = `600 ${idFontSize}px Arial, sans-serif`;
+            const textW = ctx.measureText(listingNumber).width;
+            const boxW = textW + pad * 2;
+            const boxH = idFontSize * 1.6;
+            const bx = pad;
+            const by = pad;
+            const r = 4;
+
+            // Rounded pill background
+            ctx.save();
+            ctx.globalAlpha = 0.65;
+            ctx.fillStyle = '#111827';
+            ctx.beginPath();
+            ctx.moveTo(bx + r, by);
+            ctx.lineTo(bx + boxW - r, by);
+            ctx.arcTo(bx + boxW, by, bx + boxW, by + r, r);
+            ctx.lineTo(bx + boxW, by + boxH - r);
+            ctx.arcTo(bx + boxW, by + boxH, bx + boxW - r, by + boxH, r);
+            ctx.lineTo(bx + r, by + boxH);
+            ctx.arcTo(bx, by + boxH, bx, by + boxH - r, r);
+            ctx.lineTo(bx, by + r);
+            ctx.arcTo(bx, by, bx + r, by, r);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+
+            // White text on top
+            ctx.save();
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = '#ffffff';
+            ctx.font = `600 ${idFontSize}px Arial, sans-serif`;
+            ctx.textBaseline = 'middle';
+            ctx.textAlign = 'left';
+            ctx.fillText(listingNumber, bx + pad, by + boxH / 2);
+            ctx.restore();
+          }
 
           URL.revokeObjectURL(blobUrl);
           try {
@@ -59,9 +100,7 @@ export function burnWatermark(
   });
 }
 
-/**
- * Cache for already-watermarked images to avoid re-processing.
- */
+/** Cache to avoid re-processing the same image. */
 const wmCache = new Map<string, string>();
 
 export async function getWatermarkedUrl(

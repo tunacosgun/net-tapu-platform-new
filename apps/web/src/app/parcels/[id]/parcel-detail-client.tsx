@@ -14,6 +14,7 @@ import { useViewerTracking } from '@/hooks/use-viewer-tracking';
 import { useAuthStore } from '@/stores/auth-store';
 import { useSiteSettings } from '@/hooks/use-site-settings';
 import { getWatermarkedUrl } from '@/lib/watermark';
+import { ParcelImageGallery } from '@/components/parcel/ParcelImageGallery';
 import type { Parcel, ParcelImage } from '@/types';
 import {
   Heart, Search as SearchIcon, ExternalLink, MapPin, Maximize2,
@@ -302,12 +303,9 @@ export default function ParcelDetailClient() {
   const [error, setError] = useState<string | null>(null);
   const [showCallMe, setShowCallMe] = useState(false);
   const [showAppointment, setShowAppointment] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [selectedIdx, setSelectedIdx] = useState(0);
   const [isFavorited, setIsFavorited] = useState(false);
   const [favToggling, setFavToggling] = useState(false);
   const [pdfLoading, setPdfLoading] = useState(false);
-  const [lightboxFullscreen, setLightboxFullscreen] = useState(false);
   const [showOffer, setShowOffer] = useState(false);
   const [offerAmount, setOfferAmount] = useState('');
   const [offerMessage, setOfferMessage] = useState('');
@@ -347,15 +345,15 @@ export default function ParcelDetailClient() {
   useEffect(() => {
     if (!images.length || !siteName) return;
     let cancelled = false;
+    const listingLabel = parcel?.listingId || '';
     images.forEach((img, idx) => {
       const url = resolveImageUrl(img);
-      const pid = parcel?.id || ''; const hashVal = pid.split('').reduce((a: number, c: string) => ((a * 31 + c.charCodeAt(0)) >>> 0), 5381); const listingNum = String(hashVal % 9000000000 + 1000000000);
-      getWatermarkedUrl(url, siteName, listingNum).then((wmUrl) => {
+      getWatermarkedUrl(url, siteName, listingLabel).then((wmUrl) => {
         if (!cancelled) setWmImages((prev) => ({ ...prev, [idx]: wmUrl }));
       });
     });
     return () => { cancelled = true; };
-  }, [images, siteName]);
+  }, [images, siteName, parcel?.listingId]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -497,72 +495,21 @@ export default function ParcelDetailClient() {
         <span className="text-slate-900 font-medium truncate max-w-[260px]">{parcel.title}</span>
       </nav>
 
-      {/* Lightbox */}
-      {selectedImage && (
-        <LightboxOverlay
-          images={images}
-          wmImages={wmImages}
-          selectedIdx={selectedIdx}
-          selectedImage={selectedImage}
-          title={parcel.title}
-          siteName={siteName}
-          onClose={() => { setSelectedImage(null); setLightboxFullscreen(false); if (document.fullscreenElement) document.exitFullscreen(); }}
-          onNavigate={(idx) => { setSelectedIdx(idx); setSelectedImage(wmImages[idx] || resolveImageUrl(images[idx])); }}
-        />
-      )}
-
-      {/* ─── MAIN TWO-COLUMN LAYOUT (sahibinden style) ─── */}
+      {/* ─── MAIN TWO-COLUMN LAYOUT ─── */}
       <div className="grid gap-5 lg:grid-cols-12">
 
-        {/* LEFT: Photo Gallery */}
+        {/* LEFT: Photo Gallery — new premium system */}
         <div className="lg:col-span-7">
-          {images.length > 0 ? (
-            <div>
-              <div
-                className="relative cursor-pointer overflow-hidden rounded-lg border border-slate-200 bg-white flex items-center justify-center h-[300px] md:h-[500px]"
-                onClick={() => { setSelectedImage(wmImages[selectedIdx] || resolveImageUrl(images[selectedIdx])); }}
-              >
-                <img
-                  src={wmImages[selectedIdx] || resolveImageUrl(images[selectedIdx])}
-                  alt={parcel.title}
-                  className="max-h-full max-w-full object-contain"
-                />
-                {/* Listing number - top left like sahibinden */}
-                <span className="absolute top-2 left-2 text-[11px] text-slate-500 font-mono z-10">#{(() => { const id = parcel.id || ''; const hash = id.split('').reduce((a, c) => ((a * 31 + c.charCodeAt(0)) >>> 0), 5381); return String(hash % 9000000000 + 1000000000); })()}</span>
-                <Badge variant={status.variant} className="absolute top-2 left-28 text-xs px-2.5 py-1 shadow">{status.label}</Badge>
-                <div className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-lg bg-black/60 px-3 py-1.5 text-white text-xs backdrop-blur-sm cursor-pointer">
-                  <SearchIcon className="h-3.5 w-3.5" />
-                  Büyük Fotoğraf
-                </div>
-                {/* Image counter */}
-                <div className="absolute bottom-3 left-3 flex items-center gap-1.5 rounded-lg bg-black/60 px-3 py-1.5 text-white text-xs backdrop-blur-sm">
-                  <ImageIcon className="h-3.5 w-3.5" />
-                  {selectedIdx + 1} / {images.length}
-                </div>
-              </div>
-
-              {images.length > 1 && (
-                <div className="mt-2 flex gap-1.5 overflow-x-auto pb-1">
-                  {images.map((img, idx) => (
-                    <button
-                      key={img.id}
-                      onClick={() => setSelectedIdx(idx)}
-                      className={`shrink-0 h-20 w-28 rounded overflow-hidden border-2 transition-all ${selectedIdx === idx ? 'border-emerald-500 shadow-sm' : 'border-slate-200 opacity-70 hover:opacity-100'}`}
-                    >
-                      <img src={wmImages[idx] || resolveImageUrl(img)} alt="" className="h-full w-full object-contain bg-white" />
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="flex items-center justify-center rounded-lg border border-slate-200 bg-white h-[300px] md:h-[500px]">
-              <div className="text-center">
-                <ImageIcon className="mx-auto h-12 w-12 text-slate-300" />
-                <p className="mt-2 text-sm text-slate-500">Henüz fotoğraf eklenmemiş</p>
-              </div>
-            </div>
-          )}
+          {/* Status badge above gallery */}
+          <div className="mb-2 flex items-center gap-2">
+            <Badge variant={status.variant} className="text-xs px-2.5 py-1 shadow-sm">{status.label}</Badge>
+          </div>
+          <ParcelImageGallery
+            images={images}
+            wmImages={wmImages}
+            title={parcel.title}
+            listingId={parcel.listingId}
+          />
         </div>
 
         {/* RIGHT: Price + Info Table + Consultant */}
@@ -915,107 +862,3 @@ export default function ParcelDetailClient() {
   );
 }
 
-/* ─── Lightbox overlay ─── */
-function LightboxOverlay({
-  images, wmImages, selectedIdx, selectedImage, title, siteName,
-  onClose, onNavigate,
-}: {
-  images: ParcelImage[];
-  wmImages: Record<number, string>;
-  selectedIdx: number;
-  selectedImage: string;
-  title: string;
-  siteName: string;
-  onClose: () => void;
-  onNavigate: (idx: number) => void;
-}) {
-  const goNext = useCallback(() => {
-    if (images.length <= 1) return;
-    const next = (selectedIdx + 1) % images.length;
-    onNavigate(next);
-  }, [images, selectedIdx, onNavigate]);
-
-  const goPrev = useCallback(() => {
-    if (images.length <= 1) return;
-    const prev = (selectedIdx - 1 + images.length) % images.length;
-    onNavigate(prev);
-  }, [images, selectedIdx, onNavigate]);
-
-  useEffect(() => {
-    function handleKey(e: KeyboardEvent) {
-      if (e.key === 'ArrowRight') goNext();
-      else if (e.key === 'ArrowLeft') goPrev();
-      else if (e.key === 'Escape') onClose();
-    }
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
-  }, [goNext, goPrev, onClose]);
-
-  return (
-    <div
-      id="nettapu-lightbox"
-      className="fixed inset-0 z-[100] flex flex-col print:hidden select-none"
-      onContextMenu={(e) => e.preventDefault()}
-    >
-      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
-
-      <div className="relative flex items-center justify-between px-5 py-2.5 shrink-0 z-10">
-        <span className="text-sm font-medium truncate text-white/90 max-w-[50%]">{title}</span>
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => {
-              const el = document.getElementById('nettapu-lightbox');
-              if (!el) return;
-              if (document.fullscreenElement) document.exitFullscreen();
-              else el.requestFullscreen().catch(() => {});
-            }}
-            className="flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-medium text-white/70 hover:text-white hover:bg-white/10 transition-all"
-          >
-            <Maximize2 className="h-4 w-4" />
-            Tam ekran
-          </button>
-          <button
-            onClick={onClose}
-            className="flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-medium text-white/70 hover:text-white hover:bg-white/10 transition-all cursor-pointer"
-          >
-            Kapat
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
-
-      <div className="relative flex flex-1 items-center justify-center min-h-0 z-10 px-4">
-        {images.length > 1 && (
-          <button className="absolute left-4 top-1/2 -translate-y-1/2 flex h-12 w-12 items-center justify-center rounded-full bg-black/50 text-white/70 hover:bg-black/70 hover:text-white z-10 transition-all cursor-pointer" onClick={goPrev}>
-            <ChevronLeft className="h-7 w-7" />
-          </button>
-        )}
-
-        <div
-          className="h-full w-full"
-          style={{
-            backgroundImage: `url(${selectedImage})`,
-            backgroundSize: 'contain',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-            margin: '8px 72px',
-          }}
-          draggable={false}
-        />
-
-        {images.length > 1 && (
-          <button className="absolute right-4 top-1/2 -translate-y-1/2 flex h-12 w-12 items-center justify-center rounded-full bg-black/50 text-white/70 hover:bg-black/70 hover:text-white z-10 transition-all cursor-pointer" onClick={goNext}>
-            <ChevronRight className="h-7 w-7" />
-          </button>
-        )}
-      </div>
-
-      <div className="relative flex items-center justify-center py-2.5 z-10">
-        <span className="text-sm text-white">
-          <span className="font-bold">{selectedIdx + 1}/{images.length}</span>
-          <span className="ml-4 text-white/50 uppercase text-xs tracking-wider">{title}</span>
-        </span>
-      </div>
-    </div>
-  );
-}
