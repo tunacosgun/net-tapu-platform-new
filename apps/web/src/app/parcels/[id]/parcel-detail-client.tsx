@@ -797,72 +797,118 @@ export default function ParcelDetailClient() {
 
       {/* WhatsApp Zaman Tercihi Modal */}
       {showWhatsAppModal && parcel && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setShowWhatsAppModal(false)}>
-          <div className="w-full max-w-sm rounded-2xl bg-white shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            {/* Header */}
-            <div className="bg-[#25D366] px-5 py-4 flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20">
-                <svg className="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" /></svg>
-              </div>
-              <div>
-                <p className="text-white font-semibold text-sm">WhatsApp ile İletişim</p>
-                <p className="text-white/80 text-xs">Sizi ne zaman arayalım?</p>
-              </div>
-              <button onClick={() => setShowWhatsAppModal(false)} className="ml-auto text-white/70 hover:text-white transition-colors">
-                <X className="h-5 w-5" />
-              </button>
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+          style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)' }}
+          onClick={() => setShowWhatsAppModal(false)}
+        >
+          <div
+            className="w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl bg-white overflow-hidden"
+            style={{ boxShadow: '0 32px 80px rgba(0,0,0,0.3)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Drag handle (mobile) */}
+            <div className="flex justify-center pt-3 pb-1 sm:hidden">
+              <div className="w-10 h-1 rounded-full bg-slate-200" />
             </div>
 
-            {/* Body */}
-            <div className="px-5 py-4">
-              <p className="text-slate-500 text-xs mb-4 text-center">Danışmanımızın sizi araması için uygun zamanı seçin</p>
-              <div className="space-y-2.5">
-                {[
-                  { key: 'morning', icon: '🌅', label: 'Sabah Arayın', sub: '09:00 – 12:00 arası', note: 'sabah saatlerinde aranmak istiyorum' },
-                  { key: 'evening', icon: '🌆', label: 'Akşam Arayın', sub: '17:00 – 20:00 arası', note: 'akşam saatlerinde aranmak istiyorum' },
-                  { key: 'tomorrow', icon: '📅', label: 'Yarın Arayın', sub: 'Bir sonraki iş günü', note: 'bir sonraki iş günü aranmak istiyorum' },
-                ].map(({ key, icon, label, sub, note }) => {
-                  const buildUrl = () => {
-                    const lines: string[] = [];
-                    lines.push('Merhaba,');
-                    lines.push('Aşağıdaki ilan hakkında bilgi almak istiyorum.');
-                    lines.push('');
-                    lines.push('──────────');
-                    if (parcel.listingId) lines.push('İlan No: ' + parcel.listingId);
-                    lines.push(parcel.title);
-                    if (parcel.city && parcel.district) lines.push('Konum: ' + parcel.city + ', ' + parcel.district);
-                    if (parcel.areaM2) lines.push('Alan: ' + Number(parcel.areaM2).toLocaleString('tr-TR') + ' m²');
-                    if (parcel.price) lines.push('Fiyat: ' + parseFloat(parcel.price).toLocaleString('tr-TR') + ' ₺');
-                    lines.push('──────────');
-                    lines.push('');
-                    lines.push(`📌 Not: ${note}.`);
-                    lines.push('');
-                    lines.push(parcelUrl);
-                    return `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(lines.join('\n'))}`;
-                  };
-                  return (
-                    <a
-                      key={key}
-                      href={buildUrl()}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={() => setShowWhatsAppModal(false)}
-                      className="flex items-center gap-4 w-full rounded-xl border border-slate-200 px-4 py-3.5 hover:border-[#25D366] hover:bg-green-50 transition-all group cursor-pointer"
+            {/* Top section */}
+            <div className="px-6 pt-4 pb-5 text-center">
+              {/* WhatsApp icon */}
+              <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl" style={{ background: 'linear-gradient(135deg, #25D366 0%, #128C5E 100%)' }}>
+                <svg className="h-7 w-7 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-bold text-slate-900">Sizi ne zaman arayalım?</h3>
+              <p className="mt-1 text-sm text-slate-400">Danışmanımız seçtiğiniz saatte sizi arasın</p>
+            </div>
+
+            {/* Options */}
+            <div className="px-5 space-y-2 pb-4">
+              {([
+                {
+                  key: 'morning',
+                  icon: '☀️',
+                  label: 'Sabah Arayın',
+                  sub: '09:00 – 12:00 arası',
+                  color: '#F59E0B',
+                  bg: '#FFFBEB',
+                  note: 'sabah saatlerinde (09:00–12:00) aranmak istiyorum',
+                },
+                {
+                  key: 'evening',
+                  icon: '🌙',
+                  label: 'Akşam Arayın',
+                  sub: '17:00 – 20:00 arası',
+                  color: '#6366F1',
+                  bg: '#EEF2FF',
+                  note: 'akşam saatlerinde (17:00–20:00) aranmak istiyorum',
+                },
+                {
+                  key: 'tomorrow',
+                  icon: '📆',
+                  label: 'Yarın Arayın',
+                  sub: 'Bir sonraki iş günü',
+                  color: '#0EA5E9',
+                  bg: '#F0F9FF',
+                  note: 'bir sonraki iş günü aranmak istiyorum',
+                },
+              ] as const).map(({ key, icon, label, sub, color, bg, note }) => {
+                const buildUrl = () => {
+                  const lines: string[] = [
+                    'Merhaba NetTapu,',
+                    '',
+                    'Aşağıdaki arsa ilanı hakkında bilgi almak istiyorum.',
+                    '─────────────────',
+                    parcel.title,
+                    ...(parcel.city && parcel.district ? [`📍 ${parcel.city}, ${parcel.district}`] : []),
+                    ...(parcel.areaM2 ? [`📐 ${Number(parcel.areaM2).toLocaleString('tr-TR')} m²`] : []),
+                    ...(parcel.price ? [`💰 ${parseFloat(parcel.price).toLocaleString('tr-TR')} ₺`] : []),
+                    '─────────────────',
+                    `🕐 ${note}.`,
+                    '',
+                    parcelUrl,
+                  ];
+                  return `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(lines.join('\n'))}`;
+                };
+                return (
+                  <a
+                    key={key}
+                    href={buildUrl()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setShowWhatsAppModal(false)}
+                    className="flex items-center gap-4 w-full rounded-2xl px-4 py-3.5 transition-all duration-150 active:scale-[0.98] cursor-pointer group"
+                    style={{ background: bg, border: `1.5px solid ${color}20` }}
+                  >
+                    <div
+                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-xl"
+                      style={{ background: `${color}18` }}
                     >
-                      <span className="text-2xl">{icon}</span>
-                      <div className="flex-1 text-left">
-                        <p className="text-sm font-semibold text-slate-800 group-hover:text-[#1a9e50]">{label}</p>
-                        <p className="text-xs text-slate-400 mt-0.5">{sub}</p>
-                      </div>
-                      <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-[#25D366] transition-colors" />
-                    </a>
-                  );
-                })}
-              </div>
+                      {icon}
+                    </div>
+                    <div className="flex-1 text-left">
+                      <p className="text-sm font-semibold text-slate-800">{label}</p>
+                      <p className="text-xs mt-0.5" style={{ color }}>{sub}</p>
+                    </div>
+                    <div
+                      className="flex h-7 w-7 items-center justify-center rounded-full transition-transform group-hover:translate-x-0.5"
+                      style={{ background: `${color}18` }}
+                    >
+                      <ChevronRight className="h-4 w-4" style={{ color }} />
+                    </div>
+                  </a>
+                );
+              })}
             </div>
 
-            <div className="px-5 pb-5">
-              <button onClick={() => setShowWhatsAppModal(false)} className="w-full text-xs text-slate-400 hover:text-slate-600 py-2 transition-colors">
+            {/* Footer */}
+            <div className="px-5 pb-6 pt-1">
+              <button
+                onClick={() => setShowWhatsAppModal(false)}
+                className="w-full rounded-xl py-2.5 text-sm text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-all"
+              >
                 Vazgeç
               </button>
             </div>
