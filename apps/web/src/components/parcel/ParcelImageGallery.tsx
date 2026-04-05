@@ -76,15 +76,7 @@ export function ParcelImageGallery({ images, wmImages, title, listingId }: Parce
             draggable={false}
           />
 
-          {/* Listing ID — subtle top-left label, no box */}
-          {listingId && (
-            <span
-              className="absolute top-2.5 left-3 z-10 text-[10px] font-medium text-white/70 select-none pointer-events-none"
-              style={{ textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}
-            >
-              #{listingId}
-            </span>
-          )}
+          {/* Listing ID is burned into canvas — no CSS overlay here to avoid duplication */}
 
           {/* Image counter — bottom left */}
           <div className="absolute bottom-3 left-3 z-10 flex items-center gap-1.5 rounded-lg bg-black/60 backdrop-blur-sm px-3 py-1.5 text-white text-xs font-medium select-none">
@@ -228,15 +220,7 @@ export function ParcelImageGallery({ images, wmImages, title, listingId }: Parce
                   maxHeight: 'calc(100vh - 160px)',
                 }}
               />
-              {/* Subtle listing ID on image — same style as main view */}
-              {listingId && (
-                <span
-                  className="absolute top-3 left-3 text-[10px] font-medium text-white/70 select-none pointer-events-none"
-                  style={{ textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}
-                >
-                  #{listingId}
-                </span>
-              )}
+              {/* Listing ID already burned into canvas image — no duplicate CSS overlay */}
             </div>
 
             {images.length > 1 && (

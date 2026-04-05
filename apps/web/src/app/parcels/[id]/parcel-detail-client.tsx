@@ -345,15 +345,18 @@ export default function ParcelDetailClient() {
   useEffect(() => {
     if (!images.length || !siteName) return;
     let cancelled = false;
-    const listingLabel = parcel?.listingId || '';
+    // Generate stable 10-digit numeric listing number from parcel UUID
+    const pid = parcel?.id || '';
+    const hashVal = pid.split('').reduce((a: number, c: string) => ((a * 31 + c.charCodeAt(0)) >>> 0), 5381);
+    const listingNumber = String((hashVal % 9000000000) + 1000000000);
     images.forEach((img, idx) => {
       const url = resolveImageUrl(img);
-      getWatermarkedUrl(url, siteName, listingLabel).then((wmUrl) => {
+      getWatermarkedUrl(url, siteName, listingNumber).then((wmUrl) => {
         if (!cancelled) setWmImages((prev) => ({ ...prev, [idx]: wmUrl }));
       });
     });
     return () => { cancelled = true; };
-  }, [images, siteName, parcel?.listingId]);
+  }, [images, siteName, parcel?.id]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
