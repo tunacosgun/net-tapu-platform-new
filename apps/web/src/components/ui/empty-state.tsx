@@ -1,12 +1,26 @@
+import { type ReactNode } from 'react';
+
 interface EmptyStateProps {
+  icon?: ReactNode;
+  title?: string;
   message: string;
+  action?: ReactNode;
   className?: string;
 }
 
-export function EmptyState({ message, className = '' }: EmptyStateProps) {
+export function EmptyState({ icon, title, message, action, className = '' }: EmptyStateProps) {
   return (
-    <p className={`mt-12 text-center text-[var(--muted-foreground)] ${className}`}>
-      {message}
-    </p>
+    <div className={`flex flex-col items-center justify-center py-16 px-6 text-center ${className}`}>
+      {icon && (
+        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--muted)] text-[var(--muted-foreground)]">
+          {icon}
+        </div>
+      )}
+      {title && (
+        <h3 className="mb-1 text-sm font-semibold text-[var(--foreground)]">{title}</h3>
+      )}
+      <p className="max-w-sm text-sm text-[var(--muted-foreground)] leading-relaxed">{message}</p>
+      {action && <div className="mt-5">{action}</div>}
+    </div>
   );
 }

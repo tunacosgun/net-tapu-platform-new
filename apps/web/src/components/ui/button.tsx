@@ -1,39 +1,51 @@
-import { type ButtonHTMLAttributes } from 'react';
+import { type ButtonHTMLAttributes, type ReactNode } from 'react';
 
-const variantClasses = {
-  primary:
-    'bg-brand-500 hover:bg-brand-600 text-white font-semibold shadow-sm',
-  secondary:
-    'border border-[var(--border)] hover:bg-[var(--muted)]',
-  danger:
-    'bg-red-500 hover:bg-red-600 text-white font-semibold',
-  ghost:
-    'text-brand-500 hover:underline',
-} as const;
+const variantClasses: Record<string, string> = {
+  primary:   'btn btn-primary',
+  secondary: 'btn btn-secondary',
+  ghost:     'btn btn-ghost',
+  danger:    'btn btn-danger',
+};
 
-const sizeClasses = {
-  sm: 'px-3 py-1 text-xs rounded',
-  md: 'px-4 py-2 text-sm rounded-md',
-  lg: 'px-6 py-3 text-base rounded-md',
-} as const;
+const sizeClasses: Record<string, string> = {
+  sm: 'btn-sm',
+  md: '',
+  lg: 'btn-lg',
+  xl: 'btn-xl',
+};
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: keyof typeof variantClasses;
-  size?: keyof typeof sizeClasses;
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  loading?: boolean;
+  icon?: ReactNode;
 }
 
 export function Button({
   variant = 'primary',
   size = 'md',
+  loading = false,
+  icon,
   className = '',
   disabled,
+  children,
   ...props
 }: ButtonProps) {
   return (
     <button
-      className={`${variantClasses[variant]} ${sizeClasses[size]} transition-colors disabled:opacity-50 ${className}`}
-      disabled={disabled}
+      className={`${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
+      disabled={disabled || loading}
       {...props}
-    />
+    >
+      {loading ? (
+        <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+        </svg>
+      ) : icon ? (
+        <span className="shrink-0">{icon}</span>
+      ) : null}
+      {children}
+    </button>
   );
 }
