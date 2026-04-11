@@ -512,6 +512,11 @@ export default function ParcelDetailClient() {
             images={images}
             wmImages={wmImages}
             title={parcel.title}
+            listingNumber={(() => {
+              const pid = parcel?.id || '';
+              const h = pid.split('').reduce((a: number, c: string) => ((a * 31 + c.charCodeAt(0)) >>> 0), 5381);
+              return String((h % 9000000000) + 1000000000);
+            })()}
           />
         </div>
 

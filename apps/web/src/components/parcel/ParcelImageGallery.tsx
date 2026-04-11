@@ -7,10 +7,9 @@ import { resolveImageUrl } from '@/lib/format';
 
 interface ParcelImageGalleryProps {
   images: ParcelImage[];
-  /** Pre-processed watermarked data-URLs keyed by index */
   wmImages: Record<number, string>;
-  /** The display title of the parcel */
   title: string;
+  listingNumber?: string;
 }
 
 /**
@@ -25,7 +24,7 @@ interface ParcelImageGalleryProps {
  *
  * Thumbnails → fixed size, object-cover, selected = brand border.
  */
-export function ParcelImageGallery({ images, wmImages, title }: ParcelImageGalleryProps) {
+export function ParcelImageGallery({ images, wmImages, title, listingNumber }: ParcelImageGalleryProps) {
   const [selectedIdx, setSelectedIdx] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
@@ -74,7 +73,13 @@ export function ParcelImageGallery({ images, wmImages, title }: ParcelImageGalle
             draggable={false}
           />
 
-          {/* Listing ID is burned into canvas — no CSS overlay here to avoid duplication */}
+          {/* Listing ID — CSS pill, always visible regardless of wmImages load state */}
+          {listingNumber && (
+            <div className="absolute top-3 left-3 z-10 rounded-full bg-black/55 px-3 py-1 select-none"
+              style={{ backdropFilter: 'blur(4px)' }}>
+              <span className="text-white font-semibold text-xs tracking-wide">#{listingNumber}</span>
+            </div>
+          )}
 
           {/* Image counter — bottom left */}
           <div className="absolute bottom-3 left-3 z-10 flex items-center gap-1.5 rounded-lg bg-black/60 backdrop-blur-sm px-3 py-1.5 text-white text-xs font-medium select-none">
@@ -187,8 +192,8 @@ export function ParcelImageGallery({ images, wmImages, title }: ParcelImageGalle
             </div>
           </div>
 
-          {/* Main image — centered, not cropped, original aspect ratio */}
-          <div className="relative z-10 flex flex-1 min-h-0 items-center justify-center px-16 py-2">
+          {/* Main image — fills available space */}
+          <div className="relative z-10 flex flex-1 min-h-0 items-center justify-center px-14 py-3">
             {images.length > 1 && (
               <button
                 onClick={goPrev}
@@ -198,20 +203,20 @@ export function ParcelImageGallery({ images, wmImages, title }: ParcelImageGalle
               </button>
             )}
 
-            <div className="relative flex items-center justify-center max-h-full max-w-full">
-              <img
-                src={currentSrc}
-                alt={title}
-                className="max-h-full max-w-full object-contain rounded-lg"
-                draggable={false}
-                style={{
-                  userSelect: 'none',
-                  boxShadow: '0 8px 40px rgba(0,0,0,0.5), 0 2px 12px rgba(0,0,0,0.3)',
-                  maxHeight: 'calc(100vh - 160px)',
-                }}
-              />
-              {/* Listing ID already burned into canvas image — no duplicate CSS overlay */}
-            </div>
+            <img
+              src={currentSrc}
+              alt={title}
+              className="rounded-xl object-contain"
+              draggable={false}
+              style={{
+                userSelect: 'none',
+                maxWidth: '100%',
+                maxHeight: 'calc(100vh - 140px)',
+                width: 'auto',
+                height: 'auto',
+                boxShadow: '0 12px 48px rgba(0,0,0,0.6)',
+              }}
+            />
 
             {images.length > 1 && (
               <button
