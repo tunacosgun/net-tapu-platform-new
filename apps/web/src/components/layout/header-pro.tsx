@@ -146,24 +146,24 @@ function AuctionsLiveDropdown({ pathname }: { pathname: string | null }) {
 
   return (
     <div className="relative" onMouseEnter={handleEnter} onMouseLeave={handleLeave}>
-      <button
+      <Link
+        href="/auctions"
         className={`relative flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-lg transition-all duration-200 select-none ${
           isActive || open
             ? 'text-emerald-600 bg-emerald-50'
             : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
         }`}
-        aria-expanded={open}
       >
         <Gavel className="h-4 w-4" />
         İhaleler
         {hasLive && (
-          <span className="flex h-2 w-2 shrink-0">
-            <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-green-400 opacity-75" />
+          <span className="relative flex h-2 w-2 shrink-0">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
           </span>
         )}
         <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
-      </button>
+      </Link>
 
       <AnimatePresence>
         {open && (
@@ -172,7 +172,7 @@ function AuctionsLiveDropdown({ pathname }: { pathname: string | null }) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.97 }}
             transition={{ duration: 0.15, ease: 'easeOut' }}
-            className="absolute left-0 top-full mt-2 z-50 w-80"
+            className="absolute left-0 top-full mt-1 z-[100] w-80"
           >
             <div className="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
               {/* Header */}

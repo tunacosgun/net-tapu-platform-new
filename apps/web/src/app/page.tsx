@@ -14,7 +14,7 @@ import { VideoPopup } from '@/components/video-popup';
 import {
   Search, ArrowRight, MapPin, Shield, Lock, Headphones, Scale,
   Play, Star, Users, Gavel, Building2, ChevronRight, TrendingUp,
-  Zap, Timer, Sparkles, CheckCircle2, Award,
+  Zap, Timer, Sparkles, CheckCircle2, Award, X,
 } from 'lucide-react';
 import type { Parcel, Auction, PaginatedResponse, Reference } from '@/types';
 
@@ -39,6 +39,8 @@ export default function HomePage() {
   const [stats, setStats] = useState({ parcels: 0, auctions: 0, cities: 0 });
   const [searchQuery, setSearchQuery] = useState('');
   const [showVideo, setShowVideo] = useState(false);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [searchFocused, setSearchFocused] = useState(false);
   const [testimonials, setTestimonials] = useState<Reference[]>([]);
 
   useEffect(() => {
@@ -80,11 +82,47 @@ export default function HomePage() {
     });
   }, []);
 
+  // Load recent searches from localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('nt_recent_searches');
+      if (saved) setRecentSearches(JSON.parse(saved));
+    } catch {}
+  }, []);
+
+  function saveSearch(q: string) {
+    const trimmed = q.trim();
+    if (!trimmed) return;
+    setRecentSearches((prev) => {
+      const updated = [trimmed, ...prev.filter((s) => s !== trimmed)].slice(0, 5);
+      try { localStorage.setItem('nt_recent_searches', JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+  }
+
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/parcels?search=${encodeURIComponent(searchQuery.trim())}`);
+    const q = searchQuery.trim();
+    if (q) {
+      saveSearch(q);
+      setSearchFocused(false);
+      router.push(`/parcels?search=${encodeURIComponent(q)}`);
     }
+  }
+
+  function handleRecentClick(q: string) {
+    setSearchFocused(false);
+    saveSearch(q);
+    router.push(`/parcels?search=${encodeURIComponent(q)}`);
+  }
+
+  function removeRecent(q: string, e: React.MouseEvent) {
+    e.stopPropagation();
+    setRecentSearches((prev) => {
+      const updated = prev.filter((s) => s !== q);
+      try { localStorage.setItem('nt_recent_searches', JSON.stringify(updated)); } catch {}
+      return updated;
+    });
   }
 
   return (
@@ -156,22 +194,24 @@ export default function HomePage() {
               <div className="relative group">
                 {/* Glow effect */}
                 <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-2xl opacity-20 blur-xl group-hover:opacity-40 transition-opacity duration-500" />
-                
+
                 {/* Search input container */}
                 <div className="relative flex items-center bg-white/95 backdrop-blur-xl rounded-xl shadow-2xl border border-white/20 p-2">
                   <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-emerald-50 text-emerald-600 ml-1">
                     <Search className="h-5 w-5" />
                   </div>
-                  
+
                   <input
                     type="text"
                     placeholder="İl, ilçe, ada/parsel veya ilan no ile arayın..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
+                    onFocus={() => setSearchFocused(true)}
+                    onBlur={() => setTimeout(() => setSearchFocused(false), 150)}
                     className="flex-1 px-4 py-3 bg-transparent text-slate-900 placeholder:text-slate-400 text-base focus:outline-none"
                     data-testid="hero-search-input"
                   />
-                  
+
                   <button
                     type="submit"
                     className="bg-gradient-to-r from-emerald-600 to-emerald-500 text-white px-8 py-3 rounded-lg font-semibold hover:from-emerald-700 hover:to-emerald-600 transition-all duration-200 flex items-center gap-2 shadow-emerald hover:shadow-emerald-lg btn-shine"
@@ -181,6 +221,40 @@ export default function HomePage() {
                     <ArrowRight className="h-4 w-4" />
                   </button>
                 </div>
+
+                {/* Recent searches dropdown */}
+                {searchFocused && recentSearches.length > 0 && !searchQuery && (
+                  <div className="absolute left-0 right-0 top-full mt-2 z-50 rounded-2xl bg-white shadow-2xl border border-slate-100 overflow-hidden">
+                    <div className="px-4 py-2.5 border-b border-slate-100 flex items-center justify-between">
+                      <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Son Aramalar</span>
+                      <button
+                        type="button"
+                        onClick={() => { setRecentSearches([]); localStorage.removeItem('nt_recent_searches'); }}
+                        className="text-xs text-slate-400 hover:text-red-500 transition-colors"
+                      >
+                        Temizle
+                      </button>
+                    </div>
+                    {recentSearches.map((q) => (
+                      <button
+                        key={q}
+                        type="button"
+                        onClick={() => handleRecentClick(q)}
+                        className="flex items-center gap-3 w-full px-4 py-3 text-left hover:bg-slate-50 transition-colors group/item"
+                      >
+                        <Search className="h-4 w-4 text-slate-300 shrink-0" />
+                        <span className="flex-1 text-sm text-slate-700 font-medium">{q}</span>
+                        <button
+                          type="button"
+                          onClick={(e) => removeRecent(q, e)}
+                          className="opacity-0 group-hover/item:opacity-100 transition-opacity text-slate-300 hover:text-slate-500 p-1"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Quick links */}
