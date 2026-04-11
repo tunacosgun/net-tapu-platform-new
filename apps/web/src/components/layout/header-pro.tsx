@@ -11,7 +11,10 @@ import {
   ChevronDown, Phone, Mail, Search,
   Settings, CreditCard, Gavel, Clock, TrendingUp, ArrowRight,
   Info, Eye, Target, Settings2, Building2, FolderOpen, Star, Newspaper, BookOpen, Headphones,
+  History,
 } from 'lucide-react';
+import { useRecentSearches } from '@/hooks/use-recent-searches';
+import { useRouter } from 'next/navigation';
 import type { Auction } from '@/types';
 import apiClient from '@/lib/api-client';
 
@@ -340,6 +343,7 @@ function CorporateDropdown({
 
 export function HeaderPro() {
   const pathname = usePathname();
+  const router = useRouter();
   const { isAuthenticated, user, avatarUrl } = useAuthStore();
   const s = useSiteSettings();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -351,6 +355,11 @@ export function HeaderPro() {
   const [corporateOpen, setCorporateOpen] = useState(false);
   const [mobileCorporateOpen, setMobileCorporateOpen] = useState(false);
   const corporateTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const searchRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const { searches: recentSearches, save: saveSearch, remove: removeSearch, clear: clearSearches } = useRecentSearches();
 
   // Parse corporate nav items from settings
   let corporateItems: NavDropdownItem[] = DEFAULT_CORPORATE_ITEMS;
@@ -422,6 +431,32 @@ export function HeaderPro() {
   function handleCorporateLeave() {
     corporateTimer.current = setTimeout(() => setCorporateOpen(false), 120);
   }
+
+  function openSearch() {
+    setSearchOpen(true);
+    setTimeout(() => searchInputRef.current?.focus(), 50);
+  }
+
+  function handleSearchSubmit(q: string) {
+    const trimmed = q.trim();
+    if (!trimmed) return;
+    saveSearch(trimmed);
+    setSearchOpen(false);
+    setSearchQuery('');
+    router.push(`/parcels?search=${encodeURIComponent(trimmed)}`);
+  }
+
+  // Close search on outside click
+  useEffect(() => {
+    if (!searchOpen) return;
+    function onMouseDown(e: MouseEvent) {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setSearchOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', onMouseDown);
+    return () => document.removeEventListener('mousedown', onMouseDown);
+  }, [searchOpen]);
 
   return (
     <>
@@ -565,12 +600,87 @@ export function HeaderPro() {
           {/* Right actions */}
           <div className="flex items-center gap-2">
             {/* Search - Desktop only */}
-            <button
-              className="hidden lg:flex items-center justify-center h-10 w-10 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-50 transition-all duration-200"
-              data-testid="header-search-btn"
-            >
-              <Search className="h-5 w-5" />
-            </button>
+            <div className="relative hidden lg:block" ref={searchRef}>
+              <button
+                onClick={openSearch}
+                className="flex items-center justify-center h-10 w-10 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-50 transition-all duration-200"
+                data-testid="header-search-btn"
+              >
+                <Search className="h-5 w-5" />
+              </button>
+
+              <AnimatePresence>
+                {searchOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -8, scale: 0.97 }}
+                    transition={{ duration: 0.15, ease: 'easeOut' }}
+                    className="absolute right-0 top-full mt-2 z-[100] w-80"
+                  >
+                    <div className="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
+                      {/* Search input */}
+                      <form onSubmit={(e) => { e.preventDefault(); handleSearchSubmit(searchQuery); }} className="p-3">
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                          <input
+                            ref={searchInputRef}
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === 'Escape') setSearchOpen(false); }}
+                            placeholder="Ara... (il, ilçe, ilan no)"
+                            className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                          />
+                        </div>
+                      </form>
+
+                      {/* Recent searches */}
+                      {recentSearches.length > 0 && (
+                        <div className="pb-3">
+                          <div className="flex items-center justify-between px-4 pb-2">
+                            <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                              <History className="h-3.5 w-3.5" />
+                              Son Aramalar
+                            </span>
+                            <button onClick={clearSearches} className="text-xs text-slate-400 hover:text-slate-600 transition-colors">Temizle</button>
+                          </div>
+                          <div className="space-y-0.5">
+                            {recentSearches.slice(0, 3).map((q) => (
+                              <div key={q} className="flex items-center gap-2 px-3 mx-1 rounded-lg hover:bg-slate-50 group">
+                                <button
+                                  onClick={() => handleSearchSubmit(q)}
+                                  className="flex-1 flex items-center gap-2 py-2 text-sm text-slate-700 text-left"
+                                >
+                                  <Search className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                                  {q}
+                                </button>
+                                <button
+                                  onClick={() => removeSearch(q)}
+                                  className="p-1 text-slate-300 hover:text-slate-500 opacity-0 group-hover:opacity-100 transition-all"
+                                >
+                                  <X className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Go to parcels */}
+                      <div className="border-t border-slate-100">
+                        <button
+                          onClick={() => { setSearchOpen(false); router.push('/parcels'); }}
+                          className="w-full flex items-center justify-center gap-1.5 py-3 text-xs font-bold text-emerald-600 hover:bg-emerald-50 transition-colors"
+                        >
+                          Tüm Arsaları Gör <ArrowRight className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
             {isAuthenticated ? (
               <>
@@ -671,6 +781,14 @@ export function HeaderPro() {
                           >
                             <CreditCard className="h-4 w-4 text-slate-400" />
                             <span>Ödemeler</span>
+                          </Link>
+                          <Link
+                            href="/profile/saved-searches"
+                            onClick={() => setProfileOpen(false)}
+                            className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors duration-150"
+                          >
+                            <History className="h-4 w-4 text-slate-400" />
+                            <span>Kayıtlı Aramalar</span>
                           </Link>
                         </div>
 

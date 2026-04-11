@@ -13,8 +13,9 @@ import { ParcelDetailModal } from '@/components/parcel-detail-modal';
 import {
   Search, LayoutGrid, List, Map as MapIcon, MapPin, X, SlidersHorizontal,
   Heart, ChevronDown, ChevronUp, ArrowUpDown, Sparkles, TrendingUp,
-  Calendar, Maximize2, Building2, Filter, Check,
+  Calendar, Maximize2, Building2, Filter, Check, History,
 } from 'lucide-react';
+import { useRecentSearches } from '@/hooks/use-recent-searches';
 import type { Parcel, PaginatedResponse } from '@/types';
 
 const ParcelMapLazy = dynamic(() => import('@/components/parcel-map-inner'), {
@@ -71,6 +72,9 @@ function ParcelsContent() {
   const [showFilters, setShowFilters] = useState(true);
   const [modalParcelId, setModalParcelId] = useState<string | null>(searchParams.get('parcel'));
 
+  const { searches: recentSearches, save: saveSearch, remove: removeSearch, clear: clearSearches } = useRecentSearches();
+  const [searchFocused, setSearchFocused] = useState(false);
+
   // Filter state
   const [selectedCity, setSelectedCity] = useState(city);
   const [priceRange, setPriceRange] = useState({ min: '', max: '' });
@@ -124,7 +128,15 @@ function ParcelsContent() {
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
+    if (searchInput.trim()) saveSearch(searchInput.trim());
     updateSearchParams({ search: searchInput, page: '1' });
+  }
+
+  function handleRecentSearchClick(q: string) {
+    setSearchInput(q);
+    saveSearch(q);
+    setSearchFocused(false);
+    updateSearchParams({ search: q, page: '1' });
   }
 
   function handleViewChange(mode: ViewMode) {
@@ -174,7 +186,7 @@ function ParcelsContent() {
             <div className="flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
               
               {/* Search bar */}
-              <form onSubmit={handleSearch} className="flex-1 max-w-2xl">
+              <form onSubmit={handleSearch} className="flex-1 max-w-2xl relative">
                 <div className="relative">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                   <input
@@ -182,6 +194,8 @@ function ParcelsContent() {
                     placeholder="İl, ilçe, ada/parsel veya ilan no ile arayın..."
                     value={searchInput}
                     onChange={(e) => setSearchInput(e.target.value)}
+                    onFocus={() => setSearchFocused(true)}
+                    onBlur={() => setTimeout(() => setSearchFocused(false), 150)}
                     className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                     data-testid="parcels-search-input"
                   />
@@ -195,6 +209,38 @@ function ParcelsContent() {
                     </button>
                   )}
                 </div>
+
+                {/* Recent searches dropdown */}
+                {searchFocused && !searchInput && recentSearches.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-white rounded-xl shadow-lg border border-slate-100 overflow-hidden">
+                    <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-50">
+                      <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                        <History className="h-3.5 w-3.5" />
+                        Son Aramalar
+                      </span>
+                      <button type="button" onClick={clearSearches} className="text-xs text-slate-400 hover:text-slate-600">Temizle</button>
+                    </div>
+                    {recentSearches.map((q) => (
+                      <div key={q} className="flex items-center group hover:bg-slate-50">
+                        <button
+                          type="button"
+                          onClick={() => handleRecentSearchClick(q)}
+                          className="flex-1 flex items-center gap-3 px-4 py-3 text-sm text-slate-700 text-left"
+                        >
+                          <Search className="h-4 w-4 text-slate-400 shrink-0" />
+                          {q}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => removeSearch(q)}
+                          className="pr-4 p-1 text-slate-300 hover:text-slate-500 opacity-0 group-hover:opacity-100 transition-all"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </form>
 
               {/* Right controls */}

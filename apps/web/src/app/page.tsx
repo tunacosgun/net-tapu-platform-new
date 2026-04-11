@@ -14,8 +14,9 @@ import { VideoPopup } from '@/components/video-popup';
 import {
   Search, ArrowRight, MapPin, Shield, Lock, Headphones, Scale,
   Play, Star, Users, Gavel, Building2, ChevronRight, TrendingUp,
-  Zap, Timer, Sparkles, CheckCircle2, Award, X,
+  Zap, Timer, Sparkles, CheckCircle2, Award, X, History,
 } from 'lucide-react';
+import { useRecentSearches } from '@/hooks/use-recent-searches';
 import type { Parcel, Auction, PaginatedResponse, Reference } from '@/types';
 
 const ParcelMapLazy = dynamic(() => import('@/components/parcel-map-inner'), {
@@ -39,8 +40,8 @@ export default function HomePage() {
   const [stats, setStats] = useState({ parcels: 0, auctions: 0, cities: 0 });
   const [searchQuery, setSearchQuery] = useState('');
   const [showVideo, setShowVideo] = useState(false);
-  const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [searchFocused, setSearchFocused] = useState(false);
+  const { searches: recentSearches, save: saveSearch, remove: removeSearchItem, clear: clearSearches } = useRecentSearches();
   const [testimonials, setTestimonials] = useState<Reference[]>([]);
 
   useEffect(() => {
@@ -82,24 +83,6 @@ export default function HomePage() {
     });
   }, []);
 
-  // Load recent searches from localStorage
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('nt_recent_searches');
-      if (saved) setRecentSearches(JSON.parse(saved));
-    } catch {}
-  }, []);
-
-  function saveSearch(q: string) {
-    const trimmed = q.trim();
-    if (!trimmed) return;
-    setRecentSearches((prev) => {
-      const updated = [trimmed, ...prev.filter((s) => s !== trimmed)].slice(0, 5);
-      try { localStorage.setItem('nt_recent_searches', JSON.stringify(updated)); } catch {}
-      return updated;
-    });
-  }
-
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
     const q = searchQuery.trim();
@@ -118,11 +101,7 @@ export default function HomePage() {
 
   function removeRecent(q: string, e: React.MouseEvent) {
     e.stopPropagation();
-    setRecentSearches((prev) => {
-      const updated = prev.filter((s) => s !== q);
-      try { localStorage.setItem('nt_recent_searches', JSON.stringify(updated)); } catch {}
-      return updated;
-    });
+    removeSearchItem(q);
   }
 
   return (
