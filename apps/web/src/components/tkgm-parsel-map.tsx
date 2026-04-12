@@ -69,7 +69,15 @@ export function TkgmParselMap({ city, district, ada, parsel }: Props) {
 
     const timer = setTimeout(async () => {
       const L = (await import('leaflet')).default;
-      await import('leaflet/dist/leaflet.css');
+
+      // Inject leaflet CSS via CDN if not already present
+      if (!document.getElementById('leaflet-css-tkgm')) {
+        const link = document.createElement('link');
+        link.id = 'leaflet-css-tkgm';
+        link.rel = 'stylesheet';
+        link.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';
+        document.head.appendChild(link);
+      }
 
       // Destroy previous instance
       if (mapInstanceRef.current) {
