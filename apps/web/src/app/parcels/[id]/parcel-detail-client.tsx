@@ -10,6 +10,7 @@ import { parcelStatusConfig } from '@/components/ui/badge';
 import { ShareButtons } from '@/components/share-buttons';
 import { CallMeForm } from '@/components/call-me-form';
 import { AppointmentForm } from '@/components/appointment-form';
+import { TkgmParselMap } from '@/components/tkgm-parsel-map';
 import { useViewerTracking } from '@/hooks/use-viewer-tracking';
 import { useAuthStore } from '@/stores/auth-store';
 import { useSiteSettings } from '@/hooks/use-site-settings';
@@ -618,8 +619,20 @@ export default function ParcelDetailClient() {
                 )}
               </div>
               {parcel.ada && parcel.parsel && (
-                <p className="mt-1.5 text-[10px] text-slate-400">TKGM sitesinde İdari sekmesinden il/ilçe/mahalle seçip yukarıdaki ada ve parsel numaralarını girin.</p>
+                <p className="mt-1.5 text-[10px] text-slate-400">TKGM'den otomatik olarak çekilen kadastro haritası aşağıda gösterilmektedir.</p>
               )}
+            </div>
+          )}
+
+          {/* TKGM Kadastro Haritası — otomatik sorgu */}
+          {parcel.ada && parcel.parsel && parcel.city && parcel.district && (
+            <div className="border-x border-b border-slate-200 print:hidden">
+              <TkgmParselMap
+                city={parcel.city}
+                district={parcel.district}
+                ada={parcel.ada}
+                parsel={parcel.parsel}
+              />
             </div>
           )}
 

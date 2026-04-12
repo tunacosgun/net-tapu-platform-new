@@ -13,9 +13,10 @@ import { ParcelDetailModal } from '@/components/parcel-detail-modal';
 import {
   Search, LayoutGrid, List, Map as MapIcon, MapPin, X, SlidersHorizontal,
   Heart, ChevronDown, ChevronUp, ArrowUpDown, Sparkles, TrendingUp,
-  Calendar, Maximize2, Building2, Filter, Check, History,
+  Calendar, Maximize2, Building2, Filter, Check, History, Layers,
 } from 'lucide-react';
 import { useRecentSearches } from '@/hooks/use-recent-searches';
+import { TkgmParselSorgula } from '@/components/tkgm-parsel-sorgula';
 import type { Parcel, PaginatedResponse } from '@/types';
 
 const ParcelMapLazy = dynamic(() => import('@/components/parcel-map-inner'), {
@@ -74,6 +75,7 @@ function ParcelsContent() {
 
   const { searches: recentSearches, save: saveSearch, remove: removeSearch, clear: clearSearches } = useRecentSearches();
   const [searchFocused, setSearchFocused] = useState(false);
+  const [showTkgm, setShowTkgm] = useState(false);
 
   // Filter state
   const [selectedCity, setSelectedCity] = useState(city);
@@ -176,6 +178,7 @@ function ParcelsContent() {
 
   return (
     <>
+      <TkgmParselSorgula open={showTkgm} onClose={() => setShowTkgm(false)} />}
       <div className="min-h-screen bg-slate-50">
         
         {/* ═══════════════════════════════════════════════════════════════
@@ -297,6 +300,16 @@ function ParcelsContent() {
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
                   ))}
                 </select>
+
+                {/* TKGM Parsel Sorgula button */}
+                <button
+                  onClick={() => setShowTkgm(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold transition-colors shadow-sm"
+                  title="TKGM Parsel Sorgulama"
+                >
+                  <Layers className="h-4 w-4" />
+                  <span className="hidden sm:inline">Parsel Sorgula</span>
+                </button>
               </div>
             </div>
 

@@ -3,19 +3,21 @@
   "configurations": [
     {
       "name": "monolith",
-      "runtimeExecutable": "npm",
+      "runtimeExecutable": "/Users/tunahan/.nvm/versions/node/v20.20.0/bin/npm",
       "runtimeArgs": ["run", "start:dev"],
       "port": 3000,
       "cwd": "apps/monolith",
-      "autoPort": false
+      "autoPort": false,
+      "env": { "PATH": "/Users/tunahan/.nvm/versions/node/v20.20.0/bin:/usr/bin:/bin:/usr/sbin:/sbin" }
     },
     {
       "name": "auction-service",
-      "runtimeExecutable": "npm",
+      "runtimeExecutable": "/Users/tunahan/.nvm/versions/node/v20.20.0/bin/npm",
       "runtimeArgs": ["run", "start:dev"],
       "port": 3001,
       "cwd": "apps/auction-service",
-      "autoPort": false
+      "autoPort": false,
+      "env": { "PATH": "/Users/tunahan/.nvm/versions/node/v20.20.0/bin:/usr/bin:/bin:/usr/sbin:/sbin" }
     },
     {
       "name": "web",

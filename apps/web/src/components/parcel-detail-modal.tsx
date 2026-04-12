@@ -8,6 +8,7 @@ import { Card, Badge, Button, LoadingState } from '@/components/ui';
 import { parcelStatusConfig } from '@/components/ui/badge';
 import { ShareButtons } from '@/components/share-buttons';
 import { CallMeForm } from '@/components/call-me-form';
+import { TkgmParselMap } from '@/components/tkgm-parsel-map';
 import { useSiteSettings } from '@/hooks/use-site-settings';
 import type { Parcel, ParcelImage } from '@/types';
 
@@ -215,6 +216,16 @@ export function ParcelDetailModal({ parcelId, onClose }: ParcelDetailModalProps)
                   {parcel.description}
                 </p>
               </div>
+            )}
+
+            {/* TKGM Kadastro Haritası */}
+            {parcel.ada && parcel.parsel && parcel.city && parcel.district && (
+              <TkgmParselMap
+                city={parcel.city}
+                district={parcel.district}
+                ada={parcel.ada}
+                parsel={parcel.parsel}
+              />
             )}
 
             {/* Action Buttons */}
