@@ -411,6 +411,8 @@ export function HeaderPro() {
   useEffect(() => {
     if (!isAuthenticated) return;
     let cancelled = false;
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+
     const fetchNotifs = async () => {
       try {
         const { default: apiClient } = await import('@/lib/api-client');
@@ -420,19 +422,18 @@ export function HeaderPro() {
         setNotifications(Array.isArray(items) ? items : []);
         const unread = Array.isArray(items) ? items.filter((n: any) => !n.isRead).length : 0;
         setNotificationCount(unread);
-        return true;
       } catch {
         if (!cancelled) setNotificationCount(0);
-        return false;
       }
     };
-    fetchNotifs().then((ok) => {
-      if (ok && !cancelled) {
-        const iv = setInterval(fetchNotifs, 60000);
-        return () => clearInterval(iv);
-      }
-    });
-    return () => { cancelled = true; };
+
+    fetchNotifs();
+    intervalId = setInterval(fetchNotifs, 60000);
+
+    return () => {
+      cancelled = true;
+      if (intervalId) clearInterval(intervalId);
+    };
   }, [isAuthenticated]);
 
   useEffect(() => {

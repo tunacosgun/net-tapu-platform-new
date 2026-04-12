@@ -49,7 +49,7 @@ export default function AdminRealEstateGuidePage() {
   const fetchArticles = useCallback(async () => {
     try {
       const { data } = await apiClient.get<PaginatedResponse<CmsPage>>('/admin/pages', {
-        params: { limit: 100, type: 'real_estate_concepts' },
+        params: { limit: 100, pageType: 'real_estate_concepts' },
       });
       // Filter out the main guide page, keep only articles
       setArticles(data.data.filter((p) => p.slug !== 'gayrimenkul-rehberi'));
