@@ -178,7 +178,7 @@ function ParcelsContent() {
 
   return (
     <>
-      <TkgmParselSorgula open={showTkgm} onClose={() => setShowTkgm(false)} />}
+      <TkgmParselSorgula open={showTkgm} onClose={() => setShowTkgm(false)} />
       <div className="min-h-screen bg-slate-50">
         
         {/* ═══════════════════════════════════════════════════════════════
