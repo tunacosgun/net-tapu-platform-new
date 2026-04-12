@@ -25,7 +25,8 @@ interface TkgmResult {
 
 export function TkgmParselMap({ city, district, ada, parsel }: Props) {
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<unknown>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mapInstanceRef = useRef<any>(null);
   const [result, setResult] = useState<TkgmResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -65,7 +66,8 @@ export function TkgmParselMap({ city, district, ada, parsel }: Props) {
   useEffect(() => {
     if (!result || !mapRef.current) return;
 
-    let map: unknown = null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let map: any = null;
 
     const timer = setTimeout(async () => {
       const L = (await import('leaflet')).default;
@@ -81,7 +83,8 @@ export function TkgmParselMap({ city, district, ada, parsel }: Props) {
 
       // Destroy previous instance
       if (mapInstanceRef.current) {
-        (mapInstanceRef.current as { remove: () => void }).remove();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (mapInstanceRef.current as any).remove();
         mapInstanceRef.current = null;
       }
 
@@ -97,33 +100,29 @@ export function TkgmParselMap({ city, district, ada, parsel }: Props) {
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap',
         maxZoom: 20,
-      }).addTo(map as Parameters<typeof L.tileLayer>[0] & { addTo: (m: unknown) => void });
+      }).addTo(map);
 
       if (result.boundary) {
-        const layer = L.geoJSON(result.boundary as Parameters<typeof L.geoJSON>[0], {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const layer = L.geoJSON(result.boundary as any, {
           style: {
             color: '#059669',
             weight: 3,
             fillColor: '#059669',
             fillOpacity: 0.2,
           },
-        }).addTo(map as Parameters<typeof L.tileLayer>[0] & { addTo: (m: unknown) => void });
+        }).addTo(map);
 
-        (map as { fitBounds: (b: unknown, o: unknown) => void }).fitBounds(
-          (layer as { getBounds: () => unknown }).getBounds(),
-          { padding: [30, 30] }
-        );
+        map.fitBounds(layer.getBounds(), { padding: [30, 30] });
       } else if (result.responseData?.latitude) {
-        L.marker([lat, lng]).addTo(
-          map as Parameters<typeof L.tileLayer>[0] & { addTo: (m: unknown) => void }
-        );
+        L.marker([lat, lng]).addTo(map);
       }
     }, 100);
 
     return () => {
       clearTimeout(timer);
       if (mapInstanceRef.current) {
-        (mapInstanceRef.current as { remove: () => void }).remove();
+        mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
       }
     };
