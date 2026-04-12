@@ -503,7 +503,7 @@ export default function ParcelDetailClient() {
       {/* ─── MAIN TWO-COLUMN LAYOUT ─── */}
       <div className="grid gap-5 lg:grid-cols-12">
 
-        {/* LEFT: Photo Gallery — new premium system */}
+        {/* LEFT: Photo Gallery + TKGM Map */}
         <div className="lg:col-span-7">
           {/* Status badge above gallery */}
           <div className="mb-2 flex items-center gap-2">
@@ -519,6 +519,18 @@ export default function ParcelDetailClient() {
               return String((h % 9000000000) + 1000000000);
             })()}
           />
+
+          {/* TKGM Kadastro Haritası — görsel altında, tam genişlik */}
+          {parcel.ada && parcel.parsel && parcel.city && parcel.district && (
+            <div className="mt-4 print:hidden">
+              <TkgmParselMap
+                city={parcel.city}
+                district={parcel.district}
+                ada={parcel.ada}
+                parsel={parcel.parsel}
+              />
+            </div>
+          )}
         </div>
 
         {/* RIGHT: Price + Info Table + Consultant */}
@@ -621,18 +633,6 @@ export default function ParcelDetailClient() {
               {parcel.ada && parcel.parsel && (
                 <p className="mt-1.5 text-[10px] text-slate-400">TKGM'den otomatik olarak çekilen kadastro haritası aşağıda gösterilmektedir.</p>
               )}
-            </div>
-          )}
-
-          {/* TKGM Kadastro Haritası — otomatik sorgu */}
-          {parcel.ada && parcel.parsel && parcel.city && parcel.district && (
-            <div className="border-x border-b border-slate-200 print:hidden">
-              <TkgmParselMap
-                city={parcel.city}
-                district={parcel.district}
-                ada={parcel.ada}
-                parsel={parcel.parsel}
-              />
             </div>
           )}
 
