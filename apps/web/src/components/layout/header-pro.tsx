@@ -386,19 +386,26 @@ export function HeaderPro() {
   const { searches: recentSearches, save: saveSearch, remove: removeSearch, clear: clearSearches } = useRecentSearches();
 
   // Parse corporate nav items from settings
+  // Support item hrefs must never bleed into the corporate dropdown
+  const SUPPORT_HREFS = new Set(DEFAULT_SUPPORT_ITEMS.map((i) => i.href));
   let corporateItems: NavDropdownItem[] = DEFAULT_CORPORATE_ITEMS;
   if (s.corporate_nav_items) {
     try {
       const parsed = JSON.parse(s.corporate_nav_items as string);
       if (Array.isArray(parsed) && parsed.length > 0) {
         // Merge icon from DEFAULT_CORPORATE_ITEMS by matching href when icon is missing
-        corporateItems = parsed.map((item: NavDropdownItem) => {
-          if (!item.icon || item.icon === '') {
-            const def = DEFAULT_CORPORATE_ITEMS.find(d => d.href === item.href);
-            if (def?.icon) return { ...item, icon: def.icon };
-          }
-          return item;
-        });
+        // Also strip any support items that ended up in DB
+        corporateItems = parsed
+          .filter((item: NavDropdownItem) => !SUPPORT_HREFS.has(item.href))
+          .map((item: NavDropdownItem) => {
+            if (!item.icon || item.icon === '') {
+              const def = DEFAULT_CORPORATE_ITEMS.find(d => d.href === item.href);
+              if (def?.icon) return { ...item, icon: def.icon };
+            }
+            return item;
+          });
+        // If filtering left nothing, fall back to defaults
+        if (corporateItems.length === 0) corporateItems = DEFAULT_CORPORATE_ITEMS;
       }
     } catch {}
   }
