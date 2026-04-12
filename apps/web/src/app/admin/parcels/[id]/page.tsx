@@ -167,6 +167,11 @@ export default function AdminEditParcelPage() {
       description: data.description || undefined,
       showListingDate: showListingDate,
       assignedConsultant: selectedConsultant || null,
+      // Convert numeric string fields to numbers for backend validation
+      vatRate: data.vatRate !== undefined && data.vatRate !== '' ? Number(data.vatRate) : 0,
+      price: data.price,
+      areaM2: data.areaM2,
+      kdvRate: data.kdvRate !== undefined ? Number(data.kdvRate) : undefined,
     };
 
     try {

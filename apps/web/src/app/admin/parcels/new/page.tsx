@@ -186,6 +186,7 @@ export default function AdminNewParcelPage() {
       parsel: data.parsel || undefined,
       description: data.description || undefined,
       showListingDate: showListingDate,
+      vatRate: data.vatRate !== undefined && data.vatRate !== '' ? Number(data.vatRate) : 0,
     };
 
     try {
