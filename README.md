@@ -115,3 +115,9 @@ docker-compose -f docker-compose.loadtest.yml up --build
 <div align="center">
 <b>Built for high performance and real-time reliability.</b>
 </div>
+
+
+## Contributors
+
+- Tunahan Coşgun — <info@tunahancosgun.dev>
+- Duygu Durmuş — <duygudurmus12@gmail.com>
