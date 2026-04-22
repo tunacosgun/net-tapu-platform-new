@@ -2,12 +2,11 @@
 
 import Link from 'next/link';
 import { useState, useCallback } from 'react';
-import { Badge } from '@/components/ui';
-import { parcelStatusConfig } from '@/components/ui/badge';
+import { Badge, parcelStatusConfig } from '@/components/ui/badge';
 import { formatPrice, resolveImageUrl, timeAgo } from '@/lib/format';
 import { useAuthStore } from '@/stores/auth-store';
 import apiClient from '@/lib/api-client';
-import { MapPin, Maximize2, Heart, Flame, Clock, ImageIcon } from 'lucide-react';
+import { MapPin, Maximize2, Heart, Flame, Clock, ImageIcon, FileCheck } from 'lucide-react';
 import type { Parcel } from '@/types';
 
 interface ParcelCardProps {
@@ -18,6 +17,10 @@ interface ParcelCardProps {
   variant?: 'default' | 'compact' | 'horizontal';
 }
 
+/**
+ * NetTapu Parcel Card — professional, information-dense design.
+ * Inspired by sahibinden.com: clear hierarchy, sharp corners, tabular numbers.
+ */
 export function ParcelCard({
   parcel,
   showFavorite = true,
@@ -45,9 +48,7 @@ export function ParcelCard({
           setFavId(null);
           onFavoriteChange?.(parcel.id, false);
         } else {
-          const { data } = await apiClient.post<{ id: string }>('/favorites', {
-            parcelId: parcel.id,
-          });
+          const { data } = await apiClient.post<{ id: string }>('/favorites', { parcelId: parcel.id });
           setFavId(data.id);
           onFavoriteChange?.(parcel.id, true);
         }
@@ -63,41 +64,42 @@ export function ParcelCard({
   const firstImg = parcel.images?.[0];
   const imageUrl = firstImg ? resolveImageUrl(firstImg) : null;
 
+  // ═══ Horizontal variant ═══
   if (variant === 'horizontal') {
     return (
       <Link
         href={`/parcels/${parcel.id}`}
-        className="group flex gap-4 rounded-xl bg-white p-3 shadow-[0_2px_10px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-all duration-300"
+        className="group flex gap-4 rounded-md border border-slate-200 bg-white p-3 hover:border-brand-300 hover:shadow-md transition-all"
         data-testid={`parcel-card-horizontal-${parcel.id}`}
       >
-        <div className="relative h-24 w-32 shrink-0 overflow-hidden rounded-lg bg-slate-100">
+        <div className="relative h-24 w-32 shrink-0 overflow-hidden rounded-sm bg-slate-100">
           {imageUrl ? (
-            <img src={imageUrl} alt={parcel.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
+            <img src={imageUrl} alt={parcel.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
           ) : (
-            <div className="flex h-full w-full items-center justify-center">
+            <div className="flex h-full w-full items-center justify-center bg-slate-100">
               <ImageIcon className="h-6 w-6 text-slate-300" />
             </div>
           )}
-          <Badge variant={status.variant} className="absolute top-1.5 left-1.5 text-[10px]">
+          <span className={`absolute top-1.5 left-1.5 badge badge-${status.variant} text-[9px]`}>
             {status.label}
-          </Badge>
+          </span>
         </div>
         <div className="flex flex-1 flex-col justify-between min-w-0">
           <div>
-            <h3 className="truncate font-semibold text-slate-900 group-hover:text-emerald-600 transition-colors duration-150">
+            <h3 className="font-heading text-[15px] font-bold text-ink-900 truncate group-hover:text-brand-700 transition-colors">
               {parcel.title}
             </h3>
-            <p className="mt-0.5 flex items-center gap-1 text-sm text-slate-500">
-              <MapPin className="h-3.5 w-3.5 text-slate-400" />
+            <p className="mt-1 flex items-center gap-1 text-xs text-slate-500">
+              <MapPin className="h-3 w-3 text-brand-600" />
               {parcel.city}, {parcel.district}
             </p>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-lg font-bold text-emerald-600 tracking-tight">
+            <span className="font-heading text-lg font-extrabold text-brand-700 tracking-tight tabular-nums">
               {formatPrice(parcel.price)}
             </span>
             {parcel.areaM2 && (
-              <span className="text-xs font-medium text-slate-500 bg-slate-50 px-2 py-0.5 rounded-md">
+              <span className="text-[11px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-sm tabular-nums">
                 {Number(parcel.areaM2).toLocaleString('tr-TR')} m²
               </span>
             )}
@@ -107,31 +109,32 @@ export function ParcelCard({
     );
   }
 
+  // ═══ Compact variant ═══
   if (variant === 'compact') {
     return (
       <Link
         href={`/parcels/${parcel.id}`}
-        className="group rounded-xl bg-white p-4 shadow-[0_2px_10px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-all duration-300"
+        className="group rounded-md border border-slate-200 bg-white p-4 hover:border-brand-300 hover:shadow-md transition-all"
         data-testid={`parcel-card-compact-${parcel.id}`}
       >
         <div className="flex items-center justify-between gap-2">
-          <h3 className="truncate text-sm font-semibold text-slate-900 group-hover:text-emerald-600 transition-colors duration-150">
+          <h3 className="truncate text-sm font-bold text-ink-900 group-hover:text-brand-700 transition-colors">
             {parcel.title}
           </h3>
-          <Badge variant={status.variant} className="shrink-0 text-[10px]">
+          <Badge variant={status.variant} className="shrink-0 text-[9px]">
             {status.label}
           </Badge>
         </div>
         <p className="mt-1 flex items-center gap-1 text-xs text-slate-500">
-          <MapPin className="h-3 w-3" />
+          <MapPin className="h-3 w-3 text-brand-600" />
           {parcel.city}, {parcel.district}
         </p>
         <div className="mt-3 flex items-center justify-between">
-          <span className="text-base font-bold text-emerald-600 tracking-tight">
+          <span className="font-heading text-base font-extrabold text-brand-700 tracking-tight tabular-nums">
             {formatPrice(parcel.price)}
           </span>
           {parcel.areaM2 && (
-            <span className="text-xs font-medium text-slate-500 bg-slate-50 px-2 py-0.5 rounded-md">
+            <span className="text-[11px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-sm tabular-nums">
               {Number(parcel.areaM2).toLocaleString('tr-TR')} m²
             </span>
           )}
@@ -140,54 +143,73 @@ export function ParcelCard({
     );
   }
 
-  // Default — full card with image (Professional design)
+  // ═══ Default — dense sahibinden-style card ═══
   return (
     <Link
       href={`/parcels/${parcel.id}`}
-      className="group relative flex flex-col overflow-hidden rounded-xl bg-white shadow-[0_2px_10px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-all duration-300"
+      className="group relative flex flex-col overflow-hidden rounded-md border border-slate-200 bg-white hover:border-brand-400 hover:shadow-lg transition-all"
       data-testid={`parcel-card-${parcel.id}`}
     >
       {/* Image */}
-      <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
+      <div className="relative aspect-[5/3] overflow-hidden bg-slate-100">
         {imageUrl ? (
           <img
             src={imageUrl}
             alt={parcel.title}
-            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
             loading="lazy"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
+          <div className="flex h-full w-full items-center justify-center bg-slate-100">
             <ImageIcon className="h-10 w-10 text-slate-300" />
           </div>
         )}
 
-        {/* Gradient overlay on hover */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-        {/* Status */}
+        {/* Top-left status badge */}
         <Badge variant={status.variant} className="absolute top-3 left-3 shadow-sm">
           {status.label}
         </Badge>
 
-        {/* Auction tag */}
+        {/* Auction/featured flag */}
         {parcel.isAuctionEligible && (
-          <span className="absolute top-3 right-3 flex items-center gap-1 rounded-full bg-emerald-600 px-2.5 py-1 text-[10px] font-bold text-white shadow-lg">
+          <span className="absolute top-3 right-3 inline-flex items-center gap-1 rounded-sm bg-red-600 text-white text-[10px] font-bold px-2 py-1 uppercase tracking-wider shadow-md">
             <Flame className="h-3 w-3" />
             Açık Artırma
           </span>
         )}
+        {parcel.isFeatured && !parcel.isAuctionEligible && (
+          <span className="absolute top-3 right-3 inline-flex items-center gap-1 rounded-sm bg-gold-500 text-white text-[10px] font-bold px-2 py-1 uppercase tracking-wider shadow-md">
+            <FileCheck className="h-3 w-3" />
+            Öne Çıkan
+          </span>
+        )}
+
+        {/* Bottom overlay with quick meta */}
+        <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-2 px-3 py-2 bg-gradient-to-t from-black/60 via-black/30 to-transparent">
+          {parcel.areaM2 && (
+            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-white tabular-nums">
+              <Maximize2 className="h-3 w-3" />
+              {Number(parcel.areaM2).toLocaleString('tr-TR')} m²
+            </span>
+          )}
+          {parcel.createdAt && (
+            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-white/80">
+              <Clock className="h-3 w-3" />
+              {timeAgo(parcel.createdAt)}
+            </span>
+          )}
+        </div>
 
         {/* Favorite */}
         {showFavorite && isAuthenticated && (
           <button
             onClick={toggleFavorite}
             disabled={toggling}
-            className={`absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center rounded-lg shadow-lg transition-all duration-200 active:scale-90 ${
+            className={`absolute top-3 right-3 group-hover:opacity-100 opacity-90 flex h-8 w-8 items-center justify-center rounded-full shadow-md transition-all active:scale-90 ${
               isFavorited
-                ? 'bg-rose-500 text-white hover:bg-rose-600'
-                : 'bg-white/90 backdrop-blur-sm text-slate-400 hover:bg-white hover:text-rose-500'
-            }`}
+                ? 'bg-red-500 text-white'
+                : 'bg-white/95 backdrop-blur-sm text-slate-500 hover:text-red-500'
+            } ${parcel.isAuctionEligible || parcel.isFeatured ? 'mt-8' : ''}`}
             aria-label={isFavorited ? 'Favorilerden kaldır' : 'Favorilere ekle'}
             data-testid={`favorite-btn-${parcel.id}`}
           >
@@ -197,59 +219,48 @@ export function ParcelCard({
       </div>
 
       {/* Content */}
-      <div className="flex flex-1 flex-col p-5">
-        <h3 className="font-semibold text-[15px] leading-snug text-slate-900 group-hover:text-emerald-600 transition-colors duration-150 line-clamp-2">
+      <div className="flex flex-1 flex-col p-4">
+        <h3 className="font-heading text-[15px] font-bold leading-tight text-ink-900 group-hover:text-brand-700 transition-colors line-clamp-2 mb-2 min-h-[40px]">
           {parcel.title}
         </h3>
-        <p className="mt-2 flex items-center gap-1.5 text-sm text-slate-500">
-          <MapPin className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
-          {parcel.city}, {parcel.district}
+
+        <p className="flex items-center gap-1.5 text-xs text-slate-600 font-medium mb-3">
+          <MapPin className="h-3.5 w-3.5 text-brand-600 shrink-0" />
+          <span className="truncate">{parcel.city}{parcel.district ? `, ${parcel.district}` : ''}</span>
         </p>
 
-        {/* Detail pills */}
-        <div className="mt-3 flex items-center gap-2 flex-wrap">
-          {parcel.areaM2 && (
-            <span className="inline-flex items-center gap-1 rounded-lg bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600">
-              <Maximize2 className="h-3 w-3 text-slate-400" />
-              {Number(parcel.areaM2).toLocaleString('tr-TR')} m²
-            </span>
-          )}
-          {parcel.zoningStatus && (
-            <span className="inline-flex items-center rounded-lg bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600 truncate max-w-[140px]">
-              {parcel.zoningStatus}
-            </span>
-          )}
-        </div>
+        {/* Meta pills */}
+        {(parcel.zoningStatus || parcel.ada) && (
+          <div className="flex items-center gap-1.5 flex-wrap mb-3">
+            {parcel.zoningStatus && (
+              <span className="inline-flex items-center rounded-sm bg-brand-50 border border-brand-200 px-2 py-0.5 text-[10px] font-bold text-brand-700 uppercase tracking-wide truncate max-w-[140px]">
+                {parcel.zoningStatus}
+              </span>
+            )}
+            {parcel.ada && parcel.parsel && (
+              <span className="inline-flex items-center rounded-sm bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600 tabular-nums">
+                Ada {parcel.ada} / Parsel {parcel.parsel}
+              </span>
+            )}
+          </div>
+        )}
 
-        {/* Price */}
-        <div className="mt-auto pt-4">
-          <div className="flex items-end justify-between pt-4 border-t border-slate-100">
-            <div>
-              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Fiyat</p>
-              <span className="text-xl font-bold text-emerald-600 tracking-tight">
+        {/* Price footer */}
+        <div className="mt-auto pt-3 border-t border-slate-100">
+          <div className="flex items-end justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest leading-tight mb-0.5">Fiyat</p>
+              <span className="font-heading text-xl font-extrabold text-brand-700 tracking-tight tabular-nums leading-tight block">
                 {formatPrice(parcel.price)}
               </span>
             </div>
             {(parcel.pricePerM2 || (parcel.areaM2 && parcel.price)) && (
-              <span className="text-xs font-semibold text-emerald-600/70 bg-emerald-50 px-2.5 py-1 rounded-lg">
+              <span className="text-[10px] font-bold text-brand-700 bg-brand-50 border border-brand-200 px-2 py-1 rounded-sm tabular-nums whitespace-nowrap">
                 {formatPrice(parcel.pricePerM2 ?? String(Math.round(parseFloat(parcel.price!) / parseFloat(parcel.areaM2!))))}
                 /m²
               </span>
             )}
           </div>
-        </div>
-
-        {/* Meta */}
-        <div className="mt-2.5 flex items-center justify-between text-[10px] text-slate-400">
-          {parcel.createdAt && (
-            <span className="flex items-center gap-1">
-              <Clock className="h-3 w-3" />
-              {timeAgo(parcel.createdAt)}
-            </span>
-          )}
-          {parcel.ada && parcel.parsel && (
-            <span className="font-medium">Ada {parcel.ada} / Parsel {parcel.parsel}</span>
-          )}
         </div>
       </div>
     </Link>

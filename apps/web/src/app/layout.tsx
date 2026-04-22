@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, Manrope } from 'next/font/google';
 import { AuthProvider } from '@/providers/auth-provider';
 import { SiteSettingsProvider } from '@/providers/site-settings-provider';
 import { ErrorBoundary } from '@/components/error-boundary';
@@ -15,7 +15,13 @@ import { MobileBottomNav } from '@/components/layout/mobile-bottom-nav';
 import { Toaster } from 'sonner';
 import './globals.css';
 
-// Professional Typography System - Inter
+// Professional Typography — Manrope (display/heading) + Inter (body fallback)
+const manrope = Manrope({
+  subsets: ['latin', 'latin-ext'],
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-manrope',
+  display: 'swap',
+});
 const inter = Inter({
   subsets: ['latin', 'latin-ext'],
   weight: ['400', '500', '600', '700'],
@@ -85,13 +91,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="tr" className={inter.variable}>
+    <html lang="tr" className={`${manrope.variable} ${inter.variable}`}>
       <head>
         <OrganizationJsonLd />
         <WebSiteJsonLd />
         <RealEstateAgentJsonLd />
       </head>
-      <body className="min-h-screen bg-[#F8FAFC] text-slate-900 antialiased font-sans">
+      <body className="min-h-screen bg-white text-ink-800 antialiased font-sans">
         <ErrorBoundary>
           <AuthProvider>
             <SiteSettingsProvider>
