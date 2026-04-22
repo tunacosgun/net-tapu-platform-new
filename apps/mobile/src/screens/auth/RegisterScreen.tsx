@@ -219,7 +219,7 @@ export default function RegisterScreen() {
         >
           {/* Compact Header */}
           <LinearGradient
-            colors={isDark ? [theme.colors.primaryDark, '#0f172a'] : [theme.colors.primary, theme.colors.primaryLight]}
+            colors={isDark ? [theme.colors.primaryDark, '#121210'] : [theme.colors.primary, theme.colors.primaryLight]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.header}
@@ -252,7 +252,7 @@ export default function RegisterScreen() {
             entering={FadeInDown.springify()}
             style={[styles.formCard, {
               backgroundColor: theme.colors.card,
-              shadowColor: isDark ? '#000' : '#16a34a',
+              shadowColor: isDark ? '#000' : '#6d7a32',
             }]}
           >
             {/* Social Signup */}

@@ -1,28 +1,37 @@
 import { Platform, TextStyle } from 'react-native';
 
-const fontFamily = Platform.OS === 'ios' ? 'System' : 'Roboto';
-
 /**
- * NetTapu Typography Scale
- * 3 weights: 400 (regular), 500 (medium), 700 (bold)
- * Price = strongest visual emphasis
+ * NetTapu Mobile Typography
+ * iOS: SF Pro (System)
+ * Android: Roboto (System default in RN)
+ * Professional hierarchy, tabular nums for prices via fontVariant.
  */
+const fontFamily = Platform.OS === 'ios' ? 'System' : 'sans-serif';
+const fontFamilyBold = Platform.OS === 'ios' ? 'System' : 'sans-serif-medium';
+
+const base = { fontFamily };
+
 export const Typography = {
-  display: { fontSize: 32, fontWeight: '700', fontFamily, lineHeight: 38, letterSpacing: -0.5 } as TextStyle,
-  h1: { fontSize: 26, fontWeight: '700', fontFamily, lineHeight: 32, letterSpacing: -0.4 } as TextStyle,
-  h2: { fontSize: 20, fontWeight: '700', fontFamily, lineHeight: 26, letterSpacing: -0.3 } as TextStyle,
-  h3: { fontSize: 17, fontWeight: '700', fontFamily, lineHeight: 22, letterSpacing: -0.2 } as TextStyle,
-  h4: { fontSize: 15, fontWeight: '700', fontFamily, lineHeight: 20, letterSpacing: -0.1 } as TextStyle,
-  body: { fontSize: 15, fontWeight: '400', fontFamily, lineHeight: 22 } as TextStyle,
-  bodyMedium: { fontSize: 15, fontWeight: '500', fontFamily, lineHeight: 22 } as TextStyle,
-  bodySmall: { fontSize: 13, fontWeight: '400', fontFamily, lineHeight: 18 } as TextStyle,
-  caption: { fontSize: 12, fontWeight: '400', fontFamily, lineHeight: 16 } as TextStyle,
-  captionMedium: { fontSize: 12, fontWeight: '500', fontFamily, lineHeight: 16 } as TextStyle,
-  label: { fontSize: 14, fontWeight: '500', fontFamily, lineHeight: 20 } as TextStyle,
-  overline: { fontSize: 11, fontWeight: '500', fontFamily, lineHeight: 14, letterSpacing: 0.5, textTransform: 'uppercase' } as TextStyle,
-  button: { fontSize: 16, fontWeight: '700', fontFamily, lineHeight: 20 } as TextStyle,
-  tabLabel: { fontSize: 10, fontWeight: '500', fontFamily, lineHeight: 14 } as TextStyle,
-  price: { fontSize: 22, fontWeight: '700', fontFamily, lineHeight: 28, letterSpacing: -0.4 } as TextStyle,
-  priceLarge: { fontSize: 30, fontWeight: '700', fontFamily, lineHeight: 36, letterSpacing: -0.5 } as TextStyle,
-  priceSmall: { fontSize: 17, fontWeight: '700', fontFamily, lineHeight: 22, letterSpacing: -0.3 } as TextStyle,
+  display:      { ...base, fontFamily: fontFamilyBold, fontSize: 34, fontWeight: '800', lineHeight: 40, letterSpacing: -0.8 } as TextStyle,
+  h1:           { ...base, fontFamily: fontFamilyBold, fontSize: 28, fontWeight: '800', lineHeight: 34, letterSpacing: -0.6 } as TextStyle,
+  h2:           { ...base, fontFamily: fontFamilyBold, fontSize: 22, fontWeight: '700', lineHeight: 28, letterSpacing: -0.4 } as TextStyle,
+  h3:           { ...base, fontFamily: fontFamilyBold, fontSize: 18, fontWeight: '700', lineHeight: 24, letterSpacing: -0.2 } as TextStyle,
+  h4:           { ...base, fontFamily: fontFamilyBold, fontSize: 16, fontWeight: '700', lineHeight: 22, letterSpacing: -0.1 } as TextStyle,
+  body:         { ...base, fontSize: 15, fontWeight: '400', lineHeight: 22 } as TextStyle,
+  bodyMedium:   { ...base, fontSize: 15, fontWeight: '500', lineHeight: 22 } as TextStyle,
+  bodyBold:     { ...base, fontFamily: fontFamilyBold, fontSize: 15, fontWeight: '700', lineHeight: 22 } as TextStyle,
+  bodySmall:    { ...base, fontSize: 13, fontWeight: '400', lineHeight: 18 } as TextStyle,
+  bodySmallMed: { ...base, fontSize: 13, fontWeight: '500', lineHeight: 18 } as TextStyle,
+  caption:      { ...base, fontSize: 12, fontWeight: '400', lineHeight: 16 } as TextStyle,
+  captionMed:   { ...base, fontSize: 12, fontWeight: '500', lineHeight: 16 } as TextStyle,
+  captionBold:  { ...base, fontFamily: fontFamilyBold, fontSize: 12, fontWeight: '700', lineHeight: 16 } as TextStyle,
+  label:        { ...base, fontSize: 14, fontWeight: '500', lineHeight: 20 } as TextStyle,
+  labelBold:    { ...base, fontFamily: fontFamilyBold, fontSize: 14, fontWeight: '700', lineHeight: 20 } as TextStyle,
+  overline:     { ...base, fontFamily: fontFamilyBold, fontSize: 10, fontWeight: '800', lineHeight: 14, letterSpacing: 1.2, textTransform: 'uppercase' } as TextStyle,
+  button:       { ...base, fontFamily: fontFamilyBold, fontSize: 15, fontWeight: '700', lineHeight: 20, letterSpacing: 0.2 } as TextStyle,
+  buttonSmall:  { ...base, fontFamily: fontFamilyBold, fontSize: 13, fontWeight: '700', lineHeight: 16, letterSpacing: 0.2 } as TextStyle,
+  tabLabel:     { ...base, fontFamily: fontFamilyBold, fontSize: 10, fontWeight: '700', lineHeight: 14, letterSpacing: 0.4 } as TextStyle,
+  price:        { ...base, fontFamily: fontFamilyBold, fontSize: 22, fontWeight: '800', lineHeight: 28, letterSpacing: -0.5, fontVariant: ['tabular-nums'] } as TextStyle,
+  priceLarge:   { ...base, fontFamily: fontFamilyBold, fontSize: 32, fontWeight: '800', lineHeight: 38, letterSpacing: -0.8, fontVariant: ['tabular-nums'] } as TextStyle,
+  priceSmall:   { ...base, fontFamily: fontFamilyBold, fontSize: 17, fontWeight: '800', lineHeight: 22, letterSpacing: -0.3, fontVariant: ['tabular-nums'] } as TextStyle,
 };

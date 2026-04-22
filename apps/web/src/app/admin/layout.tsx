@@ -5,11 +5,12 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/stores/auth-store';
 import NotificationBell from '@/components/admin/NotificationBell';
+import { NetTapuLogo } from '@/components/ui/nettapu-logo';
 import {
   LayoutDashboard, BarChart3, Users, ShieldBan, Map, Gavel,
   CreditCard, Landmark, ClipboardList, Phone, CalendarDays,
   HandCoins, FileText, HelpCircle, Trophy, MessageSquare,
-  Target, Handshake, Settings, Bell, Menu, X, ExternalLink, BookOpen,
+  Target, Handshake, Settings, Bell, Menu, X, ExternalLink, BookOpen, LogOut,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -42,14 +43,14 @@ const navSections: Array<{
     { href: '/admin/offers',       label: 'Teklifler',          icon: HandCoins },
   ]},
   { title: 'İçerik', items: [
-    { href: '/admin/pages',               label: 'Sayfalar',       icon: FileText },
-    { href: '/admin/faq',                 label: 'S.S.S.',         icon: HelpCircle },
+    { href: '/admin/pages',               label: 'Sayfalar',          icon: FileText },
+    { href: '/admin/faq',                 label: 'S.S.S.',            icon: HelpCircle },
     { href: '/admin/real-estate-guide',   label: 'Rehber Makaleleri', icon: BookOpen },
-    { href: '/admin/references',          label: 'Referanslar',    icon: Trophy },
-    { href: '/admin/testimonials',        label: 'Yorumlar',       icon: MessageSquare },
+    { href: '/admin/references',          label: 'Referanslar',       icon: Trophy },
+    { href: '/admin/testimonials',        label: 'Yorumlar',          icon: MessageSquare },
   ]},
   { title: 'Pazarlama', items: [
-    { href: '/admin/campaigns', label: 'Kampanyalar',         icon: Target },
+    { href: '/admin/campaigns', label: 'Kampanyalar',           icon: Target },
     { href: '/admin/dealers',   label: 'Bayiler / Danışmanlar', icon: Handshake },
   ]},
   { title: 'Sistem', items: [
@@ -64,7 +65,7 @@ function NavItems({ pathname, onNavigate }: { pathname: string; onNavigate?: () 
       {navSections.map((section, i) => (
         <div key={i}>
           {section.title && (
-            <p className="section-label mb-1 px-2">{section.title}</p>
+            <p className="section-label mb-1.5 px-2">{section.title}</p>
           )}
           <div className="space-y-0.5">
             {section.items.map((item) => {
@@ -76,14 +77,14 @@ function NavItems({ pathname, onNavigate }: { pathname: string; onNavigate?: () 
                   key={item.href}
                   href={item.href}
                   onClick={onNavigate}
-                  className={[
-                    'flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[13px] transition-colors duration-100',
+                  className={`relative flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[13px] transition-all ${
                     isActive
-                      ? 'bg-[var(--brand-light)] text-[var(--brand)] font-medium'
-                      : 'text-[#374151] hover:bg-[var(--muted)] hover:text-[var(--foreground)]',
-                  ].join(' ')}
+                      ? 'bg-brand-50 text-brand-700 font-bold'
+                      : 'text-ink-700 hover:bg-slate-100 hover:text-brand-700 font-medium'
+                  }`}
                 >
-                  <Icon className={`h-[15px] w-[15px] shrink-0 ${isActive ? 'text-[var(--brand)]' : 'text-[#9ca3af]'}`} />
+                  {isActive && <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 bg-brand-600 rounded-r" />}
+                  <Icon className={`h-[15px] w-[15px] shrink-0 ${isActive ? 'text-brand-700' : 'text-slate-400'}`} />
                   {item.label}
                 </Link>
               );
@@ -95,15 +96,21 @@ function NavItems({ pathname, onNavigate }: { pathname: string; onNavigate?: () 
   );
 }
 
-const SidebarLogo = () => (
-  <div className="flex items-center gap-2.5 px-4 py-4 border-b border-[var(--border)]">
-    <div className="flex h-6 w-6 items-center justify-center rounded bg-[var(--brand)]">
-      <span className="text-[10px] font-bold text-white leading-none">NT</span>
+function SidebarHeader({ compact = false, onClose }: { compact?: boolean; onClose?: () => void }) {
+  return (
+    <div className={`flex items-center gap-2.5 px-4 py-4 border-b border-slate-200 ${compact ? 'justify-between' : ''}`}>
+      <Link href="/admin" className="flex items-center gap-2.5">
+        <NetTapuLogo variant="light" width={110} height={28} />
+        <span className="badge badge-dark text-[9px]">Admin</span>
+      </Link>
+      {onClose && (
+        <button onClick={onClose} className="p-1 rounded hover:bg-slate-100 text-slate-500">
+          <X className="h-4 w-4" />
+        </button>
+      )}
     </div>
-    <span className="text-[13px] font-semibold text-[var(--foreground)]">NetTapu</span>
-    <span className="ml-auto text-[10px] font-medium text-[var(--muted-foreground)] bg-[var(--muted)] px-1.5 py-0.5 rounded">Admin</span>
-  </div>
-);
+  );
+}
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, isLoading, isAuthenticated } = useAuthStore();
@@ -121,10 +128,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[var(--background-subtle)]">
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
         <div className="flex flex-col items-center gap-3">
-          <div className="h-7 w-7 animate-spin rounded-full border-2 border-[var(--border)] border-t-[var(--brand)]" />
-          <p className="text-sm text-[var(--muted-foreground)]">Yükleniyor...</p>
+          <div className="h-7 w-7 animate-spin rounded-full border-2 border-slate-200 border-t-brand-600" />
+          <p className="text-sm text-slate-500 font-semibold">Yükleniyor...</p>
         </div>
       </div>
     );
@@ -132,26 +139,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (!user || !user.roles?.some((r) => ADMIN_ROLES.includes(r))) return null;
 
   return (
-    <div className="flex flex-1 bg-[var(--background-subtle)]">
+    <div className="flex flex-1 bg-slate-50 min-h-screen">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-[9999] lg:hidden">
           <div
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            className="absolute inset-0 bg-ink-900/50 backdrop-blur-sm"
             onClick={() => setSidebarOpen(false)}
           />
-          <aside className="absolute left-0 top-0 bottom-0 w-64 bg-[var(--background)] shadow-xl overflow-y-auto z-10 flex flex-col">
-            <div className="flex items-center justify-between px-4 py-4 border-b border-[var(--border)]">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-6 w-6 items-center justify-center rounded bg-[var(--brand)]">
-                  <span className="text-[10px] font-bold text-white">NT</span>
-                </div>
-                <span className="text-[13px] font-semibold">NetTapu Admin</span>
-              </div>
-              <button onClick={() => setSidebarOpen(false)} className="p-1 rounded hover:bg-[var(--muted)] text-[var(--muted-foreground)]">
-                <X className="h-4 w-4" />
-              </button>
-            </div>
+          <aside className="absolute left-0 top-0 bottom-0 w-72 bg-white shadow-2xl overflow-y-auto z-10 flex flex-col">
+            <SidebarHeader compact onClose={() => setSidebarOpen(false)} />
             <div className="flex-1 overflow-y-auto py-4">
               <NavItems pathname={pathname} onNavigate={() => setSidebarOpen(false)} />
             </div>
@@ -160,40 +157,71 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       )}
 
       {/* Desktop sidebar */}
-      <aside className="hidden w-56 shrink-0 border-r border-[var(--border)] bg-[var(--background)] lg:flex flex-col overflow-y-auto">
-        <SidebarLogo />
+      <aside className="hidden w-60 shrink-0 border-r border-slate-200 bg-white lg:flex flex-col overflow-y-auto">
+        <SidebarHeader />
         <div className="flex-1 overflow-y-auto py-4">
           <NavItems pathname={pathname} />
+        </div>
+
+        {/* Footer / user card */}
+        <div className="border-t border-slate-200 p-3">
+          <div className="flex items-center gap-2.5 rounded-md px-2 py-2">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-600 text-white text-xs font-bold">
+              {user.email?.charAt(0).toUpperCase() || 'A'}
+            </span>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold text-ink-800 truncate">{user.email}</p>
+              <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">Yönetici</p>
+            </div>
+            <button
+              onClick={async () => {
+                try { await fetch('/api/auth/session', { method: 'DELETE' }); } catch {}
+                useAuthStore.getState().clearTokens();
+                window.location.href = '/login';
+              }}
+              className="p-1.5 rounded hover:bg-red-50 text-slate-400 hover:text-red-600 transition-colors"
+              title="Çıkış"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+            </button>
+          </div>
         </div>
       </aside>
 
       {/* Content */}
       <div className="flex-1 min-w-0 flex flex-col">
         {/* Top bar */}
-        <header className="flex h-12 items-center justify-between border-b border-[var(--border)] bg-[var(--background)] px-4 shrink-0">
+        <header className="flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4 lg:px-6 shrink-0 sticky top-0 z-20">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-1.5 rounded-md hover:bg-[var(--muted)] text-[var(--muted-foreground)]"
+              className="lg:hidden p-2 rounded-md hover:bg-slate-100 text-ink-700"
             >
-              <Menu className="h-4 w-4" />
+              <Menu className="h-5 w-5" />
             </button>
-            <span className="text-xs text-[var(--muted-foreground)] hidden sm:block">{user.email}</span>
+            <div className="lg:hidden">
+              <NetTapuLogo variant="light" width={90} height={22} />
+            </div>
+            <span className="hidden lg:block text-xs text-slate-500 font-medium">
+              <span className="text-slate-400">Yönetim Paneli</span>
+              {pathname !== '/admin' && <span className="mx-2 text-slate-300">/</span>}
+            </span>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
             <NotificationBell />
             <Link
               href="/"
-              className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
+              target="_blank"
+              className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 hover:text-brand-700 transition-colors"
             >
-              <ExternalLink className="h-3 w-3" />
-              Siteye Dön
+              <ExternalLink className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Siteye Dön</span>
             </Link>
           </div>
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-auto p-4 sm:p-5 lg:p-6">
+        <main className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
           {children}
         </main>
       </div>

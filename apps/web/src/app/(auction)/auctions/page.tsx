@@ -6,27 +6,18 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import apiClient from '@/lib/api-client';
 import { formatPrice, resolveImageUrl } from '@/lib/format';
-import { Badge, Pagination, Alert, EmptyState, LoadingState } from '@/components/ui';
+import { Pagination, Alert, EmptyState, LoadingState } from '@/components/ui';
+import { Gavel, Clock, TrendingUp, Users, Eye, Timer, Zap, ArrowRight, CheckCircle2, MapPin } from 'lucide-react';
 import type { Auction, PaginatedResponse } from '@/types';
 
-const statusLabels: Record<string, string> = {
-  scheduled: 'Planlandı',
-  deposit_open: 'Depozito Açık',
-  live: 'Canlı',
-  ending: 'Bitiyor',
-  ended: 'Bitti',
-  settling: 'Sonuçlanıyor',
-  settled: 'Sonuçlandı',
-};
-
-const statusColors: Record<string, { bg: string; dot: string }> = {
-  live: { bg: 'bg-green-50 text-green-700 border-green-200', dot: 'bg-green-500' },
-  ending: { bg: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-  scheduled: { bg: 'bg-blue-50 text-blue-700 border-blue-200', dot: 'bg-blue-500' },
-  deposit_open: { bg: 'bg-indigo-50 text-indigo-700 border-indigo-200', dot: 'bg-indigo-500' },
-  ended: { bg: 'bg-gray-100 text-gray-500 border-gray-200', dot: 'bg-gray-400' },
-  settling: { bg: 'bg-gray-100 text-gray-500 border-gray-200', dot: 'bg-gray-400' },
-  settled: { bg: 'bg-gray-100 text-gray-500 border-gray-200', dot: 'bg-gray-400' },
+const statusConfig: Record<string, { label: string; classes: string; dotClasses: string; textClasses: string }> = {
+  live:         { label: 'Canlı',          classes: 'bg-red-50 text-red-700 border-red-200',         dotClasses: 'bg-red-500',   textClasses: 'text-red-600' },
+  ending:       { label: 'Bitiyor',        classes: 'bg-amber-50 text-amber-700 border-amber-200',   dotClasses: 'bg-amber-500', textClasses: 'text-amber-600' },
+  scheduled:    { label: 'Planlandı',      classes: 'bg-brand-50 text-brand-700 border-brand-200',   dotClasses: 'bg-brand-500', textClasses: 'text-brand-600' },
+  deposit_open: { label: 'Depozito Açık',  classes: 'bg-gold-50 text-gold-700 border-gold-200',      dotClasses: 'bg-gold-500',  textClasses: 'text-gold-700' },
+  ended:        { label: 'Bitti',          classes: 'bg-slate-100 text-slate-600 border-slate-200',  dotClasses: 'bg-slate-400', textClasses: 'text-slate-500' },
+  settling:     { label: 'Sonuçlanıyor',   classes: 'bg-slate-100 text-slate-600 border-slate-200',  dotClasses: 'bg-slate-400', textClasses: 'text-slate-500' },
+  settled:      { label: 'Sonuçlandı',     classes: 'bg-slate-100 text-slate-600 border-slate-200',  dotClasses: 'bg-slate-400', textClasses: 'text-slate-500' },
 };
 
 function timeUntil(dateStr: string): string {
@@ -35,7 +26,7 @@ function timeUntil(dateStr: string): string {
   const hours = Math.floor(diff / 3_600_000);
   const minutes = Math.floor((diff % 3_600_000) / 60_000);
   if (hours > 24) return `${Math.floor(hours / 24)} gün ${hours % 24} saat`;
-  if (hours > 0) return `${hours} saat ${minutes} dk`;
+  if (hours > 0) return `${hours}s ${minutes}dk`;
   return `${minutes} dk`;
 }
 
@@ -48,11 +39,11 @@ export default function AuctionsPage() {
 }
 
 const filterTabs = [
-  { key: 'all', label: 'Tümü' },
-  { key: 'live', label: 'Canlı' },
-  { key: 'scheduled', label: 'Planlandı' },
-  { key: 'deposit_open', label: 'Depozito Açık' },
-  { key: 'ended', label: 'Sona Erdi' },
+  { key: 'all',          label: 'Tümü',          icon: Gavel },
+  { key: 'live',         label: 'Canlı',         icon: Zap,        highlight: true },
+  { key: 'scheduled',    label: 'Planlandı',     icon: Timer },
+  { key: 'deposit_open', label: 'Depozito Açık', icon: CheckCircle2 },
+  { key: 'ended',        label: 'Sona Erdi',     icon: Clock },
 ];
 
 function AuctionsContent() {
@@ -71,9 +62,7 @@ function AuctionsContent() {
     setError(null);
     try {
       const params: Record<string, any> = { page, limit: 12 };
-      if (statusFilter !== 'all') {
-        params.status = statusFilter; // single valid AuctionStatus enum value
-      }
+      if (statusFilter !== 'all') params.status = statusFilter;
       const { data: res } = await apiClient.get<PaginatedResponse<Auction>>('/auctions', { params });
       setData(res);
     } catch {
@@ -98,31 +87,77 @@ function AuctionsContent() {
     router.push(`/auctions?${params.toString()}`);
   }
 
+  const liveCount = data?.data.filter(a => a.status === 'live' || a.status === 'ending').length || 0;
+
   return (
-    <div className="bg-white min-h-screen">
-      <div className="border-b border-gray-200 bg-gray-50">
-        <div className="mx-auto max-w-6xl px-4 py-5">
-          <h1 className="text-xl font-bold text-gray-900">Açık Artırmalar</h1>
-          <p className="mt-1 text-sm text-gray-500">Canlı ve yaklaşan açık artırmaları inceleyin.</p>
+    <div className="min-h-screen bg-white -mx-4 -my-6">
+      {/* Page header banner */}
+      <div className="relative overflow-hidden bg-gradient-olive">
+        <div className="absolute inset-0 opacity-[0.08]" style={{
+          backgroundImage: 'radial-gradient(rgba(255,255,255,0.9) 1.2px, transparent 1.2px)',
+          backgroundSize: '24px 24px',
+        }} />
+        <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full bg-brand-400/20 blur-3xl" />
+        <div className="relative mx-auto max-w-[1280px] px-4 sm:px-6 py-12">
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div>
+              <div className="flex items-center gap-2.5 mb-4">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm">
+                  <Gavel className="h-3 w-3 text-gold-300" />
+                  <span className="text-[10px] font-bold text-white/90 uppercase tracking-widest">Canlı Açık Artırma</span>
+                </span>
+                {liveCount > 0 && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-600 shadow-sm">
+                    <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
+                    <span className="text-[10px] font-bold text-white uppercase tracking-widest">{liveCount} Canlı</span>
+                  </span>
+                )}
+              </div>
+              <h1 className="font-heading text-3xl sm:text-4xl font-extrabold text-white tracking-[-0.02em] leading-tight">
+                Açık Artırmalar
+              </h1>
+              <p className="mt-2 text-brand-100/95 max-w-xl text-[15px]">
+                Canlı ve yaklaşan açık artırmaları inceleyin, gerçek zamanlı teklif vererek arsalara sahip olun.
+              </p>
+            </div>
+            <Link
+              href="/how-it-works"
+              className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2.5 rounded-md bg-white/10 border border-white/20 text-white text-sm font-bold hover:bg-white/20 transition-colors backdrop-blur-sm"
+            >
+              İhale Kuralları
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
         </div>
       </div>
 
-      <div className="mx-auto max-w-6xl px-4 py-6">
+      <div className="mx-auto max-w-[1280px] px-4 sm:px-6 py-8">
         {/* Filter tabs */}
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
-          {filterTabs.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setFilter(tab.key)}
-              className={`shrink-0 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                statusFilter === tab.key
-                  ? 'bg-brand-500 text-white shadow-sm'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+        <div className="flex gap-2 mb-7 overflow-x-auto pb-1 -mx-1 px-1">
+          {filterTabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = statusFilter === tab.key;
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setFilter(tab.key)}
+                className={`shrink-0 inline-flex items-center gap-1.5 rounded-md px-4 py-2.5 text-sm font-bold transition-all ${
+                  isActive
+                    ? 'bg-brand-700 text-white shadow-brand'
+                    : 'bg-white border border-slate-200 text-ink-700 hover:border-brand-300 hover:text-brand-700'
+                }`}
+                data-testid={`filter-${tab.key}`}
+              >
+                <Icon className={`h-3.5 w-3.5 ${tab.highlight && !isActive ? 'text-red-500' : ''}`} />
+                {tab.label}
+                {tab.highlight && !isActive && liveCount > 0 && (
+                  <span className="ml-1 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-bold tabular-nums">
+                    {liveCount}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
 
         {loading && <LoadingState />}
@@ -133,81 +168,117 @@ function AuctionsContent() {
             {data.data.length === 0 ? (
               <EmptyState message="Aktif açık artırma bulunamadı." />
             ) : (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 {data.data.map((auction) => {
-                  const sc = statusColors[auction.status] || statusColors.ended;
+                  const sc = statusConfig[auction.status] || statusConfig.ended;
                   const isLive = auction.status === 'live' || auction.status === 'ending';
 
                   return (
                     <Link
                       key={auction.id}
                       href={`/auctions/${auction.id}`}
-                      className={`block rounded-lg border overflow-hidden hover:shadow-md transition-shadow ${
-                        isLive ? 'border-green-200 bg-green-50/30' : 'border-gray-200 bg-white'
+                      className={`group flex flex-col rounded-md border overflow-hidden bg-white transition-all hover:shadow-lg ${
+                        isLive ? 'border-red-200 hover:border-red-400' : 'border-slate-200 hover:border-brand-400'
                       }`}
+                      data-testid={`auction-card-${auction.id}`}
                     >
-                      {/* Cover Image */}
+                      {/* Cover */}
                       {(() => {
                         const coverImg = (auction as any).parcel?.images?.[0];
                         const imgUrl = coverImg ? resolveImageUrl(coverImg) : null;
-                        return imgUrl ? (
-                          <div className="relative h-44 w-full bg-gray-100">
-                            <Image src={imgUrl} alt={auction.title} fill className="object-cover" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" />
+                        return (
+                          <div className="relative h-44 w-full bg-slate-100 overflow-hidden">
+                            {imgUrl ? (
+                              <Image
+                                src={imgUrl}
+                                alt={auction.title}
+                                fill
+                                className="object-cover transition-transform duration-700 group-hover:scale-105"
+                                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                              />
+                            ) : (
+                              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200">
+                                <Gavel className="h-12 w-12 text-slate-300" />
+                              </div>
+                            )}
                             {isLive && (
-                              <span className="absolute top-3 right-3 inline-flex items-center gap-1.5 bg-red-600 text-white text-xs font-bold px-2.5 py-1 rounded-md">
+                              <span className="absolute top-3 right-3 inline-flex items-center gap-1.5 bg-red-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-sm shadow-md uppercase tracking-wider">
                                 <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
-                                CANLI
+                                Canlı
+                              </span>
+                            )}
+                            {(auction as any).parcel?.city && (
+                              <span className="absolute bottom-3 left-3 inline-flex items-center gap-1 bg-black/60 backdrop-blur-sm text-white text-[11px] font-semibold px-2.5 py-1 rounded-sm">
+                                <MapPin className="h-3 w-3" />
+                                {(auction as any).parcel.city}
                               </span>
                             )}
                           </div>
-                        ) : null;
+                        );
                       })()}
 
-                      <div className="p-5">
-                      <div className="flex items-center justify-between">
-                        <span className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-semibold ${sc.bg}`}>
-                          <span className={`h-1.5 w-1.5 rounded-full ${sc.dot} ${isLive ? 'animate-pulse' : ''}`} />
-                          {statusLabels[auction.status] || auction.status}
-                        </span>
-                        {auction.status === 'live' && auction.scheduledEnd && (
-                          <span className="text-xs font-medium text-red-600">
-                            {timeUntil(auction.extendedUntil || auction.scheduledEnd)}
+                      {/* Body */}
+                      <div className="flex flex-col flex-1 p-5">
+                        <div className="flex items-center justify-between gap-2 mb-3">
+                          <span className={`inline-flex items-center gap-1.5 rounded-sm border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${sc.classes}`}>
+                            <span className={`h-1.5 w-1.5 rounded-full ${sc.dotClasses} ${isLive ? 'animate-pulse' : ''}`} />
+                            {sc.label}
                           </span>
-                        )}
-                        {auction.status === 'scheduled' && (
-                          <span className="text-xs font-medium text-blue-600">
-                            {timeUntil(auction.scheduledStart)}
+                          {auction.status === 'live' && auction.scheduledEnd && (
+                            <span className="text-xs font-bold text-red-600 tabular-nums flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {timeUntil(auction.extendedUntil || auction.scheduledEnd)}
+                            </span>
+                          )}
+                          {auction.status === 'scheduled' && (
+                            <span className="text-xs font-bold text-brand-700 tabular-nums flex items-center gap-1">
+                              <Timer className="h-3 w-3" />
+                              {timeUntil(auction.scheduledStart)}
+                            </span>
+                          )}
+                        </div>
+
+                        <h2 className="font-heading font-bold text-ink-900 text-[15px] line-clamp-2 leading-snug group-hover:text-brand-700 transition-colors mb-4 min-h-[42px]">
+                          {auction.title}
+                        </h2>
+
+                        {/* Price block */}
+                        <div className="rounded-md bg-gradient-olive-soft border border-brand-100 p-3.5 mb-3">
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-brand-700 mb-0.5">
+                            {auction.currentPrice ? 'Güncel Fiyat' : 'Başlangıç Fiyatı'}
+                          </p>
+                          <p className="font-heading text-2xl font-extrabold text-brand-800 tabular-nums tracking-tight">
+                            {formatPrice(auction.currentPrice || auction.startingPrice)}
+                          </p>
+                        </div>
+
+                        {/* Meta row */}
+                        <div className="grid grid-cols-2 gap-2 text-xs mb-4">
+                          <div>
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Min. Artış</p>
+                            <p className="font-bold text-ink-800 tabular-nums">{formatPrice(auction.minimumIncrement)}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Depozito</p>
+                            <p className="font-bold text-ink-800 tabular-nums">{formatPrice(auction.requiredDeposit)}</p>
+                          </div>
+                        </div>
+
+                        {/* Stats strip */}
+                        <div className="mt-auto flex items-center justify-between gap-2 pt-3 border-t border-slate-100 text-[11px] text-slate-500">
+                          <span className="flex items-center gap-1 font-semibold">
+                            <Users className="h-3.5 w-3.5 text-brand-600" />
+                            <span className="tabular-nums">{auction.participantCount}</span> kat.
                           </span>
-                        )}
-                      </div>
-
-                      <h2 className="mt-3 font-semibold text-gray-900 line-clamp-2">{auction.title}</h2>
-
-                      <div className="mt-4 rounded-md bg-gray-50 border border-gray-100 p-3">
-                        <p className="text-xs text-gray-500 uppercase tracking-wide">
-                          {auction.currentPrice ? 'Güncel Fiyat' : 'Başlangıç Fiyatı'}
-                        </p>
-                        <p className={`mt-0.5 text-xl font-bold ${isLive ? 'text-green-600' : 'text-brand-600'}`}>
-                          {formatPrice(auction.currentPrice || auction.startingPrice)}
-                        </p>
-                      </div>
-
-                      <div className="mt-3 space-y-1.5 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">Min. Artış</span>
-                          <span className="font-medium text-gray-700">{formatPrice(auction.minimumIncrement)}</span>
+                          <span className="flex items-center gap-1 font-semibold">
+                            <TrendingUp className="h-3.5 w-3.5 text-brand-600" />
+                            <span className="tabular-nums">{auction.bidCount}</span> teklif
+                          </span>
+                          <span className="flex items-center gap-1 font-semibold">
+                            <Eye className="h-3.5 w-3.5 text-brand-600" />
+                            <span className="tabular-nums">{auction.watcherCount}</span> izl.
+                          </span>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">Depozito</span>
-                          <span className="font-medium text-gray-700">{formatPrice(auction.requiredDeposit)}</span>
-                        </div>
-                      </div>
-
-                      <div className="mt-4 flex items-center gap-4 text-xs text-gray-400 pt-3 border-t border-gray-100">
-                        <span>{auction.participantCount} katılımcı</span>
-                        <span>{auction.bidCount} teklif</span>
-                        <span>{auction.watcherCount} izleyici</span>
-                      </div>
                       </div>
                     </Link>
                   );

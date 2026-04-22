@@ -534,7 +534,7 @@ export default function LiveAuctionScreen() {
   const isEnded = status === 'ended' || status === 'settled';
   const timeInfo = formatTime(timeRemainingMs);
 
-  const connectionColor = connectionStatus === 'connected' ? '#22c55e'
+  const connectionColor = connectionStatus === 'connected' ? '#8e9d3f'
     : connectionStatus === 'connecting' || connectionStatus === 'reconnecting' ? '#eab308'
     : '#ef4444';
 
@@ -828,7 +828,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     alignItems: 'center',
   },
-  extensionText: { color: '#2563eb', fontWeight: '600', fontSize: 14 },
+  extensionText: { color: '#515d2b', fontWeight: '600', fontSize: 14 },
 
   // Timer
   timerCard: {
@@ -873,17 +873,17 @@ const styles = StyleSheet.create({
 
   // Winner
   winnerCard: {
-    backgroundColor: '#f0fdf4',
+    backgroundColor: '#f4f6ec',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#bbf7d0',
+    borderColor: '#e5eaca',
     padding: 24,
     alignItems: 'center',
     marginBottom: 12,
   },
-  winnerTitle: { fontSize: 20, fontWeight: '800', color: '#15803d', marginBottom: 4 },
-  winnerDetail: { fontSize: 15, color: '#166534', marginBottom: 4 },
-  winnerPrice: { fontSize: 24, fontWeight: '800', color: '#16a34a' },
+  winnerTitle: { fontSize: 20, fontWeight: '800', color: '#414a24', marginBottom: 4 },
+  winnerDetail: { fontSize: 15, color: '#343c1f', marginBottom: 4 },
+  winnerPrice: { fontSize: 24, fontWeight: '800', color: '#6d7a32' },
 
   // Rejection
   rejectionCard: {

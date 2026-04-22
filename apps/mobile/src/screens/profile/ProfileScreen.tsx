@@ -207,7 +207,7 @@ export default function ProfileScreen() {
             {/* Gradient ring */}
             <Animated.View style={[styles.avatarRing, ringStyle, {
               borderColor: c.primary,
-              borderTopColor: isDark ? '#6366f1' : '#818cf8',
+              borderTopColor: isDark ? '#515d2b' : '#8e9d3f',
               borderRightColor: isDark ? '#a78bfa' : '#c084fc',
             }]} />
             {avatarUrl ? (
@@ -297,7 +297,7 @@ export default function ProfileScreen() {
                   entering={FadeInDown.delay(450).duration(450).springify()}
                   style={[styles.proBanner, {
                     backgroundColor: isDark ? '#1e1b4b' : '#eef2ff',
-                    borderColor: isDark ? '#312e81' : '#c7d2fe',
+                    borderColor: isDark ? '#161a0c' : '#c7d2fe',
                   }]}
                 >
                   <View style={styles.proBadge}>
@@ -305,14 +305,14 @@ export default function ProfileScreen() {
                     <Text style={styles.proBadgeText}>PRO</Text>
                   </View>
                   <View style={{ flex: 1, marginLeft: 12 }}>
-                    <Text style={[styles.proTitle, { color: isDark ? '#e0e7ff' : '#312e81' }]}>
+                    <Text style={[styles.proTitle, { color: isDark ? '#e0e7ff' : '#161a0c' }]}>
                       NetTapu Pro ile daha fazlası
                     </Text>
-                    <Text style={[styles.proSubtitle, { color: isDark ? '#a5b4fc' : '#6366f1' }]}>
+                    <Text style={[styles.proSubtitle, { color: isDark ? '#a5b4fc' : '#515d2b' }]}>
                       Erken bildirim, detaylı analiz ve oncelikli destek
                     </Text>
                   </View>
-                  <Ionicons name="chevron-forward" size={18} color={isDark ? '#818cf8' : '#6366f1'} />
+                  <Ionicons name="chevron-forward" size={18} color={isDark ? '#8e9d3f' : '#515d2b'} />
                 </Animated.View>
               )}
             </React.Fragment>
@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
   },
   proBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: '#6366f1', paddingHorizontal: 10, paddingVertical: 5,
+    backgroundColor: '#515d2b', paddingHorizontal: 10, paddingVertical: 5,
     borderRadius: 8,
   },
   proBadgeText: { color: '#fff', fontSize: 11, fontWeight: '800', letterSpacing: 0.5 },

@@ -61,7 +61,7 @@ export function AnimatedHeader({
   if (gradient) {
     return (
       <LinearGradient
-        colors={isDark ? ['#052e16', '#0f172a'] : ['#15803d', '#16a34a']}
+        colors={isDark ? ['#161a0c', '#121210'] : ['#414a24', '#6d7a32']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.container}

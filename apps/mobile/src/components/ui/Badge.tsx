@@ -2,17 +2,17 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
 const STATUS_CONFIG: Record<string, { bg: string; text: string; dot: string; label: string }> = {
-  active: { bg: '#f0fdf4', text: '#166534', dot: '#22c55e', label: 'Satışta' },
+  active: { bg: '#f4f6ec', text: '#343c1f', dot: '#8e9d3f', label: 'Satışta' },
   sold: { bg: '#fef2f2', text: '#991b1b', dot: '#ef4444', label: 'Satıldı' },
   deposit_taken: { bg: '#fffbeb', text: '#92400e', dot: '#f59e0b', label: 'Kaparo Alındı' },
-  reserved: { bg: '#faf5ff', text: '#6b21a8', dot: '#a855f7', label: 'Ayırtıldı' },
+  reserved: { bg: '#faf5ff', text: '#343c1f', dot: '#a855f7', label: 'Ayırtıldı' },
   draft: { bg: '#f8fafc', text: '#64748b', dot: '#94a3b8', label: 'Taslak' },
   withdrawn: { bg: '#f8fafc', text: '#94a3b8', dot: '#cbd5e1', label: 'Geri Çekildi' },
   live: { bg: '#fef2f2', text: '#dc2626', dot: '#ef4444', label: 'Canlı' },
   scheduled: { bg: '#f0f9ff', text: '#0369a1', dot: '#38bdf8', label: 'Planlandı' },
   deposit_open: { bg: '#fffbeb', text: '#92400e', dot: '#f59e0b', label: 'Kaparo Açık' },
   ended: { bg: '#f8fafc', text: '#64748b', dot: '#94a3b8', label: 'Bitti' },
-  settled: { bg: '#f0fdf4', text: '#166534', dot: '#22c55e', label: 'Tamamlandı' },
+  settled: { bg: '#f4f6ec', text: '#343c1f', dot: '#8e9d3f', label: 'Tamamlandı' },
   ending: { bg: '#fef2f2', text: '#dc2626', dot: '#ef4444', label: 'Bitiyor' },
 };
 
@@ -37,10 +37,10 @@ export function StatusBadge({ status, size = 'sm' }: BadgeProps) {
 
 export function parcelStatusColor(status: string): string {
   switch (status) {
-    case 'active': return '#166534';
+    case 'active': return '#343c1f';
     case 'sold': return '#991b1b';
     case 'deposit_taken': return '#92400e';
-    case 'reserved': return '#6b21a8';
+    case 'reserved': return '#343c1f';
     default: return '#64748b';
   }
 }

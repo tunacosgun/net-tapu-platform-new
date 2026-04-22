@@ -63,7 +63,7 @@ export default function ForgotPasswordScreen() {
           {/* Header */}
           <Animated.View entering={FadeInDown.duration(500).springify()}>
             <LinearGradient
-              colors={isDark ? ['#052e16', '#0f172a'] : ['#15803d', '#16a34a']}
+              colors={isDark ? ['#161a0c', '#121210'] : ['#414a24', '#6d7a32']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.header}
@@ -88,7 +88,7 @@ export default function ForgotPasswordScreen() {
             entering={FadeInDown.delay(150).duration(500).springify()}
             style={[styles.card, {
               backgroundColor: theme.colors.card,
-              shadowColor: isDark ? '#000' : '#16a34a',
+              shadowColor: isDark ? '#000' : '#6d7a32',
             }]}
           >
             {sent ? (
@@ -104,14 +104,14 @@ export default function ForgotPasswordScreen() {
                   onPress={() => navigation.goBack()}
                   style={{ borderRadius: 14, overflow: 'hidden', alignSelf: 'stretch', marginTop: 20 }}
                 >
-                  <LinearGradient colors={['#16a34a', '#15803d']} style={styles.submitBtn}>
+                  <LinearGradient colors={['#6d7a32', '#414a24']} style={styles.submitBtn}>
                     <Text style={styles.submitText}>Giriş Sayfasına Dön</Text>
                   </LinearGradient>
                 </TouchableOpacity>
               </View>
             ) : (
               <>
-                <View style={[styles.infoBox, { backgroundColor: isDark ? theme.colors.surface : '#f0fdf4' }]}>
+                <View style={[styles.infoBox, { backgroundColor: isDark ? theme.colors.surface : '#f4f6ec' }]}>
                   <Ionicons name="information-circle-outline" size={18} color={theme.colors.primary} />
                   <Text style={[styles.infoText, { color: theme.colors.primary }]}>
                     Kayıtlı e-posta adresinizi girin
@@ -130,7 +130,7 @@ export default function ForgotPasswordScreen() {
                   disabled={loading || !email}
                   style={{ borderRadius: 14, overflow: 'hidden', opacity: !email ? 0.5 : 1 }}
                 >
-                  <LinearGradient colors={['#16a34a', '#15803d']} style={styles.submitBtn}>
+                  <LinearGradient colors={['#6d7a32', '#414a24']} style={styles.submitBtn}>
                     {loading ? (
                       <ActivityIndicator size="small" color="#fff" />
                     ) : (

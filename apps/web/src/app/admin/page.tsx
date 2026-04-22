@@ -121,7 +121,7 @@ export default function AdminDashboard() {
           value={String(stats?.auctions.live ?? 0)}
           subtext={`${stats?.auctions.scheduled ?? 0} planlanmış`}
           href="/admin/auctions"
-          color="text-blue-600 bg-blue-50"
+          color="text-brand-700 bg-brand-50"
         />
         <KPICard
           icon={Users}
@@ -129,7 +129,7 @@ export default function AdminDashboard() {
           value={String(stats?.users.total ?? 0)}
           subtext={`+${stats?.users.newThisMonth ?? 0} bu ay`}
           href="/admin/users"
-          color="text-purple-600 bg-purple-50"
+          color="text-ink-800 bg-slate-100"
         />
         <KPICard
           icon={TrendingUp}
@@ -137,7 +137,7 @@ export default function AdminDashboard() {
           value={finance ? formatPrice(finance.total_captured_amount) : '₺0'}
           subtext={finance ? `${formatPrice(finance.total_refunded_amount)} iade` : ''}
           href="/admin/analytics"
-          color="text-emerald-600 bg-emerald-50"
+          color="text-gold-700 bg-gold-50"
         />
       </div>
 

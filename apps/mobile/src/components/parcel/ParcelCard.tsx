@@ -75,7 +75,7 @@ export function ParcelCard({ parcel, onPress, compact = false, featured = false,
           activeOpacity={0.9}
           style={[styles.vitrinCard, {
             backgroundColor: isDark ? c.card : '#fff',
-            borderColor: isDark ? '#1e293b' : '#e2e8f0',
+            borderColor: isDark ? '#1f1f1c' : '#e2e8f0',
           }]}
         >
           <View style={styles.vitrinImageWrap}>
@@ -91,7 +91,7 @@ export function ParcelCard({ parcel, onPress, compact = false, featured = false,
             </View>
           </View>
           <View style={styles.vitrinInfo}>
-            <Text style={[styles.vitrinPrice, { color: isDark ? c.primaryLight : '#166534' }]} numberOfLines={1}>{formatPrice(parcel.price)}</Text>
+            <Text style={[styles.vitrinPrice, { color: isDark ? c.primaryLight : '#343c1f' }]} numberOfLines={1}>{formatPrice(parcel.price)}</Text>
             <Text style={[styles.vitrinTitle, { color: c.text }]} numberOfLines={2}>{parcel.title}</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, marginTop: 4 }}>
               <Ionicons name="location-outline" size={10} color={c.textMuted} />
@@ -113,7 +113,7 @@ export function ParcelCard({ parcel, onPress, compact = false, featured = false,
           activeOpacity={0.95}
           style={[styles.featuredCard, {
             backgroundColor: isDark ? c.card : '#fff',
-            shadowColor: isDark ? '#000' : '#1e293b',
+            shadowColor: isDark ? '#000' : '#1f1f1c',
           }]}
         >
           <View style={styles.featuredImageWrap}>
@@ -155,9 +155,9 @@ export function ParcelCard({ parcel, onPress, compact = false, featured = false,
             {/* Detail chips */}
             <View style={styles.featuredDetailRow}>
               {parcel.areaM2 && (
-                <View style={[styles.chip, { backgroundColor: isDark ? c.surface : '#f0fdf4' }]}>
+                <View style={[styles.chip, { backgroundColor: isDark ? c.surface : '#f4f6ec' }]}>
                   <Ionicons name="resize-outline" size={12} color={c.primary} />
-                  <Text style={[styles.chipText, { color: isDark ? c.text : '#166534' }]}>{formatArea(parcel.areaM2)}</Text>
+                  <Text style={[styles.chipText, { color: isDark ? c.text : '#343c1f' }]}>{formatArea(parcel.areaM2)}</Text>
                 </View>
               )}
               {parcel.zoningStatus && (
@@ -223,8 +223,8 @@ export function ParcelCard({ parcel, onPress, compact = false, featured = false,
             <Text style={[styles.detail, { color: c.textMuted }]} numberOfLines={1}>{detailText}</Text>
           ) : null}
           {/* Price — hero element with background */}
-          <View style={[styles.priceBadge, { backgroundColor: isDark ? c.primaryBg : '#f0fdf4' }]}>
-            <Text style={[styles.price, { color: isDark ? c.primary : '#166534' }]}>{formatPrice(parcel.price)}</Text>
+          <View style={[styles.priceBadge, { backgroundColor: isDark ? c.primaryBg : '#f4f6ec' }]}>
+            <Text style={[styles.price, { color: isDark ? c.primary : '#343c1f' }]}>{formatPrice(parcel.price)}</Text>
             {parcel.areaM2 && parcel.price && (
               <Text style={[styles.pricePerM2, { color: c.textMuted }]}>
                 {formatPrice(String(Math.round(parseFloat(parcel.price) / parseFloat(parcel.areaM2))))}/m²

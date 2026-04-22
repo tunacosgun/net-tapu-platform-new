@@ -199,7 +199,7 @@ export default function PaymentResultScreen() {
             <Animated.View style={[styles.successCircle, successCircleStyle]}>
               <Text style={styles.successIcon}>✓</Text>
             </Animated.View>
-            <Animated.Text entering={FadeInDown.delay(200).duration(400)} style={[styles.title, { color: '#15803d' }]}>Ödeme Başarılı!</Animated.Text>
+            <Animated.Text entering={FadeInDown.delay(200).duration(400)} style={[styles.title, { color: '#414a24' }]}>Ödeme Başarılı!</Animated.Text>
             <Animated.Text entering={FadeInDown.delay(300).duration(400)} style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
               Kaparonuz başarıyla yatırıldı.{'\n'}Artık ihaleye teklif verebilirsiniz.
             </Animated.Text>
@@ -286,10 +286,10 @@ const styles = StyleSheet.create({
 
   successCircle: {
     width: 80, height: 80, borderRadius: 40,
-    backgroundColor: '#dcfce7', borderWidth: 3, borderColor: '#22c55e',
+    backgroundColor: '#dcfce7', borderWidth: 3, borderColor: '#8e9d3f',
     alignItems: 'center', justifyContent: 'center', marginBottom: 20,
   },
-  successIcon: { fontSize: 36, fontWeight: '800', color: '#22c55e' },
+  successIcon: { fontSize: 36, fontWeight: '800', color: '#8e9d3f' },
 
   failCircle: {
     width: 80, height: 80, borderRadius: 40,

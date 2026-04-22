@@ -36,8 +36,8 @@ const RING_MIDDLE = 170;
 const slides = [
   {
     icon: 'map-outline' as const,
-    color: '#16a34a',
-    gradient: ['#16a34a', '#059669'] as [string, string],
+    color: '#6d7a32',
+    gradient: ['#6d7a32', '#059669'] as [string, string],
     title: 'Arsa & Gayrimenkul',
     desc: 'Türkiye genelinde binlerce arsa ilanını harita üzerinden keşfedin. Lokasyon, fiyat ve imar durumuna göre filtreleyin.',
   },
@@ -50,8 +50,8 @@ const slides = [
   },
   {
     icon: 'shield-checkmark-outline' as const,
-    color: '#2563eb',
-    gradient: ['#2563eb', '#1d4ed8'] as [string, string],
+    color: '#515d2b',
+    gradient: ['#515d2b', '#515d2b'] as [string, string],
     title: 'Güvenli Ödeme',
     desc: 'Kaparo ve ödeme işlemleriniz SSL ve 3D Secure ile korunur. Tüm işlemler yasal güvence altındadır.',
   },
@@ -319,7 +319,7 @@ export default function OnboardingScreen() {
                 activeOpacity={1}
               >
                 <LinearGradient
-                  colors={['#16a34a', '#15803d']}
+                  colors={['#6d7a32', '#414a24']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.nextBtn}

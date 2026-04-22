@@ -244,11 +244,11 @@ export default function DepositPaymentScreen() {
 
           {/* Security Notice */}
           <Animated.View entering={FadeInDown.delay(200).duration(400).springify()}>
-            <Animated.View style={[styles.securityCard, { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' }, securityAnimStyle]}>
+            <Animated.View style={[styles.securityCard, { backgroundColor: '#f4f6ec', borderColor: '#e5eaca' }, securityAnimStyle]}>
               <Text style={styles.securityIcon}>🔒</Text>
               <View style={{ flex: 1 }}>
-                <Text style={[styles.securityTitle, { color: '#15803d' }]}>Güvenli Ödeme</Text>
-                <Text style={[styles.securityText, { color: '#166534' }]}>
+                <Text style={[styles.securityTitle, { color: '#414a24' }]}>Güvenli Ödeme</Text>
+                <Text style={[styles.securityText, { color: '#343c1f' }]}>
                   Tüm ödemeler 3D Secure ile korunmaktadır. İhaleyi kazanamazsanız kaparonuz iade edilir.
                 </Text>
               </View>
@@ -331,7 +331,7 @@ export default function DepositPaymentScreen() {
             const transferCode = `NT-${auctionId.slice(0, 4).toUpperCase()}-${Date.now().toString(36).slice(-4).toUpperCase()}`;
             return (
               <Animated.View entering={FadeInDown.duration(300).springify()} style={[styles.bankCard, { borderColor: '#93c5fd' }]}>
-                <Text style={[styles.bankTitle, { color: '#1e40af' }]}>Havale / EFT Bilgileri</Text>
+                <Text style={[styles.bankTitle, { color: '#414a24' }]}>Havale / EFT Bilgileri</Text>
                 <View style={styles.bankRow}>
                   <Text style={styles.bankLabel}>Banka</Text>
                   <Text style={styles.bankValue}>{bankInfo.bank_name}</Text>
@@ -486,14 +486,14 @@ const styles = StyleSheet.create({
   bankCard: { backgroundColor: '#eff6ff', borderRadius: 12, borderWidth: 1, padding: 14, marginBottom: 16 },
   bankTitle: { fontWeight: '700', fontSize: 14, marginBottom: 10 },
   bankRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 5 },
-  bankLabel: { fontSize: 12, color: '#3b82f6', fontWeight: '500' },
-  bankValue: { fontSize: 13, color: '#1e3a8a', fontWeight: '600' },
+  bankLabel: { fontSize: 12, color: '#515d2b', fontWeight: '500' },
+  bankValue: { fontSize: 13, color: '#343c1f', fontWeight: '600' },
   transferCodeCard: { backgroundColor: '#dbeafe', borderRadius: 10, borderWidth: 1, padding: 12, marginTop: 10, alignItems: 'center' },
-  transferCodeLabel: { fontSize: 11, color: '#1e40af', fontWeight: '600', marginBottom: 4 },
-  transferCodeValue: { fontSize: 22, fontWeight: '800', color: '#1e3a8a', letterSpacing: 2, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace' },
-  transferCodeHint: { fontSize: 10, color: '#3b82f6', marginTop: 4 },
+  transferCodeLabel: { fontSize: 11, color: '#414a24', fontWeight: '600', marginBottom: 4 },
+  transferCodeValue: { fontSize: 22, fontWeight: '800', color: '#343c1f', letterSpacing: 2, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace' },
+  transferCodeHint: { fontSize: 10, color: '#515d2b', marginTop: 4 },
   bankNote: { marginTop: 10, paddingTop: 10, borderTopWidth: 1 },
-  bankNoteText: { fontSize: 11, color: '#1d4ed8', lineHeight: 17 },
+  bankNoteText: { fontSize: 11, color: '#515d2b', lineHeight: 17 },
 
   // Submit
   submitBtn: { borderRadius: 14, height: 56, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },

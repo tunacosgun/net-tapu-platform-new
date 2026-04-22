@@ -1,7 +1,7 @@
 /**
- * NetTapu Spacing & Layout Tokens
+ * NetTapu Mobile — Spacing, Radius & Shadow Tokens
  *
- * 8pt grid system. More whitespace = more premium.
+ * 4pt base grid. Professional, precise spacing inspired by sahibinden/Linear.
  */
 export const Spacing = {
   xs: 4,
@@ -15,67 +15,77 @@ export const Spacing = {
   '4xl': 48,
   '5xl': 64,
 
-  // Semantic spacing
+  // Semantic
   screenPadding: 20,
   sectionGap: 32,
-  cardPadding: 18,
-  cardGap: 14,
+  cardPadding: 16,
+  cardGap: 12,
+  listGap: 12,
 };
 
 /**
- * Standardized border-radius:
- *   badge: 12
- *   small boxes: 16
- *   cards: 20
- *   large cards: 24
- *   buttons: 14 or pill
+ * Sharper, more professional radii — sahibinden-style
  */
 export const BorderRadius = {
-  xs: 4,
-  sm: 6,
+  xs: 3,
+  sm: 5,
   md: 8,
   lg: 10,
-  xl: 12,
+  xl: 14,
   full: 9999,
 };
 
 /**
- * Shadow presets — soft, not heavy
+ * Tight, clean shadows — no heavy drop shadows
  */
 export const Shadows = {
-  sm: {
-    shadowColor: '#000',
+  xs: {
+    shadowColor: '#17110F',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.04,
     shadowRadius: 2,
     elevation: 1,
   },
+  sm: {
+    shadowColor: '#17110F',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 2,
+  },
   md: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 6,
-    elevation: 3,
+    shadowColor: '#17110F',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
   },
   lg: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.16,
-    shadowRadius: 12,
-    elevation: 5,
-  },
-  xl: {
-    shadowColor: '#000',
+    shadowColor: '#17110F',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
-    shadowRadius: 24,
+    shadowOpacity: 0.12,
+    shadowRadius: 18,
     elevation: 8,
   },
-  glow: {
-    shadowColor: '#16a34a',
+  xl: {
+    shadowColor: '#17110F',
+    shadowOffset: { width: 0, height: 14 },
+    shadowOpacity: 0.16,
+    shadowRadius: 30,
+    elevation: 14,
+  },
+  brand: {
+    shadowColor: '#515D2B',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
     elevation: 6,
+  },
+  brandGlow: {
+    shadowColor: '#515D2B',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 20,
+    elevation: 10,
   },
 };

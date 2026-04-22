@@ -286,7 +286,7 @@ export default function ParcelDetailScreen() {
           }}
         >
           <View style={{ flex: 1, marginRight: 12 }}>
-            <Text style={[typo.captionMedium, { color: c.textMuted }]} numberOfLines={1}>{parcel.title}</Text>
+            <Text style={[typo.captionMed, { color: c.textMuted }]} numberOfLines={1}>{parcel.title}</Text>
             <Text style={[typo.price, { color: c.primary, marginTop: 2, fontSize: 21 }]}>
               {formatPrice(parcel.price)}
             </Text>
@@ -302,7 +302,7 @@ export default function ParcelDetailScreen() {
             }}
             activeOpacity={0.88}
           >
-            <Text style={[typo.captionMedium, { color: c.textInverse, fontWeight: '700' }]}>Teklif Ver</Text>
+            <Text style={[typo.captionMed, { color: c.textInverse, fontWeight: '700' }]}>Teklif Ver</Text>
           </TouchableOpacity>
         </SafeAreaView>
       </Animated.View>

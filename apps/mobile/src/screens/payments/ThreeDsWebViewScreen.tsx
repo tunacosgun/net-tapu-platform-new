@@ -161,12 +161,12 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingHorizontal: 16,
     paddingVertical: 8,
-    backgroundColor: '#f0fdf4',
+    backgroundColor: '#f4f6ec',
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#bbf7d0',
+    borderBottomColor: '#e5eaca',
   },
   securityIcon: { fontSize: 12 },
-  securityUrl: { fontSize: 12, color: '#15803d', fontWeight: '500', flex: 1 },
+  securityUrl: { fontSize: 12, color: '#414a24', fontWeight: '500', flex: 1 },
 
   webview: { flex: 1 },
 

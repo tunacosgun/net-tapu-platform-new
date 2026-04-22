@@ -213,7 +213,7 @@ function SpotlightParcelCard({ parcel, onPress }: { parcel: Parcel; onPress: () 
           borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(15,23,42,0.06)',
           ...Platform.select({
             ios: {
-              shadowColor: '#0f172a',
+              shadowColor: '#121210',
               shadowOffset: { width: 0, height: 12 },
               shadowOpacity: isDark ? 0.45 : 0.12,
               shadowRadius: 24,
@@ -431,8 +431,8 @@ export default function HomeScreen() {
   const canvas = isDark ? c.background : c.skeleton;
   const surface = c.card;
   const heroGradient = isDark
-    ? [c.background, '#121a2e', c.surface]
-    : [c.primaryBg, '#e8f5ec', '#f1f5f9'];
+    ? [c.background, '#1f1f1c', c.surface]
+    : [c.primaryBg, '#e5eaca', '#ffffff'];
   const showSpotlight = !loading && featured.length > 0;
   const vitrinList = showSpotlight ? featured.slice(1) : featured;
 
@@ -470,9 +470,9 @@ export default function HomeScreen() {
                   </View>
                 </TouchableOpacity>
                 <View style={{ flex: 1, paddingLeft: 14 }}>
-                  <Text style={[typo.captionMedium, { color: isDark ? c.textMuted : '#475569' }]}>{getGreeting()}</Text>
+                  <Text style={[typo.captionMed, { color: isDark ? c.textMuted : '#6b6b6b' }]}>{getGreeting()}</Text>
                   <Text style={[typo.h3, { color: c.text, marginTop: 3 }]} numberOfLines={1}>{userName}</Text>
-                  <Text style={[typo.caption, { color: isDark ? c.textSecondary : '#64748b', marginTop: 4 }]}>
+                  <Text style={[typo.caption, { color: isDark ? c.textSecondary : '#525252', marginTop: 4 }]}>
                     Arsa ve arazi yatırımınız için hazırız.
                   </Text>
                 </View>
@@ -532,7 +532,7 @@ export default function HomeScreen() {
                     <Ionicons name="search" size={18} color={c.primary} />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={[typo.captionMedium, { color: c.textMuted }]}>Hızlı arama</Text>
+                    <Text style={[typo.captionMed, { color: c.textMuted }]}>Hızlı arama</Text>
                     <Text style={[typo.body, { color: c.text, marginTop: 2 }]} numberOfLines={1}>
                       İl, ilçe, ada / parsel veya başlık
                     </Text>
@@ -595,13 +595,13 @@ export default function HomeScreen() {
             </Text>
             <View style={S.categoryGrid}>
               {([
-                { label: 'Arsa', icon: 'map-outline' as const, color: '#d97706', route: 'Parcels' },
-                { label: 'Tarla', icon: 'leaf-outline' as const, color: '#65a30d', route: 'Parcels' },
-                { label: 'Zeytinlik', icon: 'water-outline' as const, color: c.primary, route: 'Parcels' },
+                { label: 'Arsa', icon: 'map-outline' as const, color: c.primary, route: 'Parcels' },
+                { label: 'Tarla', icon: 'leaf-outline' as const, color: '#8e9d3f', route: 'Parcels' },
+                { label: 'Zeytinlik', icon: 'water-outline' as const, color: c.primaryDark, route: 'Parcels' },
                 { label: 'İhale', icon: 'flash' as const, color: c.statusLive, route: 'Auctions' },
-                { label: 'Harita', icon: 'compass-outline' as const, color: '#2563eb', route: 'ParcelMap' },
-                { label: 'Favoriler', icon: 'heart-outline' as const, color: '#db2777', route: 'Favorites' },
-                { label: 'Projeler', icon: 'business-outline' as const, color: '#7c3aed', route: 'Parcels' },
+                { label: 'Harita', icon: 'compass-outline' as const, color: c.primary, route: 'ParcelMap' },
+                { label: 'Favoriler', icon: 'heart-outline' as const, color: '#c0392b', route: 'Favorites' },
+                { label: 'Projeler', icon: 'business-outline' as const, color: c.accent, route: 'Parcels' },
                 { label: 'Tümü', icon: 'grid-outline' as const, color: c.textMuted, route: 'Parcels' },
               ]).map((item, index) => (
                 <Animated.View key={item.label} entering={FadeInDown.delay(120 + index * 60).duration(350)} style={S.categoryGridItem}>
@@ -628,7 +628,7 @@ export default function HomeScreen() {
                     >
                       <Ionicons name={item.icon} size={22} color={item.color} />
                     </View>
-                    <Text style={[typo.captionMedium, { color: c.text, marginTop: 9, textAlign: 'center' }]}>{item.label}</Text>
+                    <Text style={[typo.captionMed, { color: c.text, marginTop: 9, textAlign: 'center' }]}>{item.label}</Text>
                   </TouchableOpacity>
                 </Animated.View>
               ))}
@@ -756,7 +756,7 @@ export default function HomeScreen() {
                 <View style={[S.trustIconCircle, { backgroundColor: isDark ? c.elevated : c.primaryBg }]}>
                   <Ionicons name={item.icon} size={18} color={c.primary} />
                 </View>
-                <Text style={[typo.captionMedium, { color: c.textSecondary, textAlign: 'center', marginTop: 8 }]}>
+                <Text style={[typo.captionMed, { color: c.textSecondary, textAlign: 'center', marginTop: 8 }]}>
                   {item.label}
                 </Text>
               </View>
@@ -860,7 +860,7 @@ const S = StyleSheet.create({
     overflow: 'hidden',
     ...Platform.select({
       ios: {
-        shadowColor: '#0f172a',
+        shadowColor: '#121210',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.06,
         shadowRadius: 12,
