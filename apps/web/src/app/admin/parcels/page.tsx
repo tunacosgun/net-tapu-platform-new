@@ -8,6 +8,7 @@ import { TableSkeleton } from '@/components/skeleton';
 import { formatPrice, formatDate } from '@/lib/format';
 import { PageHeader, DataTable, Badge, Pagination, Button, Alert, type Column } from '@/components/ui';
 import { Map } from 'lucide-react';
+import { LocationAutocomplete } from '@/components/location-autocomplete';
 import type { Parcel, PaginatedResponse } from '@/types';
 
 const statusLabels: Record<string, string> = {
@@ -46,6 +47,16 @@ export default function AdminParcelsPage() {
   const [statusFilter, setStatusFilter] = useState(saved?.status ?? '');
   const [searchInput, setSearchInput] = useState(saved?.search ?? '');
   const [search, setSearch] = useState(saved?.search ?? '');
+  const [cityFilter, setCityFilter] = useState('');
+  const [districtFilter, setDistrictFilter] = useState('');
+  const [neighborhoodFilter, setNeighborhoodFilter] = useState('');
+  const [parcelTypeFilter, setParcelTypeFilter] = useState('');
+  const [zoningFilter, setZoningFilter] = useState('');
+  const [minAreaFilter, setMinAreaFilter] = useState('');
+  const [maxAreaFilter, setMaxAreaFilter] = useState('');
+  const [minPriceFilter, setMinPriceFilter] = useState('');
+  const [maxPriceFilter, setMaxPriceFilter] = useState('');
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showBulkPrice, setShowBulkPrice] = useState(false);
   const [showImport, setShowImport] = useState(false);
@@ -64,14 +75,27 @@ export default function AdminParcelsPage() {
       };
       if (statusFilter) params.status = statusFilter;
       if (search) params.search = search;
-      const { data: res } = await apiClient.get<PaginatedResponse<Parcel>>('/parcels', { params });
+      if (cityFilter) params.city = cityFilter;
+      if (districtFilter) params.district = districtFilter;
+      if (neighborhoodFilter) params.neighborhood = neighborhoodFilter;
+      if (parcelTypeFilter) params.parcelType = parcelTypeFilter;
+      if (zoningFilter) params.zoningStatus = zoningFilter;
+      if (minAreaFilter) params.minArea = minAreaFilter;
+      if (maxAreaFilter) params.maxArea = maxAreaFilter;
+      if (minPriceFilter) params.minPrice = minPriceFilter;
+      if (maxPriceFilter) params.maxPrice = maxPriceFilter;
+      const { data: res } = await apiClient.get<PaginatedResponse<Parcel>>('/admin/parcels', { params });
       setData(res);
     } catch (err) {
       showApiError(err);
     } finally {
       setLoading(false);
     }
-  }, [page, statusFilter, search]);
+  }, [
+    page, statusFilter, search,
+    cityFilter, districtFilter, neighborhoodFilter, parcelTypeFilter,
+    zoningFilter, minAreaFilter, maxAreaFilter, minPriceFilter, maxPriceFilter,
+  ]);
 
   useEffect(() => {
     fetchParcels();
@@ -417,6 +441,14 @@ export default function AdminParcelsPage() {
           ))}
         </select>
 
+        <Button
+          size="sm"
+          variant={showAdvancedFilters ? 'primary' : 'secondary'}
+          onClick={() => setShowAdvancedFilters((v) => !v)}
+        >
+          {showAdvancedFilters ? 'Filtreleri Gizle' : 'Gelişmiş Filtreler'}
+        </Button>
+
         <div className="flex-1" />
 
         {selectedIds.size > 0 && (
@@ -453,6 +485,131 @@ export default function AdminParcelsPage() {
           </Button>
         </div>
       </div>
+
+      {showAdvancedFilters && (
+        <div className="rounded-lg border border-[var(--input)] bg-[var(--background)] p-4 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <LocationAutocomplete
+              label="Şehir"
+              type="city"
+              value={cityFilter}
+              onChange={(v) => {
+                setCityFilter(v);
+                setDistrictFilter('');
+                setNeighborhoodFilter('');
+                setPage(1);
+              }}
+            />
+            <LocationAutocomplete
+              label="İlçe"
+              type="district"
+              city={cityFilter}
+              value={districtFilter}
+              onChange={(v) => {
+                setDistrictFilter(v);
+                setNeighborhoodFilter('');
+                setPage(1);
+              }}
+            />
+            <LocationAutocomplete
+              label="Mahalle / Köy"
+              type="neighborhood"
+              city={cityFilter}
+              district={districtFilter}
+              value={neighborhoodFilter}
+              onChange={(v) => {
+                setNeighborhoodFilter(v);
+                setPage(1);
+              }}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-ink-700 mb-1.5">Arazi Türü</label>
+              <select
+                value={parcelTypeFilter}
+                onChange={(e) => { setParcelTypeFilter(e.target.value); setPage(1); }}
+                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm"
+              >
+                <option value="">Tümü</option>
+                <option value="arsa">Arsa</option>
+                <option value="tarla">Tarla</option>
+                <option value="bağ">Bağ</option>
+                <option value="bahçe">Bahçe</option>
+                <option value="zeytinlik">Zeytinlik</option>
+                <option value="orman">Orman</option>
+                <option value="diğer">Diğer</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-ink-700 mb-1.5">İmar Durumu</label>
+              <select
+                value={zoningFilter}
+                onChange={(e) => { setZoningFilter(e.target.value); setPage(1); }}
+                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm"
+              >
+                <option value="">Tümü</option>
+                <option value="İmarlı">İmarlı</option>
+                <option value="İmarsız">İmarsız</option>
+                <option value="Konut İmarlı">Konut İmarlı</option>
+                <option value="Ticari İmarlı">Ticari İmarlı</option>
+                <option value="Tarla">Tarla</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-ink-700 mb-1.5">Min m²</label>
+              <input
+                type="number" value={minAreaFilter}
+                onChange={(e) => { setMinAreaFilter(e.target.value); setPage(1); }}
+                placeholder="örn 300"
+                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-ink-700 mb-1.5">Max m²</label>
+              <input
+                type="number" value={maxAreaFilter}
+                onChange={(e) => { setMaxAreaFilter(e.target.value); setPage(1); }}
+                placeholder="örn 5000"
+                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-ink-700 mb-1.5">Min Fiyat ₺</label>
+              <input
+                type="number" value={minPriceFilter}
+                onChange={(e) => { setMinPriceFilter(e.target.value); setPage(1); }}
+                placeholder="örn 100000"
+                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-ink-700 mb-1.5">Max Fiyat ₺</label>
+              <input
+                type="number" value={maxPriceFilter}
+                onChange={(e) => { setMaxPriceFilter(e.target.value); setPage(1); }}
+                placeholder="örn 2000000"
+                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm"
+              />
+            </div>
+            <div className="col-span-2 flex items-end">
+              <Button
+                size="sm" variant="secondary"
+                onClick={() => {
+                  setCityFilter(''); setDistrictFilter(''); setNeighborhoodFilter('');
+                  setParcelTypeFilter(''); setZoningFilter('');
+                  setMinAreaFilter(''); setMaxAreaFilter('');
+                  setMinPriceFilter(''); setMaxPriceFilter('');
+                  setPage(1);
+                }}
+              >
+                Filtreleri Temizle
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <p className="text-xs text-[var(--muted-foreground)]">
         Başlık, fiyat veya duruma çift tıklayarak satır içi düzenleme yapabilirsiniz.
@@ -641,6 +798,21 @@ function ImportModal({
         <p className="mt-1 text-sm text-[var(--muted-foreground)]">
           Excel (.xlsx) veya CSV dosyasından arsa verilerini içe aktarın.
         </p>
+
+        <div className="mt-3 flex gap-2">
+          <a
+            href="/api/v1/admin/parcels/import-template?format=xlsx"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-700 hover:text-brand-800 underline"
+          >
+            📄 Örnek Excel şablonunu indir
+          </a>
+          <a
+            href="/api/v1/admin/parcels/import-template?format=csv"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-700 hover:text-brand-800 underline"
+          >
+            📄 Örnek CSV şablonunu indir
+          </a>
+        </div>
 
         {result ? (
           <div className="mt-4 space-y-3">

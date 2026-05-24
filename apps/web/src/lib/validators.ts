@@ -73,8 +73,14 @@ export const parcelSchema = z.object({
   price: z.string().optional().or(z.literal('')),
   zoningStatus: z.string().max(200).optional().or(z.literal('')),
   landType: z.string().max(100).optional().or(z.literal('')),
-  ada: z.string().max(20).optional().or(z.literal('')),
-  parsel: z.string().max(20).optional().or(z.literal('')),
+  ada: z
+    .string()
+    .min(1, 'Ada bilgisi zorunludur')
+    .max(20, 'Ada en fazla 20 karakter olabilir'),
+  parsel: z
+    .string()
+    .min(1, 'Parsel bilgisi zorunludur')
+    .max(20, 'Parsel en fazla 20 karakter olabilir'),
   latitude: z.string().optional().or(z.literal('')),
   longitude: z.string().optional().or(z.literal('')),
   isAuctionEligible: z.boolean(),
@@ -85,6 +91,9 @@ export const parcelSchema = z.object({
   vatRate: z.string().optional().or(z.literal('')),
   roadAccess: z.string().optional().or(z.literal('')),
   isCornerParcel: z.boolean().optional(),
+  videoUrl: z.string().max(500).optional().or(z.literal('')),
+  embedCode: z.string().max(5000).optional().or(z.literal('')),
+  guideUrl: z.string().max(500).optional().or(z.literal('')),
 });
 export type ParcelFormData = z.infer<typeof parcelSchema>;
 

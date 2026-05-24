@@ -23,6 +23,7 @@ const navSections: Array<{
   { title: null, items: [
     { href: '/admin',           label: 'Genel Bakış', icon: LayoutDashboard },
     { href: '/admin/analytics', label: 'Analitik',    icon: BarChart3 },
+    { href: '/admin/reports',   label: 'Raporlar',    icon: BarChart3 },
   ]},
   { title: 'Kullanıcılar', items: [
     { href: '/admin/users', label: 'Kullanıcılar',  icon: Users },
@@ -36,6 +37,11 @@ const navSections: Array<{
     { href: '/admin/deposits',       label: 'Depozitolar',  icon: CreditCard },
     { href: '/admin/bank-transfers', label: 'Havale / EFT', icon: Landmark },
     { href: '/admin/reconciliation', label: 'Mutabakat',    icon: ClipboardList },
+    { href: '/admin/installments',   label: 'Taksitli Satış', icon: CreditCard },
+    { href: '/admin/mail-order',     label: 'Mail Order',    icon: CreditCard },
+  ]},
+  { title: 'Entegrasyonlar', items: [
+    { href: '/admin/ekent', label: 'E-Kent Sağlayıcılar', icon: Map },
   ]},
   { title: 'CRM', items: [
     { href: '/admin/contacts',     label: 'İletişim Talepleri', icon: Phone },

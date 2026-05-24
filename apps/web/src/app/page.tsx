@@ -8,7 +8,9 @@ import { motion } from 'framer-motion';
 import apiClient from '@/lib/api-client';
 import { formatPrice } from '@/lib/format';
 import { useSiteSettings } from '@/hooks/use-site-settings';
+import { usePageContent } from '@/hooks/use-page-content';
 import { ParcelCard } from '@/components/parcel-card';
+import { TurkeyParcelMap } from '@/components/turkey-parcel-map';
 import { VideoPopup } from '@/components/video-popup';
 import {
   Search, ArrowRight, MapPin, Shield, Lock, Headphones, Scale,
@@ -61,6 +63,13 @@ const CATEGORIES = [
 export default function HomePage() {
   const router = useRouter();
   const siteSettings = useSiteSettings();
+  // Editable from admin → Settings → Sayfalar → "homepage" → hero_title / hero_subtitle / hero_description
+  const homeContent = usePageContent('homepage_content', {
+    hero_title: "Türkiye'nin dört bir yanında",
+    hero_title_accent: 'güvenli arsa yatırımı.',
+    hero_description:
+      "Harita üzerinde doğrulanmış parseller, canlı açık artırmalar ve şeffaf ödeme süreciyle NetTapu — arsa ve gayrimenkul yatırımında Türkiye'nin güvenilir dijital adresidir.",
+  });
   const [featuredParcels, setFeaturedParcels] = useState<Parcel[]>([]);
   const [latestParcels, setLatestParcels] = useState<Parcel[]>([]);
   const [activeAuctions, setActiveAuctions] = useState<Auction[]>([]);
@@ -154,7 +163,7 @@ export default function HomePage() {
         <div className="absolute -bottom-40 -left-40 w-[520px] h-[520px] rounded-full bg-brand-800/40 blur-3xl" />
 
         <div className="relative mx-auto max-w-[1280px] px-4 sm:px-6 pt-14 pb-20 lg:pt-20 lg:pb-28">
-          <div className="max-w-3xl">
+          <div className="max-w-3xl mx-auto text-center">
             {/* Trust badge */}
             <motion.div
               initial={{ opacity: 0, y: -10 }}
@@ -177,9 +186,9 @@ export default function HomePage() {
               className="font-heading text-[36px] sm:text-[52px] lg:text-[64px] font-extrabold text-white tracking-[-0.03em] leading-[1.02] mb-5"
               data-testid="hero-headline"
             >
-              Türkiye'nin dört bir yanında
+              {homeContent.hero_title}
               <br />
-              <span className="text-gold-300">güvenli arsa yatırımı.</span>
+              <span className="text-gold-300">{homeContent.hero_title_accent}</span>
             </motion.h1>
 
             {/* Subheadline */}
@@ -187,11 +196,10 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
-              className="text-[15px] sm:text-[17px] text-brand-100/95 leading-relaxed max-w-2xl mb-9"
+              className="text-[15px] sm:text-[17px] text-brand-100/95 leading-relaxed max-w-2xl mx-auto mb-9"
               data-testid="hero-description"
             >
-              Harita üzerinde doğrulanmış parseller, canlı açık artırmalar ve şeffaf ödeme süreciyle
-              NetTapu — arsa ve gayrimenkul yatırımında Türkiye'nin güvenilir dijital adresidir.
+              {homeContent.hero_description}
             </motion.p>
 
             {/* Search card (sahibinden-style prominent) */}
@@ -305,7 +313,7 @@ export default function HomePage() {
               </form>
 
               {/* Popular cities */}
-              <div className="mt-5 flex flex-wrap items-center gap-2">
+              <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
                 <span className="text-xs text-white/70 font-bold uppercase tracking-wider mr-2">Popüler:</span>
                 {['İstanbul', 'İzmir', 'Antalya', 'Muğla', 'Bodrum', 'Çeşme'].map((city) => (
                   <button
@@ -328,7 +336,7 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="mt-14 grid grid-cols-3 gap-0 max-w-3xl"
+            className="mt-14 grid grid-cols-3 gap-0 max-w-3xl mx-auto"
           >
             {[
               { value: stats.parcels, suffix: '+', label: 'Aktif İlan' },
@@ -500,6 +508,15 @@ export default function HomePage() {
           </div>
         </section>
       )}
+
+      {/* ═══════════════════════════════════════════════════════════════
+          TURKEY MAP — provincial / district drill-down
+          ═══════════════════════════════════════════════════════════════ */}
+      <section className="py-16 bg-white border-y border-slate-200" data-testid="turkey-map-section">
+        <div className="mx-auto max-w-[1280px] px-4 sm:px-6">
+          <TurkeyParcelMap />
+        </div>
+      </section>
 
       {/* ═══════════════════════════════════════════════════════════════
           HOW IT WORKS — clean professional

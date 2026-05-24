@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface ShareButtonsProps {
   url: string;
@@ -9,28 +9,37 @@ interface ShareButtonsProps {
   extraInfo?: string;
 }
 
-export function ShareButtons({ url, title, description, extraInfo }: ShareButtonsProps) {
+export function ShareButtons({ url, title, description: _description, extraInfo }: ShareButtonsProps) {
   const [copied, setCopied] = useState(false);
+  const [resolvedUrl, setResolvedUrl] = useState(url);
 
-  const encodedUrl = encodeURIComponent(url);
+  useEffect(() => {
+    // If caller passed an empty / non-absolute URL, resolve from window.location after hydration.
+    if (typeof window === 'undefined') return;
+    if (!url || !/^https?:\/\//i.test(url)) {
+      setResolvedUrl(window.location.href);
+    } else {
+      setResolvedUrl(url);
+    }
+  }, [url]);
+
+  const encodedUrl = encodeURIComponent(resolvedUrl);
   const encodedTitle = encodeURIComponent(title);
-  const encodedDesc = encodeURIComponent(description || '');
 
   const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
   const twitterUrl = `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`;
-  const whatsappText = extraInfo ? `${title}\n${extraInfo}\n${url}` : `${title} ${url}`;
+  const whatsappText = extraInfo ? `${title}\n${extraInfo}\n${resolvedUrl}` : `${title} ${resolvedUrl}`;
   const whatsappShareUrl = `https://wa.me/?text=${encodeURIComponent(whatsappText)}`;
   const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`;
 
   async function handleCopyLink() {
     try {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(resolvedUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Fallback for older browsers
       const textarea = document.createElement('textarea');
-      textarea.value = url;
+      textarea.value = resolvedUrl;
       document.body.appendChild(textarea);
       textarea.select();
       document.execCommand('copy');

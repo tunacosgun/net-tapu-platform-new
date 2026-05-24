@@ -36,6 +36,15 @@ type ArrayDef = { key: string; label: string; itemFields: FieldDef[] };
 type PageSchema = { settingsKey: string; fields: FieldDef[]; arrays: ArrayDef[] };
 
 const PAGE_CONTENT_SCHEMAS: Record<string, PageSchema> = {
+  '/': {
+    settingsKey: 'homepage_content',
+    fields: [
+      { key: 'hero_title', label: 'Banner Üst Yazı', type: 'text', placeholder: "Türkiye'nin dört bir yanında" },
+      { key: 'hero_title_accent', label: 'Banner Vurgu Yazısı (altın renk)', type: 'text', placeholder: 'güvenli arsa yatırımı.' },
+      { key: 'hero_description', label: 'Banner Açıklama', type: 'textarea', placeholder: 'Harita üzerinde doğrulanmış parseller...' },
+    ],
+    arrays: [],
+  },
   '/about': {
     settingsKey: 'page_content_about',
     fields: [

@@ -15,6 +15,14 @@ export class ListParcelsQueryDto {
   @IsOptional()
   district?: string;
 
+  @IsString()
+  @IsOptional()
+  neighborhood?: string;
+
+  @IsString()
+  @IsOptional()
+  parcelType?: string;
+
   @IsNumberString()
   @IsOptional()
   minPrice?: string;

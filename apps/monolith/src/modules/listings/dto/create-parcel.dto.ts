@@ -114,4 +114,19 @@ export class CreateParcelDto {
   @IsBoolean()
   @IsOptional()
   isCornerParcel?: boolean;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(500)
+  videoUrl?: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(5000)
+  embedCode?: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(500)
+  guideUrl?: string;
 }

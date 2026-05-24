@@ -1,12 +1,13 @@
 'use client';
 
-import { Suspense, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion } from 'framer-motion';
 import { useLogin } from '@/providers/auth-provider';
+import { useAuthStore } from '@/stores/auth-store';
 import { loginSchema, type LoginFormData } from '@/lib/validators';
 import { useRateLimit } from '@/hooks/use-rate-limit';
 import { LoadingState } from '@/components/ui';
@@ -54,8 +55,17 @@ function LoginContent() {
   } = useForm<LoginFormData>({ resolver: zodResolver(loginSchema) });
 
   const login = useLogin();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams?.get('redirect') || searchParams?.get('returnTo') || '/';
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+
+  // If user is already logged in, don't show login form — bounce to target.
+  useEffect(() => {
+    if (isAuthenticated) {
+      window.location.replace(redirectTo);
+    }
+  }, [isAuthenticated, redirectTo]);
 
   const onSubmit = async (data: LoginFormData) => {
     setServerError(null);
@@ -234,10 +244,21 @@ function LoginContent() {
 
           <p className="mt-8 text-center text-sm text-slate-600">
             Hesabınız yok mu?{' '}
-            <Link href="/register" className="font-bold text-brand-700 hover:text-brand-800 transition-colors">
+            <Link
+              href={`/register${redirectTo !== '/' ? `?returnTo=${encodeURIComponent(redirectTo)}` : ''}`}
+              className="font-bold text-brand-700 hover:text-brand-800 transition-colors"
+            >
               Hemen Kaydolun →
             </Link>
           </p>
+
+          <Link
+            href={redirectTo || '/'}
+            className="mt-4 block text-center text-sm font-semibold text-slate-500 hover:text-brand-700 transition-colors"
+            data-testid="continue-as-guest"
+          >
+            Üye olmadan devam et
+          </Link>
         </motion.div>
       </div>
 

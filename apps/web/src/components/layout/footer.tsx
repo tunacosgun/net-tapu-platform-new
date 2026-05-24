@@ -43,6 +43,7 @@ const footerSections = [
       { href: '/real-estate-guide',  label: 'Gayrimenkul Rehberi' },
       { href: '/post-sale',          label: 'Satış Sonrası' },
       { href: '/contact',            label: 'İletişim' },
+      { href: '/become-consultant',  label: 'Danışman Olun' },
     ],
   },
 ];

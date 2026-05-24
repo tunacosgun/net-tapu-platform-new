@@ -2,9 +2,10 @@ import { IsEmail, IsString, IsOptional, MinLength, MaxLength } from 'class-valid
 
 export class RegisterDto {
   @IsString()
+  @IsOptional()
   @MinLength(3)
   @MaxLength(30)
-  username!: string;
+  username?: string;
 
   @IsEmail()
   @MaxLength(255)
@@ -29,4 +30,10 @@ export class RegisterDto {
   @IsOptional()
   @MaxLength(20)
   phone?: string;
+
+  /** Optional referral/invite code (8–12 alphanumeric) */
+  @IsString()
+  @IsOptional()
+  @MaxLength(12)
+  referralCode?: string;
 }

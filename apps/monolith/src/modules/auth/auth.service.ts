@@ -51,13 +51,33 @@ export class AuthService {
     );
   }
 
+  private async resolveUsername(provided: string | undefined, email: string): Promise<string> {
+    if (provided && provided.trim()) {
+      const normalized = provided.toLowerCase().trim();
+      const clash = await this.userRepo.findOne({ where: { username: normalized } });
+      if (clash) {
+        throw new ConflictException('Bu kullanıcı adı zaten alınmış');
+      }
+      return normalized;
+    }
+    const localPart = email.split('@')[0].toLowerCase().replace(/[^a-z0-9_.-]/g, '');
+    const base = (localPart || 'user').slice(0, 25).padEnd(3, '0');
+    for (let i = 0; i < 50; i++) {
+      const candidate = i === 0 ? base : `${base}${i}`;
+      const taken = await this.userRepo.findOne({ where: { username: candidate } });
+      if (!taken) return candidate;
+    }
+    return `${base}${Date.now().toString(36)}`.slice(0, 30);
+  }
+
   async register(dto: {
-    username: string;
+    username?: string;
     email: string;
     password: string;
     firstName: string;
     lastName: string;
     phone?: string;
+    referralCode?: string;
   }) {
     const existingEmail = await this.userRepo.findOne({
       where: { email: dto.email },
@@ -66,12 +86,16 @@ export class AuthService {
       throw new ConflictException('Bu e-posta adresi zaten kayıtlı');
     }
 
-    const normalizedUsername = dto.username.toLowerCase().trim();
-    const existingUsername = await this.userRepo.findOne({
-      where: { username: normalizedUsername },
-    });
-    if (existingUsername) {
-      throw new ConflictException('Bu kullanıcı adı zaten alınmış');
+    const normalizedUsername = await this.resolveUsername(dto.username, dto.email);
+
+    // Look up the inviter BEFORE creating the new user (no self-ref possible)
+    let inviterId: string | null = null;
+    if (dto.referralCode) {
+      const code = dto.referralCode.trim().toUpperCase();
+      const inviter = await this.userRepo.findOne({
+        where: { referralCode: code },
+      });
+      if (inviter) inviterId = inviter.id;
     }
 
     const passwordHash = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
@@ -83,6 +107,7 @@ export class AuthService {
       firstName: dto.firstName,
       lastName: dto.lastName,
       phone: dto.phone ?? null,
+      referredBy: inviterId,
     });
     await this.userRepo.save(user);
 

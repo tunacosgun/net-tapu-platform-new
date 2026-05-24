@@ -8,6 +8,7 @@ import apiClient from '@/lib/api-client';
 import { showApiError } from '@/components/api-error-toast';
 import { parcelSchema, type ParcelFormData } from '@/lib/validators';
 import { FormField, FormTextarea, FormCheckbox, FormSelect } from '@/components/form-field';
+import { FormattedPriceInput } from '@/components/formatted-price-input';
 import { AddressGeocoder } from '@/components/address-geocoder';
 import { ImageUpload } from '@/components/image-upload';
 import { useRateLimit } from '@/hooks/use-rate-limit';
@@ -237,6 +238,23 @@ export default function AdminNewParcelPage() {
           error={errors.title?.message}
           {...register('title')}
         />
+
+        {/* Ada / Parsel — sahibinden.com formatı: ilan bilgilerinin en üstünde */}
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            label="Ada *"
+            error={errors.ada?.message}
+            placeholder="Tapu üzerindeki ada no"
+            {...register('ada')}
+          />
+          <FormField
+            label="Parsel *"
+            error={errors.parsel?.message}
+            placeholder="Tapu üzerindeki parsel no"
+            {...register('parsel')}
+          />
+        </div>
+
         <div className="grid grid-cols-2 gap-4">
           <FormSelect
             label="Şehir *"
@@ -296,11 +314,12 @@ export default function AdminNewParcelPage() {
             error={errors.areaM2?.message}
             {...register('areaM2')}
           />
-          <FormField
+          <FormattedPriceInput
             label="Fiyat (TRY)"
-            type="number"
             error={errors.price?.message}
-            {...register('price')}
+            value={watch('price') || ''}
+            onChange={(raw) => setValue('price', raw, { shouldValidate: true })}
+            placeholder="örn 500.000"
           />
           <div>
             <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">İmar Durumu</label>
@@ -349,21 +368,24 @@ export default function AdminNewParcelPage() {
           </div>
         </div>
         <div className="grid grid-cols-3 gap-4">
-          <FormField
-            label="Arazi Türü"
-            error={errors.landType?.message}
-            {...register('landType')}
-          />
-          <FormField
-            label="Ada"
-            error={errors.ada?.message}
-            {...register('ada')}
-          />
-          <FormField
-            label="Parsel"
-            error={errors.parsel?.message}
-            {...register('parsel')}
-          />
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Arazi Türü</label>
+            <select
+              {...register('landType')}
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+            >
+              <option value="">Seçiniz</option>
+              <option value="arsa">Arsa</option>
+              <option value="tarla">Tarla</option>
+              <option value="bağ">Bağ</option>
+              <option value="bahçe">Bahçe</option>
+              <option value="zeytinlik">Zeytinlik</option>
+              <option value="orman">Orman</option>
+              <option value="mera">Mera</option>
+              <option value="diğer">Diğer</option>
+            </select>
+            {errors.landType?.message && <p className="mt-1 text-xs text-red-600">{errors.landType.message}</p>}
+          </div>
         </div>
         {/* TKGM Lookup */}
         <div className="flex items-center gap-3">
@@ -403,6 +425,30 @@ export default function AdminNewParcelPage() {
           error={errors.description?.message}
           {...register('description')}
         />
+
+        {/* Medya & Ek Bağlantılar */}
+        <div className="rounded-lg border border-slate-200 bg-slate-50/40 p-4 space-y-3">
+          <h3 className="text-sm font-bold text-ink-900">Medya & Bağlantılar</h3>
+          <FormField
+            label="Tanıtım Videosu URL (YouTube/Vimeo)"
+            placeholder="https://youtube.com/watch?v=..."
+            error={errors.videoUrl?.message}
+            {...register('videoUrl')}
+          />
+          <FormTextarea
+            label="Embed Kodu (iframe vb.)"
+            rows={3}
+            placeholder='<iframe src="..." width="100%" height="400"></iframe>'
+            error={errors.embedCode?.message}
+            {...register('embedCode')}
+          />
+          <FormField
+            label="Kent Rehberi Sayfa Bağlantısı"
+            placeholder="https://nettapu.tunasoft.tech/rehber/..."
+            error={errors.guideUrl?.message}
+            {...register('guideUrl')}
+          />
+        </div>
         <div className="flex gap-3">
           <Button type="submit" disabled={isSubmitting || isLimited}>
             {isLimited

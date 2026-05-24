@@ -15,13 +15,17 @@ import { UpdateAuctionStatusDto } from '../dto/update-auction-status.dto';
 import { ListAuctionsQueryDto } from '../dto/list-auctions-query.dto';
 
 const ALLOWED_TRANSITIONS: Record<string, string[]> = {
-  [AuctionStatus.DRAFT]: [AuctionStatus.SCHEDULED],
-  [AuctionStatus.SCHEDULED]: [AuctionStatus.LIVE],
-  [AuctionStatus.LIVE]: [AuctionStatus.ENDING, AuctionStatus.CANCELLED],
+  // DRAFT can go either to SCHEDULED (queued) or directly LIVE (admin "Hemen Yayınla")
+  [AuctionStatus.DRAFT]: [AuctionStatus.SCHEDULED, AuctionStatus.LIVE, AuctionStatus.CANCELLED],
+  [AuctionStatus.SCHEDULED]: [AuctionStatus.LIVE, AuctionStatus.DRAFT, AuctionStatus.CANCELLED],
+  [AuctionStatus.LIVE]: [AuctionStatus.ENDING, AuctionStatus.ENDED, AuctionStatus.CANCELLED],
   [AuctionStatus.ENDING]: [AuctionStatus.ENDED, AuctionStatus.CANCELLED],
-  [AuctionStatus.ENDED]: [AuctionStatus.SETTLING],
+  // ENDED auctions can be relisted (admin re-runs an expired auction with new dates)
+  [AuctionStatus.ENDED]: [AuctionStatus.SETTLING, AuctionStatus.SCHEDULED, AuctionStatus.DRAFT],
   [AuctionStatus.SETTLING]: [AuctionStatus.SETTLED, AuctionStatus.SETTLEMENT_FAILED],
   [AuctionStatus.SETTLEMENT_FAILED]: [AuctionStatus.SETTLED],
+  // CANCELLED can be revived as DRAFT for re-publishing
+  [AuctionStatus.CANCELLED]: [AuctionStatus.DRAFT, AuctionStatus.SCHEDULED],
 };
 
 @Injectable()

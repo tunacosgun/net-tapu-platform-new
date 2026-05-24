@@ -4,6 +4,7 @@ import { useState } from 'react';
 import apiClient from '@/lib/api-client';
 import { showApiError } from '@/components/api-error-toast';
 import { PageHeader, Card, Button, Alert } from '@/components/ui';
+import { UserAutocomplete } from '@/components/user-autocomplete';
 
 type Channel = 'email' | 'sms' | 'push';
 type AudienceType = 'all' | 'verified' | 'specific';
@@ -149,14 +150,14 @@ export default function AdminNotificationsPage() {
             </div>
 
             {audienceType === 'specific' && (
-              <input
-                type="email"
-                value={specificEmail}
-                onChange={(e) => setSpecificEmail(e.target.value)}
-                placeholder="kullanici@ornek.com"
-                className="mt-3 w-full rounded-md border border-[var(--input)] bg-[var(--background)] px-3 py-2 text-sm"
-                required
-              />
+              <div className="mt-3">
+                <UserAutocomplete
+                  value={specificEmail}
+                  onChange={setSpecificEmail}
+                  placeholder="İsim veya e-posta yazın..."
+                  testId="notif-recipient"
+                />
+              </div>
             )}
           </div>
 

@@ -105,6 +105,15 @@ export class Parcel {
   @Column({ name: 'listed_at', type: 'timestamptz', nullable: true })
   listedAt!: Date | null;
 
+  @Column({ name: 'video_url', type: 'text', nullable: true })
+  videoUrl!: string | null;
+
+  @Column({ name: 'embed_code', type: 'text', nullable: true })
+  embedCode!: string | null;
+
+  @Column({ name: 'guide_url', type: 'text', nullable: true })
+  guideUrl!: string | null;
+
   /** Populated by service queries — not a TypeORM relation to avoid circular issues */
   images?: ParcelImage[];
 

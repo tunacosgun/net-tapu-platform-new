@@ -79,6 +79,9 @@ export class ParcelService {
       currency: dto.currency ?? 'TRY',
       isAuctionEligible: dto.isAuctionEligible ?? false,
       isFeatured: dto.isFeatured ?? false,
+      videoUrl: dto.videoUrl ?? null,
+      embedCode: dto.embedCode ?? null,
+      guideUrl: dto.guideUrl ?? null,
       createdBy: userId,
     });
 
@@ -104,6 +107,12 @@ export class ParcelService {
     }
     if (query.district) {
       qb.andWhere('p.district = :district', { district: query.district });
+    }
+    if (query.neighborhood) {
+      qb.andWhere('p.neighborhood = :neighborhood', { neighborhood: query.neighborhood });
+    }
+    if (query.parcelType) {
+      qb.andWhere('p.land_type = :landType', { landType: query.parcelType });
     }
     if (query.minPrice) {
       qb.andWhere('p.price::numeric >= :minPrice', { minPrice: query.minPrice });
@@ -282,5 +291,30 @@ export class ParcelService {
     } finally {
       await qr.release();
     }
+  }
+
+  async getStatsByCity(): Promise<{ city: string; count: number }[]> {
+    const rows = await this.parcelRepo
+      .createQueryBuilder('p')
+      .select('p.city', 'city')
+      .addSelect('COUNT(*)::int', 'count')
+      .where("p.status = 'active'")
+      .groupBy('p.city')
+      .orderBy('count', 'DESC')
+      .getRawMany<{ city: string; count: number }>();
+    return rows;
+  }
+
+  async getStatsByDistrict(city: string): Promise<{ district: string; count: number }[]> {
+    const rows = await this.parcelRepo
+      .createQueryBuilder('p')
+      .select('p.district', 'district')
+      .addSelect('COUNT(*)::int', 'count')
+      .where("p.status = 'active'")
+      .andWhere('LOWER(p.city) = LOWER(:city)', { city })
+      .groupBy('p.district')
+      .orderBy('count', 'DESC')
+      .getRawMany<{ district: string; count: number }>();
+    return rows;
   }
 }

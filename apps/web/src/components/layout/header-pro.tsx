@@ -338,6 +338,18 @@ export function HeaderPro() {
     return () => { cancelled = true; if (intervalId) clearInterval(intervalId); };
   }, [isAuthenticated]);
 
+  // Close search dropdown on outside click — must run before any early return to keep hook order stable
+  useEffect(() => {
+    if (!searchFocused) return;
+    function onMouseDown(e: MouseEvent) {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setSearchFocused(false);
+      }
+    }
+    document.addEventListener('mousedown', onMouseDown);
+    return () => document.removeEventListener('mousedown', onMouseDown);
+  }, [searchFocused]);
+
   const isAuthPage = pathname?.startsWith('/login') || pathname?.startsWith('/register') || pathname?.startsWith('/forgot-password');
   const isAdminPage = pathname?.startsWith('/admin');
   if (isAuthPage || isAdminPage) return null;
@@ -359,18 +371,6 @@ export function HeaderPro() {
     setSearchFocused(false);
     router.push(`/parcels?search=${encodeURIComponent(q)}`);
   }
-
-  // Close search dropdown on outside click
-  useEffect(() => {
-    if (!searchFocused) return;
-    function onMouseDown(e: MouseEvent) {
-      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
-        setSearchFocused(false);
-      }
-    }
-    document.addEventListener('mousedown', onMouseDown);
-    return () => document.removeEventListener('mousedown', onMouseDown);
-  }, [searchFocused]);
 
   return (
     <header className="sticky top-0 z-50 bg-white" data-testid="main-header">

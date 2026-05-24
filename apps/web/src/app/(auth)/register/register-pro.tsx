@@ -1,7 +1,8 @@
 'use client';
 
-import { Suspense, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useAuthStore } from '@/stores/auth-store';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -50,6 +51,15 @@ function GoogleIcon() {
 
 function RegisterContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnTo = searchParams?.get('returnTo') || searchParams?.get('redirect') || '/';
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      window.location.replace(returnTo);
+    }
+  }, [isAuthenticated, returnTo]);
   const [serverError, setServerError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -317,6 +327,14 @@ function RegisterContent() {
               Giriş Yapın →
             </Link>
           </p>
+
+          <Link
+            href={returnTo || '/'}
+            className="mt-4 block text-center text-sm font-semibold text-slate-500 hover:text-brand-700 transition-colors"
+            data-testid="continue-as-guest"
+          >
+            Üye olmadan devam et
+          </Link>
         </motion.div>
       </div>
 

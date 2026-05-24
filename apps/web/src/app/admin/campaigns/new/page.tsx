@@ -40,16 +40,16 @@ export default function NewCampaignPage() {
   async function onSubmit(data: CampaignForm) {
     setSaving(true);
     try {
-      const payload = {
-        name: data.name,
-        description: data.description || null,
-        type: data.type,
-        status: data.status,
-        startDate: data.startDate,
-        endDate: data.endDate,
-        discountPercentage: data.discountPercentage ? parseFloat(data.discountPercentage) : null,
-        discountAmount: data.discountAmount ? parseFloat(data.discountAmount) : null,
+      // Backend expects: title, campaignType, startsAt, endsAt, discountPercent
+      const payload: Record<string, unknown> = {
+        title: data.name,
+        description: data.description || undefined,
+        campaignType: data.type,
+        startsAt: data.startDate,
+        endsAt: data.endDate,
       };
+      if (data.discountPercentage) payload.discountPercent = parseFloat(data.discountPercentage);
+      if (data.discountAmount) payload.discountAmount = parseFloat(data.discountAmount);
       await apiClient.post('/admin/campaigns', payload);
       router.push('/admin/campaigns');
     } catch (err) {

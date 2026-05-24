@@ -5,6 +5,7 @@ import { ContactRequest } from '../entities/contact-request.entity';
 import { CreateContactRequestDto } from '../dto/create-contact-request.dto';
 import { UpdateContactRequestDto } from '../dto/update-contact-request.dto';
 import { ListContactRequestsQueryDto } from '../dto/list-contact-requests-query.dto';
+import { NotificationService } from '../../notifications/notification.service';
 
 @Injectable()
 export class ContactRequestService {
@@ -15,6 +16,7 @@ export class ContactRequestService {
     private readonly repo: Repository<ContactRequest>,
     @InjectDataSource()
     private readonly ds: DataSource,
+    private readonly notifications: NotificationService,
   ) {}
 
   async create(dto: CreateContactRequestDto, userId?: string, ipAddress?: string): Promise<ContactRequest> {
@@ -32,6 +34,43 @@ export class ContactRequestService {
 
     const saved = await this.repo.save(entity);
     this.logger.log(`ContactRequest created: ${saved.id} type=${saved.type}`);
+
+    // Notify all admins of the new contact request (push + email)
+    try {
+      const admins: Array<{ id: string }> = await this.ds.query(
+        `SELECT u.id FROM auth.users u
+           JOIN auth.user_roles ur ON ur.user_id = u.id
+           JOIN auth.roles r ON r.id = ur.role_id
+          WHERE r.name IN ('admin', 'superadmin')`,
+      );
+      const isConsultantApplication =
+        typeof saved.message === 'string' && saved.message.includes('[DANIŞMAN BAŞVURUSU]');
+      const subject = isConsultantApplication
+        ? `Yeni danışman başvurusu: ${saved.name}`
+        : `Yeni iletişim talebi: ${saved.name}`;
+      const body = `${saved.name} (${saved.phone}${saved.email ? ', ' + saved.email : ''}) — ${(saved.message || '').slice(0, 160)}`;
+      for (const admin of admins) {
+        await Promise.all([
+          this.notifications.enqueue({
+            userId: admin.id,
+            channel: 'push',
+            subject,
+            body,
+            metadata: { type: 'contact_request.created', contactRequestId: saved.id },
+          }),
+          this.notifications.enqueue({
+            userId: admin.id,
+            channel: 'email',
+            subject,
+            body,
+            metadata: { type: 'contact_request.created', contactRequestId: saved.id },
+          }),
+        ]);
+      }
+    } catch (e) {
+      this.logger.warn(`Failed to enqueue admin notifications: ${(e as Error).message}`);
+    }
+
     return saved;
   }
 

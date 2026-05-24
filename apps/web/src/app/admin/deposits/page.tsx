@@ -25,27 +25,33 @@ interface DepositsResponse {
 }
 
 const columns: Column<Deposit>[] = [
-  { header: 'ID', accessor: (d) => <span className="text-xs font-mono">{truncateId(d.id)}</span> },
   {
     header: 'Kullanıcı',
-    accessor: (d) => (
-      <div>
-        <span className="text-sm">
-          {(d as any).user ? `${(d as any).user.firstName || ''} ${(d as any).user.lastName || ''}`.trim() || (d as any).user.email : truncateId(d.userId)}
-        </span>
-        {(d as any).user?.email && (
-          <span className="block text-xs text-[var(--muted-foreground)]">{(d as any).user.email}</span>
-        )}
-      </div>
-    ),
+    accessor: (d) => {
+      const u = (d as any).user;
+      const fullName = u?.fullName || `${u?.firstName || ''} ${u?.lastName || ''}`.trim();
+      return (
+        <div>
+          <span className="text-sm font-medium text-ink-900">{fullName || u?.email || '—'}</span>
+          {u?.email && fullName && (
+            <span className="block text-xs text-[var(--muted-foreground)]">{u.email}</span>
+          )}
+        </div>
+      );
+    },
   },
   {
-    header: 'Açık Artırma',
-    accessor: (d) => (
-      <span className="text-sm">
-        {(d as any).auction?.title || truncateId(d.auctionId)}
-      </span>
-    ),
+    header: 'Açık Artırma / Arsa',
+    accessor: (d) => {
+      const title = (d as any).auction?.title || (d as any).parcelTitle;
+      const listingId = (d as any).parcelListingId;
+      return (
+        <div className="text-sm">
+          <div className="font-medium text-ink-900 max-w-[260px] truncate" title={title || ''}>{title || '—'}</div>
+          {listingId && <div className="text-xs text-slate-500 font-mono">#{listingId}</div>}
+        </div>
+      );
+    },
   },
   { header: 'Tutar', accessor: (d) => <span className="font-mono">{formatPrice(d.amount)}</span> },
   {
@@ -69,20 +75,21 @@ export default function AdminDepositsPage() {
   const [offset, setOffset] = useState(0);
   const limit = 20;
   const [statusFilter, setStatusFilter] = useState('');
-  const [auctionIdFilter, setAuctionIdFilter] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [search, setSearch] = useState('');
 
   const fetchDeposits = useCallback(async () => {
     setLoading(true);
     try {
       const params: Record<string, string | number> = { limit, offset };
       if (statusFilter) params.status = statusFilter;
-      if (auctionIdFilter) params.auction_id = auctionIdFilter;
+      if (search) params.search = search;
       const { data } = await apiClient.get<DepositsResponse>('/admin/finance/deposits', { params });
       setDeposits(data.data);
       setTotal(data.meta.total);
     } catch (err) { showApiError(err); }
     finally { setLoading(false); }
-  }, [offset, statusFilter, auctionIdFilter]);
+  }, [offset, statusFilter, search]);
 
   useEffect(() => { fetchDeposits(); }, [fetchDeposits]);
 
@@ -94,19 +101,36 @@ export default function AdminDepositsPage() {
       <PageHeader title="Depozitolar" />
 
       {/* Filters */}
-      <div className="flex gap-3 flex-wrap">
+      <div className="flex gap-3 flex-wrap items-center">
+        <form
+          onSubmit={(e) => { e.preventDefault(); setSearch(searchInput); setOffset(0); }}
+          className="flex gap-2"
+        >
+          <input
+            type="text"
+            placeholder="Kullanıcı adı, e-posta veya arsa başlığı..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            className="rounded-md border border-[var(--input)] bg-[var(--background)] px-3 py-2 text-sm w-80"
+          />
+          <button type="submit" className="rounded-md bg-brand-500 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-600">
+            Ara
+          </button>
+          {search && (
+            <button
+              type="button"
+              onClick={() => { setSearch(''); setSearchInput(''); setOffset(0); }}
+              className="rounded-md bg-slate-100 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-200"
+            >
+              Temizle
+            </button>
+          )}
+        </form>
         <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setOffset(0); }}
           className="rounded-md border border-[var(--input)] bg-[var(--background)] px-3 py-2 text-sm">
           <option value="">Tüm Durumlar</option>
           {Object.entries(statusLabels).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </select>
-        <input
-          type="text"
-          placeholder="Auction ID ile filtrele..."
-          value={auctionIdFilter}
-          onChange={(e) => { setAuctionIdFilter(e.target.value); setOffset(0); }}
-          className="rounded-md border border-[var(--input)] bg-[var(--background)] px-3 py-2 text-sm w-64"
-        />
       </div>
 
       {loading ? <TableSkeleton rows={8} cols={6} /> : (

@@ -8,6 +8,7 @@ import apiClient from '@/lib/api-client';
 import { showApiError } from '@/components/api-error-toast';
 import { auctionSchema, type AuctionFormData } from '@/lib/validators';
 import { FormField, FormTextarea } from '@/components/form-field';
+import { FormattedPriceInput } from '@/components/formatted-price-input';
 import { useRateLimit } from '@/hooks/use-rate-limit';
 import { Button, PageHeader } from '@/components/ui';
 import type { Parcel } from '@/types';
@@ -269,6 +270,7 @@ export default function AdminNewAuctionPage() {
     handleSubmit,
     setError,
     setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<AuctionFormData>({
     resolver: zodResolver(auctionSchema),
@@ -360,23 +362,26 @@ export default function AdminNewAuctionPage() {
         />
 
         <div className="grid grid-cols-3 gap-4">
-          <FormField
+          <FormattedPriceInput
             label="Başlangıç Fiyatı *"
-            type="number"
             error={errors.startingPrice?.message}
-            {...register('startingPrice')}
+            value={String(watch('startingPrice') ?? '')}
+            onChange={(raw) => setValue('startingPrice', raw as any, { shouldValidate: true })}
+            placeholder="örn 500.000"
           />
-          <FormField
+          <FormattedPriceInput
             label="Minimum Artış *"
-            type="number"
             error={errors.minimumIncrement?.message}
-            {...register('minimumIncrement')}
+            value={String(watch('minimumIncrement') ?? '')}
+            onChange={(raw) => setValue('minimumIncrement', raw as any, { shouldValidate: true })}
+            placeholder="örn 5.000"
           />
-          <FormField
+          <FormattedPriceInput
             label="Gerekli Depozito *"
-            type="number"
             error={errors.requiredDeposit?.message}
-            {...register('requiredDeposit')}
+            value={String(watch('requiredDeposit') ?? '')}
+            onChange={(raw) => setValue('requiredDeposit', raw as any, { shouldValidate: true })}
+            placeholder="örn 50.000"
           />
         </div>
 

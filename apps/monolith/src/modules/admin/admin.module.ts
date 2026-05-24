@@ -28,6 +28,8 @@ import { PublicContentController } from './controllers/public-content.controller
 import { AdminAnalyticsController } from './controllers/admin-analytics.controller';
 import { AdminNotificationController } from './controllers/admin-notification.controller';
 import { AdminTestimonialController, PublicTestimonialController } from './controllers/admin-testimonial.controller';
+import { AdminReportsController } from './controllers/admin-reports.controller';
+import { Parcel } from '../listings/entities/parcel.entity';
 // AdminDealerController removed - replaced by CRM DealerController
 
 @Module({
@@ -40,6 +42,7 @@ import { AdminTestimonialController, PublicTestimonialController } from './contr
       SystemSetting,
       AuditLog,
       Testimonial,
+      Parcel,
     ]),
   ],
   controllers: [
@@ -54,6 +57,7 @@ import { AdminTestimonialController, PublicTestimonialController } from './contr
     AdminNotificationController,
     AdminTestimonialController,
     PublicTestimonialController,
+    AdminReportsController,
     // AdminDealerController removed
   ],
   providers: [
@@ -67,6 +71,6 @@ import { AdminTestimonialController, PublicTestimonialController } from './contr
     AdminBroadcastService,
     TestimonialService,
   ],
-  exports: [TypeOrmModule, AuditLogService],
+  exports: [TypeOrmModule, AuditLogService, SystemSettingService],
 })
 export class AdminModule {}

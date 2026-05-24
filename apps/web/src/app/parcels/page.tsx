@@ -17,6 +17,8 @@ import {
 } from 'lucide-react';
 import { useRecentSearches } from '@/hooks/use-recent-searches';
 import { TkgmParselSorgula } from '@/components/tkgm-parsel-sorgula';
+import { LocationAutocomplete } from '@/components/location-autocomplete';
+import { SaveSearchButton } from '@/components/save-search-button';
 import type { Parcel, PaginatedResponse } from '@/types';
 
 const ParcelMapLazy = dynamic(() => import('@/components/parcel-map-inner'), {
@@ -61,7 +63,8 @@ function ParcelsContent() {
   const city = searchParams.get('city') || '';
   const search = searchParams.get('search') || '';
   const statusFilter = searchParams.get('status') || 'active';
-  const viewParam = searchParams.get('view') || 'grid';
+  // Customer preference: küçük resimli liste varsayılan
+  const viewParam = searchParams.get('view') || 'list';
   const sortParam = searchParams.get('sort') || 'createdAt-DESC';
 
   // State
@@ -79,6 +82,9 @@ function ParcelsContent() {
 
   // Filter state
   const [selectedCity, setSelectedCity] = useState(city);
+  const [selectedDistrict, setSelectedDistrict] = useState(searchParams.get('district') || '');
+  const [selectedNeighborhood, setSelectedNeighborhood] = useState(searchParams.get('neighborhood') || '');
+  const [parcelTypeFilter, setParcelTypeFilter] = useState(searchParams.get('parcelType') || '');
   const [priceRange, setPriceRange] = useState({ min: '', max: '' });
   const [areaRange, setAreaRange] = useState({ min: '', max: '' });
   const [isFeatured, setIsFeatured] = useState(false);
@@ -89,7 +95,9 @@ function ParcelsContent() {
     setLoading(true);
     setError(null);
     try {
-      const [sortBy, sortOrder] = sortParam.split('-');
+      const [sortByRaw, sortOrder] = sortParam.split('-');
+      // Map frontend sort keys to backend column names
+      const sortBy = sortByRaw === 'area' ? 'areaM2' : sortByRaw;
       const params: Record<string, string | number> = {
         page,
         limit: viewMode === 'map' ? 100 : 12,
@@ -99,6 +107,9 @@ function ParcelsContent() {
       
       if (statusFilter) params.status = statusFilter;
       if (selectedCity) params.city = selectedCity;
+      if (selectedDistrict) params.district = selectedDistrict;
+      if (selectedNeighborhood) params.neighborhood = selectedNeighborhood;
+      if (parcelTypeFilter) params.parcelType = parcelTypeFilter;
       if (search) params.search = search;
       if (isFeatured) params.isFeatured = 'true';
       if (priceRange.min) params.minPrice = priceRange.min;
@@ -115,7 +126,7 @@ function ParcelsContent() {
     } finally {
       setLoading(false);
     }
-  }, [page, selectedCity, search, statusFilter, viewMode, sortParam, isFeatured, priceRange, areaRange, zoningFilter, roadFilter]);
+  }, [page, selectedCity, selectedDistrict, selectedNeighborhood, parcelTypeFilter, search, statusFilter, viewMode, sortParam, isFeatured, priceRange, areaRange, zoningFilter, roadFilter]);
 
   useEffect(() => { fetchParcels(); }, [fetchParcels]);
 
@@ -301,6 +312,24 @@ function ParcelsContent() {
                   ))}
                 </select>
 
+                {/* Aramayı Kaydet */}
+                <SaveSearchButton
+                  filters={{
+                    city: selectedCity,
+                    district: selectedDistrict,
+                    neighborhood: selectedNeighborhood,
+                    parcelType: parcelTypeFilter,
+                    minPrice: priceRange.min,
+                    maxPrice: priceRange.max,
+                    minArea: areaRange.min,
+                    maxArea: areaRange.max,
+                    zoningStatus: zoningFilter,
+                    roadAccess: roadFilter,
+                    isFeatured: isFeatured || undefined,
+                    search,
+                  }}
+                />
+
                 {/* TKGM Parsel Sorgula button */}
                 <button
                   onClick={() => setShowTkgm(true)}
@@ -398,28 +427,68 @@ function ParcelsContent() {
                       </label>
                     </FilterSection>
 
-                    {/* City filter */}
-                    <FilterSection title="Şehir">
-                      <div className="space-y-2 max-h-64 overflow-y-auto">
-                        {CITIES.map((cityName) => (
-                          <button
-                            key={cityName}
-                            onClick={() => handleCityFilter(cityName)}
-                            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                              selectedCity === cityName
-                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                : 'text-slate-600 hover:bg-slate-50 border border-transparent'
-                            }`}
-                            data-testid={`city-filter-${cityName}`}
-                          >
-                            <span className="flex items-center gap-2">
-                              <MapPin className="h-4 w-4" />
-                              {cityName}
-                            </span>
-                            {selectedCity === cityName && <Check className="h-4 w-4" />}
-                          </button>
-                        ))}
+                    {/* Konum filtreleri */}
+                    <FilterSection title="Konum">
+                      <div className="space-y-3">
+                        <LocationAutocomplete
+                          label="Şehir"
+                          type="city"
+                          value={selectedCity}
+                          onChange={(v) => {
+                            setSelectedCity(v);
+                            setSelectedDistrict('');
+                            setSelectedNeighborhood('');
+                            updateSearchParams({ city: v, district: '', neighborhood: '', page: '1' });
+                          }}
+                          testId="city-autocomplete"
+                        />
+                        <LocationAutocomplete
+                          label="İlçe"
+                          type="district"
+                          city={selectedCity}
+                          value={selectedDistrict}
+                          onChange={(v) => {
+                            setSelectedDistrict(v);
+                            setSelectedNeighborhood('');
+                            updateSearchParams({ district: v, neighborhood: '', page: '1' });
+                          }}
+                          testId="district-autocomplete"
+                        />
+                        <LocationAutocomplete
+                          label="Mahalle / Köy"
+                          type="neighborhood"
+                          city={selectedCity}
+                          district={selectedDistrict}
+                          value={selectedNeighborhood}
+                          onChange={(v) => {
+                            setSelectedNeighborhood(v);
+                            updateSearchParams({ neighborhood: v, page: '1' });
+                          }}
+                          testId="neighborhood-autocomplete"
+                        />
                       </div>
+                    </FilterSection>
+
+                    {/* Arazi türü */}
+                    <FilterSection title="Arazi Türü">
+                      <select
+                        value={parcelTypeFilter}
+                        onChange={(e) => {
+                          setParcelTypeFilter(e.target.value);
+                          updateSearchParams({ parcelType: e.target.value, page: '1' });
+                        }}
+                        className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-ink-900 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                        data-testid="parcel-type-filter"
+                      >
+                        <option value="">Tümü</option>
+                        <option value="arsa">Arsa</option>
+                        <option value="tarla">Tarla</option>
+                        <option value="bağ">Bağ</option>
+                        <option value="bahçe">Bahçe</option>
+                        <option value="zeytinlik">Zeytinlik</option>
+                        <option value="orman">Orman</option>
+                        <option value="diğer">Diğer</option>
+                      </select>
                     </FilterSection>
 
                     {/* Price range */}

@@ -14,6 +14,7 @@ import { ParcelReservation } from './entities/parcel-reservation.entity';
 import { ParcelService } from './services/parcel.service';
 import { ParcelMediaService } from './services/parcel-media.service';
 import { ParcelImportService } from './services/parcel-import.service';
+import { ParcelPdfService } from './services/parcel-pdf.service';
 import { FavoriteService } from './services/favorite.service';
 import { SavedSearchService } from './services/saved-search.service';
 import { GeoSearchService } from './services/geo-search.service';
@@ -37,6 +38,7 @@ import { PRICING_STRATEGY } from './pricing/pricing-strategy.interface';
 import { BasePricingStrategy } from './pricing/base-pricing.strategy';
 
 import { AdminModule } from '../admin/admin.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
@@ -53,6 +55,7 @@ import { AdminModule } from '../admin/admin.module';
       ParcelReservation,
     ]),
     AdminModule,
+    NotificationsModule,
   ],
   controllers: [
     ParcelController,
@@ -71,6 +74,7 @@ import { AdminModule } from '../admin/admin.module';
     ParcelService,
     ParcelMediaService,
     ParcelImportService,
+    ParcelPdfService,
     FavoriteService,
     SavedSearchService,
     GeoSearchService,

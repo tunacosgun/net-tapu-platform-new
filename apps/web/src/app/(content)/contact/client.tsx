@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { AxiosError } from 'axios';
+import apiClient from '@/lib/api-client';
 import { usePageContent } from '@/hooks/use-page-content';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -325,6 +327,7 @@ export function ContactPageContent() {
   const [errors, setErrors] = useState<Partial<FormData>>({});
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   function set(key: keyof FormData) {
     return (v: string) => {
@@ -351,9 +354,28 @@ export function ContactPageContent() {
     e.preventDefault();
     if (!validate()) return;
     setSubmitting(true);
-    await new Promise((r) => setTimeout(r, 1400));
-    setSubmitting(false);
-    setSuccess(true);
+    try {
+      // Persist to backend so admins receive the request in /admin/contacts
+      const subjectMessage = form.subject ? `[${form.subject}] ` : '';
+      await apiClient.post('/crm/contact-requests', {
+        type: 'general',
+        name: form.name,
+        phone: form.phone,
+        email: form.email || undefined,
+        message: `${subjectMessage}${form.message}`,
+      });
+      setSuccess(true);
+    } catch (err) {
+      const msg =
+        err instanceof AxiosError
+          ? (Array.isArray(err.response?.data?.message)
+              ? err.response?.data?.message[0]
+              : err.response?.data?.message) || 'Mesaj gönderilemedi. Lütfen tekrar deneyin.'
+          : 'Mesaj gönderilemedi. Lütfen tekrar deneyin.';
+      setSubmitError(msg);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   const SOCIAL = [
@@ -423,6 +445,12 @@ export function ContactPageContent() {
                     <FloatingInput id="email" label="E-posta *" type="email" value={form.email} onChange={set('email')} error={errors.email} />
                     <FloatingSelect value={form.subject} onChange={set('subject')} error={errors.subject} />
                     <FloatingInput id="message" label="Mesajınız *" value={form.message} onChange={set('message')} error={errors.message} textarea />
+
+                    {submitError && (
+                      <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+                        {submitError}
+                      </div>
+                    )}
 
                     <motion.button
                       type="submit"
