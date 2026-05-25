@@ -166,6 +166,15 @@ export class TkgmService {
 
         const now = new Date();
         const expiresAt = new Date(now.getTime() + 2 * 60 * 60 * 1000); // cache 2h for not-found
+        const existingNF = await this.cacheRepo.findOne({
+          where: { city: dto.city, district: dto.district, ada: dto.ada, parsel: dto.parsel },
+        });
+        if (existingNF) {
+          existingNF.responseData = responseData;
+          existingNF.fetchedAt = now;
+          existingNF.expiresAt = expiresAt;
+          return this.cacheRepo.save(existingNF);
+        }
         const entry = this.cacheRepo.create({
           ada: dto.ada, parsel: dto.parsel, city: dto.city, district: dto.district,
           responseData, fetchedAt: now, expiresAt,
@@ -284,17 +293,26 @@ export class TkgmService {
     const now = new Date();
     const expiresAt = new Date(now.getTime() + TkgmService.CACHE_TTL_HOURS * 60 * 60 * 1000);
 
-    const entry = this.cacheRepo.create({
-      ada: dto.ada,
-      parsel: dto.parsel,
-      city: dto.city,
-      district: dto.district,
-      responseData,
-      fetchedAt: now,
-      expiresAt,
+    // Upsert: if a row already exists for this (city, district, ada, parsel),
+    // overwrite it with the fresh data. The unique constraint
+    // tkgm_cache_parcel_unique blocks plain INSERT on duplicates.
+    const existing = await this.cacheRepo.findOne({
+      where: { city: dto.city, district: dto.district, ada: dto.ada, parsel: dto.parsel },
     });
 
-    const saved = await this.cacheRepo.save(entry);
+    let saved: TkgmCache;
+    if (existing) {
+      existing.responseData = responseData;
+      existing.fetchedAt = now;
+      existing.expiresAt = expiresAt;
+      saved = await this.cacheRepo.save(existing);
+    } else {
+      const entry = this.cacheRepo.create({
+        ada: dto.ada, parsel: dto.parsel, city: dto.city, district: dto.district,
+        responseData, fetchedAt: now, expiresAt,
+      });
+      saved = await this.cacheRepo.save(entry);
+    }
     this.logger.log(`TKGM fetched & cached: ${dto.city}/${dto.district} ${dto.ada}/${dto.parsel} (${durationMs}ms)`);
     return saved;
   }
