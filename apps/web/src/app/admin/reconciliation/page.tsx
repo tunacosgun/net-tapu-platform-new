@@ -131,12 +131,15 @@ export default function AdminReconciliationPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {report.stalePendingPayments.map((p) => (
+                    {report.stalePendingPayments.map((p) => {
+                      const u = p as any;
+                      const displayName = u.userName || u.userEmail || (u.userId ? 'Silinmiş kullanıcı' : '—');
+                      return (
                       <tr key={p.id} className="border-b border-[var(--border)]">
                         <td className="py-2 pr-4 text-xs">
-                          <div className="font-medium text-ink-900">{(p as any).userName || (p as any).userEmail || truncateId(p.userId)}</div>
-                          {(p as any).userEmail && (p as any).userName && (
-                            <div className="text-[11px] text-[var(--muted-foreground)]">{(p as any).userEmail}</div>
+                          <div className="font-medium text-ink-900">{displayName}</div>
+                          {u.userEmail && u.userName && (
+                            <div className="text-[11px] text-[var(--muted-foreground)]">{u.userEmail}</div>
                           )}
                         </td>
                         <td className="py-2 pr-4 text-xs max-w-[220px] truncate">{(p as any).parcelTitle || (p.parcelId ? truncateId(p.parcelId) : '—')}</td>
@@ -148,7 +151,8 @@ export default function AdminReconciliationPage() {
                         </td>
                         <td className="py-2 text-xs">{p.staleSinceMinutes} dk</td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -171,12 +175,15 @@ export default function AdminReconciliationPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {report.stalePendingRefunds.map((r) => (
+                    {report.stalePendingRefunds.map((r) => {
+                      const u = r as any;
+                      const displayName = u.userName || u.userEmail || 'Silinmiş kullanıcı';
+                      return (
                       <tr key={r.id} className="border-b border-[var(--border)]">
                         <td className="py-2 pr-4 text-xs">
-                          <div className="font-medium text-ink-900">{(r as any).userName || (r as any).userEmail || '—'}</div>
-                          {(r as any).userEmail && (r as any).userName && (
-                            <div className="text-[11px] text-[var(--muted-foreground)]">{(r as any).userEmail}</div>
+                          <div className="font-medium text-ink-900">{displayName}</div>
+                          {u.userEmail && u.userName && (
+                            <div className="text-[11px] text-[var(--muted-foreground)]">{u.userEmail}</div>
                           )}
                         </td>
                         <td className="py-2 pr-4">{formatPrice(r.amount)} {r.currency}</td>
@@ -188,7 +195,8 @@ export default function AdminReconciliationPage() {
                         <td className="py-2 pr-4 text-xs">{r.staleSinceMinutes} dk</td>
                         <td className="py-2 text-xs">{r.reason}</td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
