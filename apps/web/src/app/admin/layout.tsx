@@ -30,8 +30,9 @@ const navSections: Array<{
     { href: '/admin/bans',  label: 'Yasaklamalar',  icon: ShieldBan },
   ]},
   { title: 'Gayrimenkul', items: [
-    { href: '/admin/parcels',   label: 'Arsalar',          icon: Map },
-    { href: '/admin/auctions',  label: 'Açık Artırmalar',  icon: Gavel },
+    { href: '/admin/parcels',    label: 'Arsalar',          icon: Map },
+    { href: '/admin/categories', label: 'Kategoriler',      icon: Map },
+    { href: '/admin/auctions',   label: 'Açık Artırmalar',  icon: Gavel },
   ]},
   { title: 'Finans', items: [
     { href: '/admin/deposits',       label: 'Depozitolar',  icon: CreditCard },

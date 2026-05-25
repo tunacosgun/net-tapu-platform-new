@@ -19,6 +19,7 @@ import { useRecentSearches } from '@/hooks/use-recent-searches';
 import { TkgmParselSorgula } from '@/components/tkgm-parsel-sorgula';
 import { LocationAutocomplete } from '@/components/location-autocomplete';
 import { SaveSearchButton } from '@/components/save-search-button';
+import { CategoryPicker } from '@/components/category-picker';
 import type { Parcel, PaginatedResponse } from '@/types';
 
 const ParcelMapLazy = dynamic(() => import('@/components/parcel-map-inner'), {
@@ -85,6 +86,7 @@ function ParcelsContent() {
   const [selectedDistrict, setSelectedDistrict] = useState(searchParams.get('district') || '');
   const [selectedNeighborhood, setSelectedNeighborhood] = useState(searchParams.get('neighborhood') || '');
   const [parcelTypeFilter, setParcelTypeFilter] = useState(searchParams.get('parcelType') || '');
+  const [categoryFilter, setCategoryFilter] = useState(searchParams.get('categoryId') || '');
   const [priceRange, setPriceRange] = useState({ min: '', max: '' });
   const [areaRange, setAreaRange] = useState({ min: '', max: '' });
   const [isFeatured, setIsFeatured] = useState(false);
@@ -110,6 +112,7 @@ function ParcelsContent() {
       if (selectedDistrict) params.district = selectedDistrict;
       if (selectedNeighborhood) params.neighborhood = selectedNeighborhood;
       if (parcelTypeFilter) params.parcelType = parcelTypeFilter;
+      if (categoryFilter) params.categoryId = categoryFilter;
       if (search) params.search = search;
       if (isFeatured) params.isFeatured = 'true';
       if (priceRange.min) params.minPrice = priceRange.min;
@@ -126,7 +129,7 @@ function ParcelsContent() {
     } finally {
       setLoading(false);
     }
-  }, [page, selectedCity, selectedDistrict, selectedNeighborhood, parcelTypeFilter, search, statusFilter, viewMode, sortParam, isFeatured, priceRange, areaRange, zoningFilter, roadFilter]);
+  }, [page, selectedCity, selectedDistrict, selectedNeighborhood, parcelTypeFilter, categoryFilter, search, statusFilter, viewMode, sortParam, isFeatured, priceRange, areaRange, zoningFilter, roadFilter]);
 
   useEffect(() => { fetchParcels(); }, [fetchParcels]);
 
@@ -425,6 +428,17 @@ function ParcelsContent() {
                           Sadece Öne Çıkanlar
                         </span>
                       </label>
+                    </FilterSection>
+
+                    {/* Kategori filtresi */}
+                    <FilterSection title="Kategori">
+                      <CategoryPicker
+                        value={categoryFilter || null}
+                        onChange={(id) => {
+                          setCategoryFilter(id || '');
+                          updateSearchParams({ categoryId: id || '', page: '1' });
+                        }}
+                      />
                     </FilterSection>
 
                     {/* Konum filtreleri */}

@@ -10,6 +10,7 @@ import { SavedSearch } from './entities/saved-search.entity';
 import { PriceChangeLog } from './entities/price-change-log.entity';
 import { PriceAlert } from './entities/price-alert.entity';
 import { ParcelReservation } from './entities/parcel-reservation.entity';
+import { Category } from './entities/category.entity';
 
 import { ParcelService } from './services/parcel.service';
 import { ParcelMediaService } from './services/parcel-media.service';
@@ -23,6 +24,7 @@ import { ViewerCountService } from './services/viewer-count.service';
 import { ImageProcessingService } from './services/image-processing.service';
 import { PriceAlertService } from './services/price-alert.service';
 import { ReservationService } from './services/reservation.service';
+import { CategoryService } from './services/category.service';
 
 import { ParcelController } from './controllers/parcel.controller';
 import { ParcelMediaController } from './controllers/parcel-media.controller';
@@ -33,6 +35,7 @@ import { GeoSearchController } from './controllers/geo-search.controller';
 import { ViewerCountController } from './controllers/viewer-count.controller';
 import { PriceAlertController, UserPriceAlertController } from './controllers/price-alert.controller';
 import { ReservationController, UserReservationController } from './controllers/reservation.controller';
+import { CategoryController, AdminCategoryController } from './controllers/category.controller';
 
 import { PRICING_STRATEGY } from './pricing/pricing-strategy.interface';
 import { BasePricingStrategy } from './pricing/base-pricing.strategy';
@@ -53,6 +56,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
       PriceChangeLog,
       PriceAlert,
       ParcelReservation,
+      Category,
     ]),
     AdminModule,
     NotificationsModule,
@@ -69,6 +73,8 @@ import { NotificationsModule } from '../notifications/notifications.module';
     UserPriceAlertController,
     ReservationController,
     UserReservationController,
+    CategoryController,
+    AdminCategoryController,
   ],
   providers: [
     ParcelService,
@@ -83,6 +89,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
     ImageProcessingService,
     PriceAlertService,
     ReservationService,
+    CategoryService,
     {
       provide: PRICING_STRATEGY,
       useClass: BasePricingStrategy,

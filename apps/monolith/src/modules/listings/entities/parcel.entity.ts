@@ -114,6 +114,9 @@ export class Parcel {
   @Column({ name: 'guide_url', type: 'text', nullable: true })
   guideUrl!: string | null;
 
+  @Column({ name: 'category_id', type: 'uuid', nullable: true })
+  categoryId!: string | null;
+
   /** Populated by service queries — not a TypeORM relation to avoid circular issues */
   images?: ParcelImage[];
 

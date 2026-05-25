@@ -82,6 +82,7 @@ export class ParcelService {
       videoUrl: dto.videoUrl ?? null,
       embedCode: dto.embedCode ?? null,
       guideUrl: dto.guideUrl ?? null,
+      categoryId: dto.categoryId ?? null,
       createdBy: userId,
     });
 
@@ -113,6 +114,9 @@ export class ParcelService {
     }
     if (query.parcelType) {
       qb.andWhere('p.land_type = :landType', { landType: query.parcelType });
+    }
+    if (query.categoryId) {
+      qb.andWhere('p.category_id = :categoryId', { categoryId: query.categoryId });
     }
     if (query.minPrice) {
       qb.andWhere('p.price::numeric >= :minPrice', { minPrice: query.minPrice });

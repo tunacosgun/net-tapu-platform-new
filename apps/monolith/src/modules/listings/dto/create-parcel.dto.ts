@@ -129,4 +129,8 @@ export class CreateParcelDto {
   @IsOptional()
   @MaxLength(500)
   guideUrl?: string;
+
+  @IsString()
+  @IsOptional()
+  categoryId?: string;
 }

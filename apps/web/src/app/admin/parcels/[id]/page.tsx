@@ -10,6 +10,7 @@ import { TableSkeleton } from '@/components/skeleton';
 import { parcelSchema, type ParcelFormData } from '@/lib/validators';
 import { FormField, FormTextarea, FormCheckbox } from '@/components/form-field';
 import { FormattedPriceInput } from '@/components/formatted-price-input';
+import { CategoryPicker } from '@/components/category-picker';
 import { AddressGeocoder } from '@/components/address-geocoder';
 import { ImageUpload } from '@/components/image-upload';
 import { useRateLimit } from '@/hooks/use-rate-limit';
@@ -82,6 +83,7 @@ export default function AdminEditParcelPage() {
             price: parcelData.price || '',
             zoningStatus: parcelData.zoningStatus || '',
             landType: parcelData.landType || '',
+            categoryId: (parcelData as any).categoryId || '',
             ada: parcelData.ada || '',
             parsel: parcelData.parsel || '',
             isAuctionEligible: parcelData.isAuctionEligible,
@@ -222,6 +224,12 @@ export default function AdminEditParcelPage() {
           label="Baslik *"
           error={errors.title?.message}
           {...register('title')}
+        />
+
+        <CategoryPicker
+          label="Kategori"
+          value={watch('categoryId') ?? null}
+          onChange={(id) => setValue('categoryId' as any, id ?? '', { shouldValidate: true })}
         />
 
         <div className="grid grid-cols-2 gap-4">

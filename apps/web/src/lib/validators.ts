@@ -94,6 +94,7 @@ export const parcelSchema = z.object({
   videoUrl: z.string().max(500).optional().or(z.literal('')),
   embedCode: z.string().max(5000).optional().or(z.literal('')),
   guideUrl: z.string().max(500).optional().or(z.literal('')),
+  categoryId: z.string().optional().or(z.literal('')),
 });
 export type ParcelFormData = z.infer<typeof parcelSchema>;
 

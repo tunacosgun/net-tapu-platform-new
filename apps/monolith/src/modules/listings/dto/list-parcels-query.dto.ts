@@ -23,6 +23,10 @@ export class ListParcelsQueryDto {
   @IsOptional()
   parcelType?: string;
 
+  @IsString()
+  @IsOptional()
+  categoryId?: string;
+
   @IsNumberString()
   @IsOptional()
   minPrice?: string;

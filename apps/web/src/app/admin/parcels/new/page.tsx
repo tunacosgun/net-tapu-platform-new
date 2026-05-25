@@ -9,6 +9,7 @@ import { showApiError } from '@/components/api-error-toast';
 import { parcelSchema, type ParcelFormData } from '@/lib/validators';
 import { FormField, FormTextarea, FormCheckbox, FormSelect } from '@/components/form-field';
 import { FormattedPriceInput } from '@/components/formatted-price-input';
+import { CategoryPicker } from '@/components/category-picker';
 import { AddressGeocoder } from '@/components/address-geocoder';
 import { ImageUpload } from '@/components/image-upload';
 import { useRateLimit } from '@/hooks/use-rate-limit';
@@ -237,6 +238,13 @@ export default function AdminNewParcelPage() {
           label="Başlık *"
           error={errors.title?.message}
           {...register('title')}
+        />
+
+        {/* Kategori — sahibinden.com formatı: ilanın en üstünde kategori seçimi */}
+        <CategoryPicker
+          label="Kategori"
+          value={watch('categoryId') ?? null}
+          onChange={(id) => setValue('categoryId' as any, id ?? '', { shouldValidate: true })}
         />
 
         {/* Ada / Parsel — sahibinden.com formatı: ilan bilgilerinin en üstünde */}
