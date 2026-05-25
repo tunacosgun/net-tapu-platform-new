@@ -116,32 +116,36 @@ export class TkgmService {
       const ilceKod = await this.getIlceKod(ilKod, dto.district);
       const mahalleler = await this.getMahalleler(ilceKod);
 
-      // 2. Try each mahalle until parcel is found
+      // 2. Try each mahalle in PARALLEL batches (TKGM API needs mahalleKod for parsel lookup).
+      //    Sequential loop on 50+ mahalle would take 50+ seconds (request timeout).
+      //    Batch of 10 with Promise.allSettled keeps total time ~5s for not-found, ~1s for found.
       let parcelData: Record<string, unknown> | null = null;
       let foundMahalle = '';
 
-      for (const mah of mahalleler) {
-        try {
-          // TKGM parsel endpoint: /parsel/{mahalleKod}/{ada}/{parsel}
-          const url = `${TKGM_BASE}/parsel/${mah.id}/${dto.ada}/${dto.parsel}`;
-          const data = await this.tkgmFetch<Record<string, unknown>>(url);
-          // TKGM may return GeoJSON Feature or FeatureCollection
-          let feature: Record<string, unknown> | null = null;
-          if (data && (data as any).type === 'FeatureCollection' && Array.isArray((data as any).features) && (data as any).features.length > 0) {
-            feature = (data as any).features[0];
-          } else if (data && (data as any).type === 'Feature') {
-            feature = data;
-          } else if (data && typeof data === 'object' && Object.keys(data).length > 0) {
-            feature = data;
+      const extractFeature = (data: any): Record<string, unknown> | null => {
+        if (!data || typeof data !== 'object') return null;
+        if (data.type === 'FeatureCollection' && Array.isArray(data.features) && data.features.length > 0) return data.features[0];
+        if (data.type === 'Feature') return data;
+        if (Array.isArray(data.features) && data.features.length > 0) return data.features[0];
+        if (Object.keys(data).length > 0) return data;
+        return null;
+      };
+
+      const BATCH = 10;
+      outer: for (let i = 0; i < mahalleler.length; i += BATCH) {
+        const batch = mahalleler.slice(i, i + BATCH);
+        const results = await Promise.allSettled(
+          batch.map((mah) =>
+            this.tkgmFetch<Record<string, unknown>>(`${TKGM_BASE}/parsel/${mah.id}/${dto.ada}/${dto.parsel}`)
+              .then((d) => ({ mah, feature: extractFeature(d) })),
+          ),
+        );
+        for (const r of results) {
+          if (r.status === 'fulfilled' && r.value.feature) {
+            parcelData = r.value.feature;
+            foundMahalle = r.value.mah.text;
+            break outer;
           }
-          if (feature) {
-            parcelData = feature;
-            foundMahalle = mah.text;
-            break;
-          }
-        } catch {
-          // This mahalle doesn't have this parcel, try next
-          continue;
         }
       }
 
