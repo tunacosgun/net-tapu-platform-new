@@ -123,25 +123,30 @@ export default function AdminReconciliationPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-[var(--border)] text-left text-xs text-[var(--muted-foreground)]">
-                      <th className="pb-2 pr-4">ID</th>
+                      <th className="pb-2 pr-4">Kullanıcı</th>
+                      <th className="pb-2 pr-4">Arsa</th>
                       <th className="pb-2 pr-4">Tutar</th>
                       <th className="pb-2 pr-4">Durum</th>
-                      <th className="pb-2 pr-4">Bekleme (dk)</th>
-                      <th className="pb-2">Kullanıcı</th>
+                      <th className="pb-2">Bekleme</th>
                     </tr>
                   </thead>
                   <tbody>
                     {report.stalePendingPayments.map((p) => (
                       <tr key={p.id} className="border-b border-[var(--border)]">
-                        <td className="py-2 pr-4 text-xs font-mono">{truncateId(p.id)}</td>
+                        <td className="py-2 pr-4 text-xs">
+                          <div className="font-medium text-ink-900">{(p as any).userName || (p as any).userEmail || truncateId(p.userId)}</div>
+                          {(p as any).userEmail && (p as any).userName && (
+                            <div className="text-[11px] text-[var(--muted-foreground)]">{(p as any).userEmail}</div>
+                          )}
+                        </td>
+                        <td className="py-2 pr-4 text-xs max-w-[220px] truncate">{(p as any).parcelTitle || (p.parcelId ? truncateId(p.parcelId) : '—')}</td>
                         <td className="py-2 pr-4">{formatPrice(p.amount)} {p.currency}</td>
                         <td className="py-2 pr-4">
                           <Badge className="bg-yellow-100 text-yellow-700">
                             {p.status === 'pending' ? 'Beklemede' : p.status === 'awaiting_3ds' ? '3DS Bekliyor' : p.status === 'provisioned' ? 'Onaylandı' : p.status === 'completed' ? 'Tamamlandı' : p.status === 'refunded' ? 'İade Edildi' : p.status}
                           </Badge>
                         </td>
-                        <td className="py-2 pr-4 text-xs">{p.staleSinceMinutes} dk</td>
-                        <td className="py-2 text-xs font-mono">{truncateId(p.userId)}</td>
+                        <td className="py-2 text-xs">{p.staleSinceMinutes} dk</td>
                       </tr>
                     ))}
                   </tbody>
@@ -158,17 +163,22 @@ export default function AdminReconciliationPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-[var(--border)] text-left text-xs text-[var(--muted-foreground)]">
-                      <th className="pb-2 pr-4">ID</th>
+                      <th className="pb-2 pr-4">Kullanıcı</th>
                       <th className="pb-2 pr-4">Tutar</th>
                       <th className="pb-2 pr-4">Durum</th>
-                      <th className="pb-2 pr-4">Bekleme (dk)</th>
+                      <th className="pb-2 pr-4">Bekleme</th>
                       <th className="pb-2">Sebep</th>
                     </tr>
                   </thead>
                   <tbody>
                     {report.stalePendingRefunds.map((r) => (
                       <tr key={r.id} className="border-b border-[var(--border)]">
-                        <td className="py-2 pr-4 text-xs font-mono">{truncateId(r.id)}</td>
+                        <td className="py-2 pr-4 text-xs">
+                          <div className="font-medium text-ink-900">{(r as any).userName || (r as any).userEmail || '—'}</div>
+                          {(r as any).userEmail && (r as any).userName && (
+                            <div className="text-[11px] text-[var(--muted-foreground)]">{(r as any).userEmail}</div>
+                          )}
+                        </td>
                         <td className="py-2 pr-4">{formatPrice(r.amount)} {r.currency}</td>
                         <td className="py-2 pr-4">
                           <Badge className="bg-red-100 text-red-700">
