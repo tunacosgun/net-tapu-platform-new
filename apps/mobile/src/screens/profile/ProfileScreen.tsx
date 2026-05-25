@@ -188,9 +188,15 @@ export default function ProfileScreen() {
     {
       title: 'Ayarlar',
       items: [
-        { icon: 'search-outline', label: 'Kayıtlı Aramalar', screen: 'Settings', color: c.info },
+        { icon: 'search-outline', label: 'Kayıtlı Aramalar', screen: 'SavedSearches', color: c.info },
         { icon: 'notifications-outline', label: 'Bildirim Ayarları', screen: 'Notifications', color: c.warning },
         { icon: 'shield-checkmark-outline', label: 'Güvenlik', screen: 'Settings', color: c.primary },
+      ],
+    },
+    {
+      title: 'Diğer',
+      items: [
+        { icon: 'people-outline', label: 'Danışman Olun', screen: 'BecomeConsultant', color: c.primary },
       ],
     },
   ];

@@ -20,6 +20,8 @@ import OffersScreen from '../screens/profile/OffersScreen';
 import PaymentsScreen from '../screens/profile/PaymentsScreen';
 import SettingsScreen from '../screens/profile/SettingsScreen';
 import NotificationsScreen from '../screens/profile/NotificationsScreen';
+import { SavedSearchesScreen } from '../screens/profile/SavedSearchesScreen';
+import { BecomeConsultantScreen } from '../screens/profile/BecomeConsultantScreen';
 
 export type RootStackParamList = {
   Splash: undefined;
@@ -39,6 +41,8 @@ export type RootStackParamList = {
   Payments: undefined;
   Settings: undefined;
   Notifications: undefined;
+  SavedSearches: undefined;
+  BecomeConsultant: undefined;
 };
 
 import { useSettingsStore } from '../stores/settings-store';
@@ -90,6 +94,8 @@ export default function RootNavigator() {
           <Stack.Screen name="Payments" component={PaymentsScreen} />
           <Stack.Screen name="Settings" component={SettingsScreen} />
           <Stack.Screen name="Notifications" component={NotificationsScreen} />
+          <Stack.Screen name="SavedSearches" component={SavedSearchesScreen} />
+          <Stack.Screen name="BecomeConsultant" component={BecomeConsultantScreen} />
         </Stack.Group>
       )}
     </Stack.Navigator>
