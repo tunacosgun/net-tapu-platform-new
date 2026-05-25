@@ -64,7 +64,7 @@ export default function AdminCategoriesPage() {
       <PageHeader
         title="Kategoriler"
         subtitle="Sahibinden tarzı hiyerarşik kategori ağacı. İlanlar bu kategorilere atanır ve filtrelenir."
-        actions={
+        action={
           <Button onClick={() => setCreatingUnder({ parentId: null, parentName: 'Üst seviye' })}>
             <Plus className="h-4 w-4" /> Yeni Kök Kategori
           </Button>
