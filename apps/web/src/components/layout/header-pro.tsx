@@ -81,7 +81,7 @@ const DEFAULT_SUPPORT_ITEMS: NavDropdownItem[] = [
 const categoryNav = [
   { href: '/parcels',              label: 'Arsalar',         icon: Map },
   { href: '/auctions',             label: 'İhaleler',        icon: Gavel, live: true },
-  { href: '/parcels?view=map',     label: 'Harita',          icon: Map },
+  { href: '/harita',               label: 'Harita',          icon: Map },
   { href: '/campaigns',            label: 'Kampanyalar',     icon: Star },
   { href: '/real-estate-guide',    label: 'Rehber',          icon: BookOpen },
 ];

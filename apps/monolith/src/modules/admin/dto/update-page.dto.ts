@@ -10,6 +10,11 @@ import {
 export class UpdatePageDto {
   @IsString()
   @IsOptional()
+  @MaxLength(255)
+  slug?: string;
+
+  @IsString()
+  @IsOptional()
   @MaxLength(500)
   title?: string;
 

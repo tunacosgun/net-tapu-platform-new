@@ -30,6 +30,9 @@ import { AuctionStatus, SettlementManifestStatus } from '@nettapu/shared';
 interface ManifestListItem {
   manifest_id: string;
   auction_id: string;
+  auction_title: string | null;
+  winner_name: string | null;
+  winner_email: string | null;
   status: string;
   items_total: number;
   items_acknowledged: number;
@@ -74,7 +77,16 @@ export class AdminSettlementController {
     const limit = query.limit ?? 20;
     const offset = query.offset ?? 0;
 
-    const qb = this.manifestRepo.createQueryBuilder('m');
+    const qb = this.manifestRepo
+      .createQueryBuilder('m')
+      .leftJoin('auctions.auctions', 'a', 'a.id = m.auction_id')
+      .leftJoin('auth.users', 'u', 'u.id = a.winner_id')
+      .addSelect([
+        'a.title AS auction_title',
+        'u.first_name AS winner_first_name',
+        'u.last_name AS winner_last_name',
+        'u.email AS winner_email',
+      ]);
 
     if (query.status) {
       qb.where('m.status = :status', { status: query.status });
@@ -84,23 +96,38 @@ export class AdminSettlementController {
       qb.andWhere('m.auctionId = :auctionId', { auctionId: query.auction_id });
     }
 
+    if ((query as any).search) {
+      const s = `%${(query as any).search}%`;
+      qb.andWhere('(u.first_name ILIKE :s OR u.last_name ILIKE :s OR u.email ILIKE :s OR a.title ILIKE :s)', { s });
+    }
+
     qb.orderBy('m.createdAt', 'DESC')
       .skip(offset)
       .take(limit);
 
-    const [manifests, total] = await qb.getManyAndCount();
+    const total = await qb.getCount();
+    const raw = await qb.getRawAndEntities();
 
-    return {
-      data: manifests.map((m) => ({
+    const data: ManifestListItem[] = raw.entities.map((m, idx) => {
+      const r = raw.raw[idx] || {};
+      const winnerName = `${r.winner_first_name || ''} ${r.winner_last_name || ''}`.trim();
+      return {
         manifest_id: m.id,
         auction_id: m.auctionId,
+        auction_title: r.auction_title || null,
+        winner_name: winnerName || null,
+        winner_email: r.winner_email || null,
         status: m.status,
         items_total: m.itemsTotal,
         items_acknowledged: m.itemsAcknowledged,
         created_at: m.createdAt,
         completed_at: m.completedAt,
         expired_at: m.expiredAt,
-      })),
+      };
+    });
+
+    return {
+      data,
       meta: { total, limit, offset },
     };
   }

@@ -33,6 +33,7 @@ export default function AdminEditPagePage() {
 
   const [form, setForm] = useState({
     title: '',
+    slug: '',
     content: '',
     metaTitle: '',
     metaDescription: '',
@@ -49,6 +50,7 @@ export default function AdminEditPagePage() {
         setPageData(data);
         setForm({
           title: data.title,
+          slug: data.slug,
           content: data.content || '',
           metaTitle: data.metaTitle || '',
           metaDescription: data.metaDescription || '',
@@ -216,6 +218,22 @@ export default function AdminEditPagePage() {
                 onChange={(e) => handleChange('sortOrder', parseInt(e.target.value) || 0)}
                 className="w-full rounded-md border border-[var(--input)] bg-[var(--background)] px-3 py-2 text-sm"
               />
+            </div>
+            <div className="sm:col-span-3">
+              <label className="block text-sm font-medium mb-1">URL / Bağlantı (slug)</label>
+              <div className="flex items-center gap-1">
+                <span className="text-sm text-[var(--muted-foreground)] font-mono">/</span>
+                <input
+                  type="text"
+                  value={form.slug}
+                  onChange={(e) => handleChange('slug', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-'))}
+                  placeholder="ornek: konya, antalya, fethiye"
+                  className="flex-1 rounded-md border border-[var(--input)] bg-[var(--background)] px-3 py-2 text-sm font-mono"
+                />
+              </div>
+              <p className="mt-1 text-xs text-[var(--muted-foreground)]">
+                Sayfanın siteye erişim adresi. Değiştirirseniz eski bağlantılar kırılır — gerekirse yönlendirme ekleyin.
+              </p>
             </div>
           </div>
         </div>

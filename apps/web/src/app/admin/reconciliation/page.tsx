@@ -30,18 +30,22 @@ export default function AdminReconciliationPage() {
   const [loading, setLoading] = useState(true);
   const [triggering, setTriggering] = useState(false);
   const [retrying, setRetrying] = useState<string | null>(null);
+  const [searchInput, setSearchInput] = useState('');
+  const [search, setSearch] = useState('');
   const { cooldown, isLimited, checkRateLimit } = useRateLimit();
 
   const fetchData = useCallback(async () => {
     setLoading(true);
+    const settlementsParams: Record<string, string | number> = { limit: 50 };
+    if (search) settlementsParams.search = search;
     const results = await Promise.allSettled([
       apiClient.get<ReconciliationReport>('/admin/reconciliation'),
-      apiClient.get<SettlementsResponse>('/admin/settlements', { params: { limit: 50 } }),
+      apiClient.get<SettlementsResponse>('/admin/settlements', { params: settlementsParams }),
     ]);
     if (results[0].status === 'fulfilled') setReport(results[0].value.data);
     if (results[1].status === 'fulfilled') setSettlements(results[1].value.data.data);
     setLoading(false);
-  }, []);
+  }, [search]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -192,7 +196,7 @@ export default function AdminReconciliationPage() {
               <thead>
                 <tr className="border-b border-[var(--border)] text-left text-xs text-[var(--muted-foreground)]">
                   <th className="pb-2 pr-4">Manifest ID</th>
-                  <th className="pb-2 pr-4">Auction ID</th>
+                  <th className="pb-2 pr-4">Açık Artırma / Kazanan</th>
                   <th className="pb-2 pr-4">Durum</th>
                   <th className="pb-2 pr-4">İlerleme</th>
                   <th className="pb-2 pr-4">Tarih</th>
@@ -203,7 +207,10 @@ export default function AdminReconciliationPage() {
                 {failedSettlements.map((s) => (
                   <tr key={s.manifest_id} className="border-b border-[var(--border)]">
                     <td className="py-3 pr-4 text-xs font-mono">{truncateId(s.manifest_id)}</td>
-                    <td className="py-3 pr-4 text-xs font-mono">{truncateId(s.auction_id)}</td>
+                    <td className="py-3 pr-4 text-xs">
+                      <div className="font-medium text-ink-900 max-w-[240px] truncate">{(s as any).auction_title || truncateId(s.auction_id)}</div>
+                      {(s as any).winner_name && <div className="text-slate-500">Kazanan: {(s as any).winner_name}</div>}
+                    </td>
                     <td className="py-3 pr-4">
                       <Badge className={manifestStatusColors[s.status] || ''}>
                         {manifestStatusLabels[s.status] || s.status}
@@ -238,7 +245,7 @@ export default function AdminReconciliationPage() {
               <thead>
                 <tr className="border-b border-[var(--border)] text-left text-xs text-[var(--muted-foreground)]">
                   <th className="pb-2 pr-4">Manifest ID</th>
-                  <th className="pb-2 pr-4">Auction ID</th>
+                  <th className="pb-2 pr-4">Açık Artırma / Kazanan</th>
                   <th className="pb-2 pr-4">İlerleme</th>
                   <th className="pb-2 pr-4">Tarih</th>
                 </tr>
@@ -247,7 +254,10 @@ export default function AdminReconciliationPage() {
                 {activeSettlements.map((s) => (
                   <tr key={s.manifest_id} className="border-b border-[var(--border)]">
                     <td className="py-3 pr-4 text-xs font-mono">{truncateId(s.manifest_id)}</td>
-                    <td className="py-3 pr-4 text-xs font-mono">{truncateId(s.auction_id)}</td>
+                    <td className="py-3 pr-4 text-xs">
+                      <div className="font-medium text-ink-900 max-w-[240px] truncate">{(s as any).auction_title || truncateId(s.auction_id)}</div>
+                      {(s as any).winner_name && <div className="text-slate-500">Kazanan: {(s as any).winner_name}</div>}
+                    </td>
                     <td className="py-3 pr-4">
                       <div className="flex items-center gap-2">
                         <div className="h-2 w-24 rounded-full bg-[var(--muted)] overflow-hidden">
@@ -270,13 +280,36 @@ export default function AdminReconciliationPage() {
 
       {/* All settlements */}
       <div>
-        <h2 className="text-lg font-semibold">Tüm Sonuçlandırmalar ({settlements.length})</h2>
+        <div className="flex flex-wrap items-center gap-3 mb-3">
+          <h2 className="text-lg font-semibold">Tüm Sonuçlandırmalar ({settlements.length})</h2>
+          <form
+            onSubmit={(e) => { e.preventDefault(); setSearch(searchInput); }}
+            className="ml-auto flex gap-2"
+          >
+            <input
+              type="text"
+              placeholder="Kullanıcı adı / e-posta / ihale başlığı..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="rounded-md border border-[var(--input)] bg-[var(--background)] px-3 py-1.5 text-sm w-72"
+            />
+            <Button type="submit" size="sm">Ara</Button>
+            {search && (
+              <Button
+                type="button" size="sm" variant="secondary"
+                onClick={() => { setSearch(''); setSearchInput(''); }}
+              >
+                Temizle
+              </Button>
+            )}
+          </form>
+        </div>
         <div className="mt-3 overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-[var(--border)] text-left text-xs text-[var(--muted-foreground)]">
                 <th className="pb-2 pr-4">Manifest</th>
-                <th className="pb-2 pr-4">Auction</th>
+                <th className="pb-2 pr-4">Açık Artırma / Kazanan</th>
                 <th className="pb-2 pr-4">Durum</th>
                 <th className="pb-2 pr-4">İlerleme</th>
                 <th className="pb-2 pr-4">Oluşturulma</th>
@@ -287,7 +320,10 @@ export default function AdminReconciliationPage() {
               {settlements.map((s) => (
                 <tr key={s.manifest_id} className="border-b border-[var(--border)]">
                   <td className="py-2 pr-4 text-xs font-mono">{truncateId(s.manifest_id)}</td>
-                  <td className="py-2 pr-4 text-xs font-mono">{truncateId(s.auction_id)}</td>
+                  <td className="py-2 pr-4 text-xs">
+                    <div className="font-medium text-ink-900 max-w-[240px] truncate">{(s as any).auction_title || truncateId(s.auction_id)}</div>
+                    {(s as any).winner_name && <div className="text-slate-500">{(s as any).winner_name}</div>}
+                  </td>
                   <td className="py-2 pr-4">
                     <Badge className={manifestStatusColors[s.status] || 'bg-gray-100 text-gray-700'}>
                       {manifestStatusLabels[s.status] || s.status}

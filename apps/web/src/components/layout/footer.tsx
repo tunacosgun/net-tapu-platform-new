@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useSiteSettings } from '@/hooks/use-site-settings';
 import { Phone, Mail, Instagram, Youtube, MessageCircle, MapPin, Clock, Shield, Award, Scale } from 'lucide-react';
 import { NetTapuLogo } from '@/components/ui/nettapu-logo';
+import { NewsletterSubscribe } from '@/components/newsletter-subscribe';
 
 const footerSections = [
   {
@@ -11,7 +12,7 @@ const footerSections = [
     links: [
       { href: '/parcels',           label: 'Arsalar' },
       { href: '/auctions',          label: 'Açık Artırmalar' },
-      { href: '/parcels?view=map',  label: 'Harita Görünümü' },
+      { href: '/harita',            label: 'Harita Görünümü' },
       { href: '/how-it-works',      label: 'Nasıl Çalışır?' },
       { href: '/campaigns',         label: 'Kampanyalar' },
     ],
@@ -174,6 +175,8 @@ export function Footer() {
                 </ul>
               </div>
             ))}
+
+            <NewsletterSubscribe />
           </div>
         </div>
       </div>
