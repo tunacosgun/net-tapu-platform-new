@@ -469,6 +469,17 @@ export default function LoginScreen() {
               </TouchableOpacity>
             </Animated.View>
 
+            {/* Üye olmadan devam et (guest mode) */}
+            <TouchableOpacity
+              onPress={() => navigation.navigate('MainTabs' as never)}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              style={{ marginTop: 14, alignSelf: 'center' }}
+            >
+              <Text style={{ color: c.textMuted, fontSize: 14, fontWeight: '600' }}>
+                Üye olmadan devam et
+              </Text>
+            </TouchableOpacity>
+
             {/* Trust Badges — fade in last */}
             <Animated.View
               entering={FadeIn.delay(TRUST_DELAY).duration(500)}

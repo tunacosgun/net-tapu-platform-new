@@ -24,6 +24,7 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 import apiClient from '../../api/client';
+import { Config } from '../../config/env';
 import { useTheme } from '../../theme';
 import { formatPrice, formatArea, resolveImageUrl, formatDate } from '../../lib/format';
 import { StatusBadge } from '../../components/ui';
@@ -142,11 +143,19 @@ export default function ParcelDetailScreen() {
     } catch { /* silently fail */ }
   }
 
+  function parcelWebUrl(): string {
+    if (!parcel) return Config.SITE_URL;
+    return `${Config.SITE_URL}/parcels/${parcel.id}`;
+  }
+
   async function handleShare() {
     if (!parcel) return;
     try {
+      const url = parcelWebUrl();
       await Share.share({
-        message: `${parcel.title}\n${parcel.city}, ${parcel.district}\n${formatPrice(parcel.price)}\n\nNetTapu'da görüntüle`,
+        message: `${parcel.title}\n${parcel.city}, ${parcel.district}\n${formatPrice(parcel.price)}\n\nİlan detayı: ${url}`,
+        url, // iOS only
+        title: parcel.title,
       });
     } catch { /* silently fail */ }
   }
@@ -154,13 +163,14 @@ export default function ParcelDetailScreen() {
   function handleWhatsApp() {
     if (!parcel) return;
     const phone = consultant?.phone || '';
+    const url = parcelWebUrl();
     const message = encodeURIComponent(
-      `Merhaba, NetTapu'daki ${parcel.title} (${parcel.listingId}) ilanı hakkında bilgi almak istiyorum.`
+      `Merhaba, NetTapu'daki ${parcel.title} (${parcel.listingId}) ilanı hakkında bilgi almak istiyorum.\n${url}`,
     );
-    const url = phone
+    const waUrl = phone
       ? `https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${message}`
       : `https://wa.me/?text=${message}`;
-    Linking.openURL(url).catch(() => Alert.alert('Hata', 'WhatsApp açılamadı.'));
+    Linking.openURL(waUrl).catch(() => Alert.alert('Hata', 'WhatsApp açılamadı.'));
   }
 
   function handleCall() {

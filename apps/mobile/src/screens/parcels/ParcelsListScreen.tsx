@@ -16,6 +16,7 @@ import { FlashList } from '@shopify/flash-list';
 import apiClient from '../../api/client';
 import { useTheme } from '../../theme';
 import { ParcelCard } from '../../components/parcel/ParcelCard';
+import { ParcelFilterSheet, type ParcelFilters } from '../../components/parcel/ParcelFilterSheet';
 import { SPRING } from '../../lib/animations';
 import type { RootStackParamList } from '../../navigation/RootNavigator';
 import type { Parcel, PaginatedResponse } from '../../types';
@@ -135,6 +136,8 @@ export default function ParcelsListScreen() {
   const [searchInput, setSearchInput] = useState('');
   const [sort, setSort] = useState<SortOption>('newest');
   const [hasLoaded, setHasLoaded] = useState(false);
+  const [filters, setFilters] = useState<ParcelFilters>({});
+  const [filterOpen, setFilterOpen] = useState(false);
 
   // Search bar focus animation
   const searchFocus = useSharedValue(0);
@@ -159,12 +162,16 @@ export default function ParcelsListScreen() {
         page: p, limit: 12, status: 'active', sortBy: sc.sortBy, sortOrder: sc.sortOrder,
       };
       if (search) params.search = search;
+      // Apply filters
+      for (const [k, v] of Object.entries(filters)) {
+        if (v && String(v).trim()) params[k] = v;
+      }
       const { data } = await apiClient.get<PaginatedResponse<Parcel>>('/parcels', { params });
       setParcels((prev) => reset ? data.data : [...prev, ...data.data]);
       setTotalPages(data.meta.totalPages);
       if (!hasLoaded) setHasLoaded(true);
     } catch {} finally { setLoading(false); }
-  }, [search, sort]);
+  }, [search, sort, filters]);
 
   useEffect(() => { setPage(1); fetchParcels(1, true); }, [fetchParcels]);
 
@@ -194,10 +201,10 @@ export default function ParcelsListScreen() {
       </Animated.View>
 
       {/* Search */}
-      <View style={styles.searchSection}>
+      <View style={[styles.searchSection, { flexDirection: 'row', alignItems: 'center' }]}>
         <Animated.View style={[
           styles.searchBar,
-          { backgroundColor: isDark ? c.surface : '#fff', shadowColor: isDark ? '#000' : '#94a3b8' },
+          { flex: 1, backgroundColor: isDark ? c.surface : '#fff', shadowColor: isDark ? '#000' : '#94a3b8' },
           searchBarAnimStyle,
         ]}>
           <Ionicons name="search-outline" size={18} color={c.textMuted} />
@@ -218,7 +225,41 @@ export default function ParcelsListScreen() {
             </TouchableOpacity>
           )}
         </Animated.View>
+        <TouchableOpacity
+          onPress={() => setFilterOpen(true)}
+          activeOpacity={0.7}
+          style={{
+            marginLeft: 10,
+            width: 44,
+            height: 44,
+            borderRadius: 12,
+            backgroundColor: isDark ? c.surface : '#fff',
+            alignItems: 'center',
+            justifyContent: 'center',
+            position: 'relative',
+          }}
+        >
+          <Ionicons name="options-outline" size={22} color={c.text} />
+          {Object.values(filters).filter((v) => v && String(v).trim()).length > 0 && (
+            <View style={{
+              position: 'absolute',
+              top: 6,
+              right: 6,
+              width: 10,
+              height: 10,
+              borderRadius: 5,
+              backgroundColor: c.primary,
+            }} />
+          )}
+        </TouchableOpacity>
       </View>
+
+      <ParcelFilterSheet
+        visible={filterOpen}
+        initial={filters}
+        onClose={() => setFilterOpen(false)}
+        onApply={(f) => { setFilters(f); setPage(1); }}
+      />
 
       {/* Sort */}
       <SortChipBar options={sortOptions} active={sort} onSelect={setSort} colors={c} isDark={isDark} />
