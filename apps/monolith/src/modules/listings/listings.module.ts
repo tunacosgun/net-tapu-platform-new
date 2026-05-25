@@ -25,6 +25,7 @@ import { ImageProcessingService } from './services/image-processing.service';
 import { PriceAlertService } from './services/price-alert.service';
 import { ReservationService } from './services/reservation.service';
 import { CategoryService } from './services/category.service';
+import { FavoriteDigestWorker } from './services/favorite-digest.worker';
 
 import { ParcelController } from './controllers/parcel.controller';
 import { ParcelMediaController } from './controllers/parcel-media.controller';
@@ -90,6 +91,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
     PriceAlertService,
     ReservationService,
     CategoryService,
+    FavoriteDigestWorker,
     {
       provide: PRICING_STRATEGY,
       useClass: BasePricingStrategy,

@@ -268,8 +268,21 @@ export function TkgmParselSorgula({ open, onClose }: Props) {
               </div>
             )}
 
+            {/* No result message */}
+            {result && rd && (rd as any).found === false && (
+              <div className="px-5 pb-5">
+                <div className="rounded-xl bg-amber-50 border border-amber-200 p-4">
+                  <p className="text-xs font-bold text-amber-800 mb-2">Parsel bulunamadı</p>
+                  <p className="text-xs text-amber-700 leading-relaxed">
+                    TKGM'de bu il/ilçe için <span className="font-mono font-bold">{ada}/{parsel}</span> bulunamadı.
+                    Lütfen ada/parsel numarasını ve il/ilçe bilgisini kontrol edin. TKGM verisi gecikmeli olabilir.
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Result info */}
-            {rd && (
+            {rd && (rd as any).found !== false && (
               <div className="px-5 pb-5 space-y-3">
                 <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-4">
                   <p className="text-xs font-bold text-emerald-700 mb-2.5 flex items-center gap-1.5">
