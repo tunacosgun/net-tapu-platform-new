@@ -30,9 +30,9 @@ import { AuctionStatus, SettlementManifestStatus } from '@nettapu/shared';
 interface ManifestListItem {
   manifest_id: string;
   auction_id: string;
-  auction_title: string | null;
-  winner_name: string | null;
-  winner_email: string | null;
+  auction_title?: string | null;
+  winner_name?: string | null;
+  winner_email?: string | null;
   status: string;
   items_total: number;
   items_acknowledged: number;
