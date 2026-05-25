@@ -84,6 +84,7 @@ const categoryNav = [
   { href: '/harita',               label: 'Harita',          icon: Map },
   { href: '/campaigns',            label: 'Kampanyalar',     icon: Star },
   { href: '/real-estate-guide',    label: 'Rehber',          icon: BookOpen },
+  { href: '/become-consultant',    label: 'Danışman Ol',     icon: Map },
 ];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
