@@ -95,6 +95,13 @@ export const parcelSchema = z.object({
   embedCode: z.string().max(5000).optional().or(z.literal('')),
   guideUrl: z.string().max(500).optional().or(z.literal('')),
   categoryId: z.string().optional().or(z.literal('')),
+  paftaNo: z.string().max(100).optional().or(z.literal('')),
+  kaksEmsal: z.string().max(100).optional().or(z.literal('')),
+  gabari: z.string().max(100).optional().or(z.literal('')),
+  creditEligible: z.enum(['yes', 'no', '']).optional(),
+  sellerType: z.enum(['sahibinden', 'emlakcidan', 'danisman', '']).optional(),
+  tradeAccepted: z.enum(['yes', 'no', '']).optional(),
+  hiddenFields: z.array(z.string()).optional(),
 });
 export type ParcelFormData = z.infer<typeof parcelSchema>;
 

@@ -3,6 +3,8 @@ import {
   IsNotEmpty,
   IsOptional,
   IsBoolean,
+  IsArray,
+  IsIn,
   MaxLength,
   Length,
   IsNumberString,
@@ -133,4 +135,37 @@ export class CreateParcelDto {
   @IsString()
   @IsOptional()
   categoryId?: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(100)
+  paftaNo?: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(100)
+  kaksEmsal?: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(100)
+  gabari?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  creditEligible?: boolean | null;
+
+  @IsString()
+  @IsOptional()
+  @IsIn(['sahibinden', 'emlakcidan', 'danisman'])
+  sellerType?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  tradeAccepted?: boolean | null;
+
+  @IsArray()
+  @IsOptional()
+  @IsString({ each: true })
+  hiddenFields?: string[];
 }

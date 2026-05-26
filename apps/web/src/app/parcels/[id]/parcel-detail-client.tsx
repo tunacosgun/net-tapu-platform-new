@@ -473,21 +473,39 @@ export default function ParcelDetailClient() {
     : (parcel.price && parcel.areaM2 ? Math.round(parseFloat(parcel.price) / parseFloat(parcel.areaM2)) : null);
 
   /* ─── Detail rows for the info table ─── */
+  const hidden: string[] = ((parcel as any).hiddenFields as string[] | undefined) ?? [];
+  const isHidden = (key: string) => hidden.includes(key);
+  const sellerTypeLabel = (st?: string | null) => st === 'emlakcidan' ? 'Emlakçıdan' : st === 'danisman' ? 'Danışmandan' : 'Sahibinden';
+
   const detailRows: { label: string; value: string }[] = [];
   const ilanNo = (() => { const id = parcel.id || ''; const hash = id.split('').reduce((a: number, c: string) => ((a * 31 + c.charCodeAt(0)) >>> 0), 5381); return String(hash % 9000000000 + 1000000000); })();
   detailRows.push({ label: 'İlan No', value: ilanNo });
-  if (parcel.listedAt && parcel.showListingDate !== false) detailRows.push({ label: 'İlan Tarihi', value: new Date(parcel.listedAt).toLocaleDateString('tr-TR', { day: '2-digit', month: 'long', year: 'numeric' }) });
-  detailRows.push({ label: 'Emlak Tipi', value: 'Satılık Arsa' });
-  if (parcel.zoningStatus) detailRows.push({ label: 'İmar Durumu', value: parcel.zoningStatus });
-  if (parcel.areaM2) detailRows.push({ label: 'm²', value: Number(parcel.areaM2).toLocaleString('tr-TR') });
-  if (pricePerM2) detailRows.push({ label: 'm² Fiyatı', value: formatPrice(String(pricePerM2)) });
-  if (parcel.ada) detailRows.push({ label: 'Ada No', value: parcel.ada });
-  if (parcel.parsel) detailRows.push({ label: 'Parsel No', value: parcel.parsel });
-  if (parcel.landType) detailRows.push({ label: 'Arazi Türü', value: parcel.landType });
+  if (parcel.listedAt && parcel.showListingDate !== false && !isHidden('listingDate')) {
+    detailRows.push({ label: 'İlan Tarihi', value: new Date(parcel.listedAt).toLocaleDateString('tr-TR', { day: '2-digit', month: 'long', year: 'numeric' }) });
+  }
+  if (!isHidden('emlakTipi')) detailRows.push({ label: 'Emlak Tipi', value: 'Satılık Arsa' });
+  if (parcel.zoningStatus && !isHidden('zoningStatus')) detailRows.push({ label: 'İmar Durumu', value: parcel.zoningStatus });
+  if (parcel.areaM2 && !isHidden('areaM2')) detailRows.push({ label: 'm²', value: Number(parcel.areaM2).toLocaleString('tr-TR') });
+  if (pricePerM2 && !isHidden('pricePerM2')) detailRows.push({ label: 'm² Fiyatı', value: formatPrice(String(pricePerM2)) });
+  if (parcel.ada && !isHidden('ada')) detailRows.push({ label: 'Ada No', value: parcel.ada });
+  if (parcel.parsel && !isHidden('parsel')) detailRows.push({ label: 'Parsel No', value: parcel.parsel });
+  if (!isHidden('paftaNo')) detailRows.push({ label: 'Pafta No', value: (parcel as any).paftaNo || 'Belirtilmemiş' });
+  if (!isHidden('kaksEmsal')) detailRows.push({ label: 'Kaks (Emsal)', value: (parcel as any).kaksEmsal || 'Belirtilmemiş' });
+  if (!isHidden('gabari')) detailRows.push({ label: 'Gabari', value: (parcel as any).gabari || 'Belirtilmemiş' });
+  if (!isHidden('creditEligible')) {
+    const ce = (parcel as any).creditEligible;
+    detailRows.push({ label: 'Krediye Uygunluk', value: ce === true ? 'Evet' : ce === false ? 'Hayır' : 'Belirtilmemiş' });
+  }
+  if (parcel.landType && !isHidden('landType')) detailRows.push({ label: 'Arazi Türü', value: parcel.landType });
   if (parcel.isAuctionEligible) detailRows.push({ label: 'Açık Artırma', value: 'Uygun' });
   if (parcel.isFeatured) detailRows.push({ label: 'Öne Çıkan', value: 'Evet' });
-  if (parcel.deedType) detailRows.push({ label: 'Tapu Türü', value: parcel.deedType });
-  if (parcel.vatRate !== undefined && parcel.vatRate !== null) detailRows.push({ label: 'KDV Oranı', value: `%${parcel.vatRate}` });
+  if (parcel.deedType && !isHidden('deedStatus')) detailRows.push({ label: 'Tapu Durumu', value: parcel.deedType });
+  if (parcel.vatRate !== undefined && parcel.vatRate !== null && !isHidden('vatRate')) detailRows.push({ label: 'KDV Oranı', value: `%${parcel.vatRate}` });
+  if (!isHidden('sellerType')) detailRows.push({ label: 'Kimden', value: sellerTypeLabel((parcel as any).sellerType) });
+  if (!isHidden('tradeAccepted')) {
+    const ta = (parcel as any).tradeAccepted;
+    detailRows.push({ label: 'Takas', value: ta === true ? 'Evet' : ta === false ? 'Hayır' : 'Belirtilmemiş' });
+  }
   detailRows.push({ label: 'Tapu Harcı', value: 'Alıcı Öder' });
 
   return (

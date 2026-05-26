@@ -42,6 +42,13 @@ export interface Parcel {
   vatRate?: string | number | null;
   roadAccess?: string | null;
   isCornerParcel?: boolean;
+  paftaNo?: string | null;
+  kaksEmsal?: string | null;
+  gabari?: string | null;
+  creditEligible?: boolean | null;
+  sellerType?: string | null;
+  tradeAccepted?: boolean | null;
+  hiddenFields?: string[];
   createdAt: string;
   updatedAt: string;
   favoriteCount?: number;

@@ -93,6 +93,27 @@ export class Parcel {
   @Column({ name: 'deed_type', type: 'varchar', length: 100, nullable: true })
   deedType!: string | null;
 
+  @Column({ name: 'pafta_no', type: 'varchar', length: 100, nullable: true })
+  paftaNo!: string | null;
+
+  @Column({ name: 'kaks_emsal', type: 'varchar', length: 100, nullable: true })
+  kaksEmsal!: string | null;
+
+  @Column({ name: 'gabari', type: 'varchar', length: 100, nullable: true })
+  gabari!: string | null;
+
+  @Column({ name: 'credit_eligible', type: 'boolean', nullable: true })
+  creditEligible!: boolean | null;
+
+  @Column({ name: 'seller_type', type: 'varchar', length: 50, nullable: true, default: 'sahibinden' })
+  sellerType!: string | null;
+
+  @Column({ name: 'trade_accepted', type: 'boolean', nullable: true })
+  tradeAccepted!: boolean | null;
+
+  @Column({ name: 'hidden_fields', type: 'jsonb', default: () => "'[]'::jsonb" })
+  hiddenFields!: string[];
+
   @Column({ name: 'vat_rate', type: 'numeric', precision: 5, scale: 2, nullable: true })
   vatRate!: string | null;
 

@@ -10,6 +10,7 @@ import { parcelSchema, type ParcelFormData } from '@/lib/validators';
 import { FormField, FormTextarea, FormCheckbox, FormSelect } from '@/components/form-field';
 import { FormattedPriceInput } from '@/components/formatted-price-input';
 import { CategoryPicker } from '@/components/category-picker';
+import { ParcelExtraFields } from '@/components/parcel-extra-fields';
 import { AddressGeocoder } from '@/components/address-geocoder';
 import { ImageUpload } from '@/components/image-upload';
 import { useRateLimit } from '@/hooks/use-rate-limit';
@@ -189,6 +190,13 @@ export default function AdminNewParcelPage() {
       description: data.description || undefined,
       showListingDate: showListingDate,
       vatRate: data.vatRate !== undefined && data.vatRate !== '' ? Number(data.vatRate) : 0,
+      paftaNo: data.paftaNo || undefined,
+      kaksEmsal: data.kaksEmsal || undefined,
+      gabari: data.gabari || undefined,
+      creditEligible: data.creditEligible === 'yes' ? true : data.creditEligible === 'no' ? false : null,
+      sellerType: data.sellerType || 'sahibinden',
+      tradeAccepted: data.tradeAccepted === 'yes' ? true : data.tradeAccepted === 'no' ? false : null,
+      hiddenFields: data.hiddenFields ?? [],
     };
 
     try {
@@ -457,6 +465,9 @@ export default function AdminNewParcelPage() {
             {...register('guideUrl')}
           />
         </div>
+
+        <ParcelExtraFields register={register} watch={watch} setValue={setValue} errors={errors as any} />
+
         <div className="flex gap-3">
           <Button type="submit" disabled={isSubmitting || isLimited}>
             {isLimited

@@ -83,6 +83,13 @@ export class ParcelService {
       embedCode: dto.embedCode ?? null,
       guideUrl: dto.guideUrl ?? null,
       categoryId: dto.categoryId ?? null,
+      paftaNo: dto.paftaNo ?? null,
+      kaksEmsal: dto.kaksEmsal ?? null,
+      gabari: dto.gabari ?? null,
+      creditEligible: dto.creditEligible ?? null,
+      sellerType: dto.sellerType ?? 'sahibinden',
+      tradeAccepted: dto.tradeAccepted ?? null,
+      hiddenFields: dto.hiddenFields ?? [],
       createdBy: userId,
     });
 

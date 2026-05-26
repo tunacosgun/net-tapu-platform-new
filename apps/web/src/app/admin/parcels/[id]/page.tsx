@@ -11,6 +11,7 @@ import { parcelSchema, type ParcelFormData } from '@/lib/validators';
 import { FormField, FormTextarea, FormCheckbox } from '@/components/form-field';
 import { FormattedPriceInput } from '@/components/formatted-price-input';
 import { CategoryPicker } from '@/components/category-picker';
+import { ParcelExtraFields } from '@/components/parcel-extra-fields';
 import { AddressGeocoder } from '@/components/address-geocoder';
 import { ImageUpload } from '@/components/image-upload';
 import { useRateLimit } from '@/hooks/use-rate-limit';
@@ -94,6 +95,13 @@ export default function AdminEditParcelPage() {
             vatRate: parcelData.vatRate !== undefined ? String(parcelData.vatRate) : '0',
             roadAccess: parcelData.roadAccess || '',
             isCornerParcel: Boolean(parcelData.isCornerParcel),
+            paftaNo: (parcelData as any).paftaNo || '',
+            kaksEmsal: (parcelData as any).kaksEmsal || '',
+            gabari: (parcelData as any).gabari || '',
+            creditEligible: (parcelData as any).creditEligible === true ? 'yes' : (parcelData as any).creditEligible === false ? 'no' : '',
+            sellerType: (parcelData as any).sellerType || 'sahibinden',
+            tradeAccepted: (parcelData as any).tradeAccepted === true ? 'yes' : (parcelData as any).tradeAccepted === false ? 'no' : '',
+            hiddenFields: (parcelData as any).hiddenFields || [],
           });
           setLoading(false);
         }
@@ -172,6 +180,13 @@ export default function AdminEditParcelPage() {
       assignedConsultant: selectedConsultant || null,
       // Convert numeric string fields to numbers for backend validation
       vatRate: data.vatRate !== undefined && data.vatRate !== '' ? Number(data.vatRate) : 0,
+      paftaNo: data.paftaNo || undefined,
+      kaksEmsal: data.kaksEmsal || undefined,
+      gabari: data.gabari || undefined,
+      creditEligible: data.creditEligible === 'yes' ? true : data.creditEligible === 'no' ? false : null,
+      sellerType: data.sellerType || 'sahibinden',
+      tradeAccepted: data.tradeAccepted === 'yes' ? true : data.tradeAccepted === 'no' ? false : null,
+      hiddenFields: data.hiddenFields ?? [],
     };
 
     try {
@@ -436,6 +451,8 @@ export default function AdminEditParcelPage() {
             {...register('guideUrl')}
           />
         </div>
+
+        <ParcelExtraFields register={register} watch={watch} setValue={setValue} errors={errors as any} />
 
         {/* Image Upload with existing images */}
         <div className="rounded-xl border border-[var(--border)] bg-[var(--background)] p-6">
