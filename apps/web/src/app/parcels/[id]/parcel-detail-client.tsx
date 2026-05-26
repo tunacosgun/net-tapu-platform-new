@@ -499,7 +499,7 @@ export default function ParcelDetailClient() {
   if (parcel.landType && !isHidden('landType')) detailRows.push({ label: 'Arazi Türü', value: parcel.landType });
   if (parcel.isAuctionEligible) detailRows.push({ label: 'Açık Artırma', value: 'Uygun' });
   if (parcel.isFeatured) detailRows.push({ label: 'Öne Çıkan', value: 'Evet' });
-  if (parcel.deedType && !isHidden('deedStatus')) detailRows.push({ label: 'Tapu Durumu', value: parcel.deedType });
+  if (!isHidden('deedStatus')) detailRows.push({ label: 'Tapu Durumu', value: parcel.deedType || 'Belirtilmemiş' });
   if (parcel.vatRate !== undefined && parcel.vatRate !== null && !isHidden('vatRate')) detailRows.push({ label: 'KDV Oranı', value: `%${parcel.vatRate}` });
   if (!isHidden('sellerType')) detailRows.push({ label: 'Kimden', value: sellerTypeLabel((parcel as any).sellerType) });
   if (!isHidden('tradeAccepted')) {
