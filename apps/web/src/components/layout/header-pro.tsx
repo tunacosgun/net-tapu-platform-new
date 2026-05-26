@@ -72,7 +72,7 @@ const DEFAULT_SUPPORT_ITEMS: NavDropdownItem[] = [
   { label: 'Gayrimenkul Rehberi',  href: '/real-estate-guide',   description: 'Kapsamlı yatırım rehberi',  icon: 'book' },
   { label: 'Satış Sonrası',        href: '/post-sale',           description: 'Destek süreçleri',          icon: 'headphones' },
   { label: 'Yasal Bilgiler',       href: '/legal',               description: 'Kullanım koşulları & KVKK', icon: 'scale' },
-  { label: 'Cayma Hakkı',          href: '/cancellation',        description: 'İptal ve iade politikası',  icon: 'undo' },
+  { label: 'Cayma Hakkı',          href: '/withdrawal-rights',   description: 'İptal ve iade politikası',  icon: 'undo' },
   { label: 'İletişim',             href: '/contact',             description: 'Bize ulaşın',               icon: 'mail' },
 ];
 

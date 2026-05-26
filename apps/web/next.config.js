@@ -5,6 +5,12 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 const nextConfig = {
   transpilePackages: ['@nettapu/shared'],
 
+  async redirects() {
+    return [
+      { source: '/cancellation', destination: '/withdrawal-rights', permanent: true },
+    ];
+  },
+
   async rewrites() {
     const apiTarget = process.env.API_URL || 'http://localhost:3000';
     const auctionTarget = process.env.AUCTION_API_URL || 'http://localhost:3001';
