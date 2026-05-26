@@ -46,6 +46,16 @@ export class ParcelController {
     return this.parcelService.findAll(query);
   }
 
+  @Get('stats/by-city')
+  async statsByCity() {
+    return this.parcelService.getStatsByCity();
+  }
+
+  @Get('stats/by-district')
+  async statsByDistrict(@Query('city') city: string) {
+    return this.parcelService.getStatsByDistrict(city || '');
+  }
+
   @Get('featured')
   async findFeatured() {
     return this.parcelService.findAll({

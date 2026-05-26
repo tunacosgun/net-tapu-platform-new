@@ -481,8 +481,6 @@ export default function ParcelDetailClient() {
   if (parcel.zoningStatus) detailRows.push({ label: 'İmar Durumu', value: parcel.zoningStatus });
   if (parcel.areaM2) detailRows.push({ label: 'm²', value: Number(parcel.areaM2).toLocaleString('tr-TR') });
   if (pricePerM2) detailRows.push({ label: 'm² Fiyatı', value: formatPrice(String(pricePerM2)) });
-  if (parcel.ada) detailRows.push({ label: 'Ada No', value: parcel.ada });
-  if (parcel.parsel) detailRows.push({ label: 'Parsel No', value: parcel.parsel });
   if (parcel.landType) detailRows.push({ label: 'Arazi Türü', value: parcel.landType });
   if (parcel.isAuctionEligible) detailRows.push({ label: 'Açık Artırma', value: 'Uygun' });
   if (parcel.isFeatured) detailRows.push({ label: 'Öne Çıkan', value: 'Evet' });

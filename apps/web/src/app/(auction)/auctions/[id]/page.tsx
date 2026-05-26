@@ -568,8 +568,12 @@ export default function AuctionDetailPage() {
               <p className="text-sm font-semibold text-[var(--foreground)]">Teklif Ver</p>
               <form onSubmit={handleBid} className="flex gap-2">
                 <input
-                  type="number" step="any" min="0" placeholder="Teklif tutarı (TRY)"
-                  value={bidAmount} onChange={(e) => setBidAmount(e.target.value)}
+                  type="text" inputMode="numeric" placeholder="Teklif tutarı (₺)"
+                  value={bidAmount ? Number(bidAmount).toLocaleString('tr-TR') : ''}
+                  onChange={(e) => {
+                    const digits = e.target.value.replace(/\D/g, '');
+                    setBidAmount(digits);
+                  }}
                   className="flex-1 rounded-xl border border-[var(--input)] bg-[var(--background)] px-4 py-3 text-lg font-mono shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
                 />
                 <button type="submit" disabled={!bidAmount} className="rounded-xl bg-[var(--brand)] hover:bg-brand-700 disabled:opacity-40 disabled:cursor-not-allowed px-6 py-3 text-base font-bold text-white transition-colors whitespace-nowrap shadow-sm">

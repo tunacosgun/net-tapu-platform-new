@@ -4,10 +4,23 @@ import { useAuctionStore } from '@/stores/auction-store';
 import { useConnectionStore } from '@/stores/connection-store';
 import type { ServerMessage } from '@nettapu/shared/dist/types/auction-ws.types';
 
-const WS_URL =
-  typeof window !== 'undefined'
-    ? (process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3001')
-    : '';
+function resolveWsUrl(): string {
+  if (typeof window === 'undefined') return '';
+  const envUrl = process.env.NEXT_PUBLIC_WS_URL;
+  // Use env URL only when it actually matches current origin (or local dev).
+  // Otherwise fall back to same-origin so nginx routes /ws/auction correctly
+  // in production regardless of build-time env mistakes.
+  if (envUrl) {
+    try {
+      const u = new URL(envUrl);
+      if (window.location.hostname === 'localhost' && u.hostname === 'localhost') return envUrl;
+      if (u.host === window.location.host) return envUrl;
+    } catch { /* ignore */ }
+  }
+  return window.location.origin;
+}
+
+const WS_URL = resolveWsUrl();
 
 let socket: Socket | null = null;
 let currentAuctionId: string | null = null;
