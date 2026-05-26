@@ -481,6 +481,8 @@ export default function ParcelDetailClient() {
   if (parcel.zoningStatus) detailRows.push({ label: 'İmar Durumu', value: parcel.zoningStatus });
   if (parcel.areaM2) detailRows.push({ label: 'm²', value: Number(parcel.areaM2).toLocaleString('tr-TR') });
   if (pricePerM2) detailRows.push({ label: 'm² Fiyatı', value: formatPrice(String(pricePerM2)) });
+  if (parcel.ada) detailRows.push({ label: 'Ada No', value: parcel.ada });
+  if (parcel.parsel) detailRows.push({ label: 'Parsel No', value: parcel.parsel });
   if (parcel.landType) detailRows.push({ label: 'Arazi Türü', value: parcel.landType });
   if (parcel.isAuctionEligible) detailRows.push({ label: 'Açık Artırma', value: 'Uygun' });
   if (parcel.isFeatured) detailRows.push({ label: 'Öne Çıkan', value: 'Evet' });
@@ -613,18 +615,6 @@ export default function ParcelDetailClient() {
           {/* TKGM Box */}
           {(parcel.ada || parcel.city) && (
             <div className="border-x border-b border-slate-200 bg-slate-50 px-4 py-3 print:hidden">
-              {parcel.ada && parcel.parsel && (
-                <div className="flex items-center gap-3 text-sm mb-2">
-                  <span className="font-semibold text-slate-700">Ada: {parcel.ada} / Parsel: {parcel.parsel}</span>
-                  <button
-                    onClick={() => { navigator.clipboard.writeText(`Ada: ${parcel.ada}, Parsel: ${parcel.parsel}`); }}
-                    className="rounded bg-white border border-slate-200 px-2 py-0.5 text-[10px] text-slate-500 hover:bg-slate-100 transition-colors"
-                    title="Kopyala"
-                  >
-                    Kopyala
-                  </button>
-                </div>
-              )}
               <div className="flex flex-wrap gap-2">
                 <a href={tkgmBaseUrl} target="_blank" rel="noopener noreferrer"
                   className="flex items-center gap-1.5 rounded-lg bg-white border border-slate-200 px-3 py-1.5 text-xs font-medium text-emerald-600 hover:bg-emerald-50 transition-all duration-150 cursor-pointer"
