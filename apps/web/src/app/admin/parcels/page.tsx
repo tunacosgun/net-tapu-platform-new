@@ -58,7 +58,7 @@ export default function AdminParcelsPage() {
   const [maxPriceFilter, setMaxPriceFilter] = useState('');
   const [sortBy, setSortBy] = useState<'createdAt' | 'price' | 'areaM2'>('createdAt');
   const [sortOrder, setSortOrder] = useState<'ASC' | 'DESC'>('DESC');
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(true);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showBulkPrice, setShowBulkPrice] = useState(false);
   const [showImport, setShowImport] = useState(false);

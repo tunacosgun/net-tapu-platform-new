@@ -450,7 +450,9 @@ export default function ParcelDetailClient() {
 
   const status = parcelStatusConfig(parcel.status);
   const whatsappNumber = siteSettings.whatsapp_number || '905000000000';
-  const parcelUrl = `https://nettapu-demo.tunasoft.tech/parcels/${parcel.id}`;
+  const parcelUrl = (typeof window !== 'undefined'
+    ? `${window.location.origin}/parcels/${parcel.id}`
+    : `https://nettapu-2.tunasoft.tech/parcels/${parcel.id}`);
   const wpLines: string[] = [];
   wpLines.push('Merhaba,');
   wpLines.push('Aşağıdaki ilan hakkında detaylı bilgi almak istiyorum.');

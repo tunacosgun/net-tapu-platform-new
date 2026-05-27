@@ -10,7 +10,7 @@ import {
   LayoutDashboard, BarChart3, Users, ShieldBan, Map, Gavel,
   CreditCard, Landmark, ClipboardList, Phone, CalendarDays,
   HandCoins, FileText, HelpCircle, Trophy, MessageSquare,
-  Target, Handshake, Settings, Bell, Menu, X, ExternalLink, BookOpen, LogOut,
+  Target, Handshake, Settings, Bell, Menu, X, ExternalLink, BookOpen, LogOut, Mail,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -48,6 +48,7 @@ const navSections: Array<{
     { href: '/admin/contacts',     label: 'İletişim Talepleri', icon: Phone },
     { href: '/admin/appointments', label: 'Randevular',         icon: CalendarDays },
     { href: '/admin/offers',       label: 'Teklifler',          icon: HandCoins },
+    { href: '/admin/newsletter',   label: 'E-Bülten Aboneleri', icon: Mail },
   ]},
   { title: 'İçerik', items: [
     { href: '/admin/pages',               label: 'Sayfalar',          icon: FileText },

@@ -41,6 +41,9 @@ export class TkgmController {
     try {
       return await this.tkgmService.lookup(dto);
     } catch (err) {
+      // Log full stack so we can diagnose persistent 500s in monolith logs.
+      // eslint-disable-next-line no-console
+      console.error('[tkgm] safeLookup caught:', err instanceof Error ? err.stack : err);
       const message = err instanceof Error ? err.message : 'TKGM sorgusu başarısız';
       return {
         responseData: {
