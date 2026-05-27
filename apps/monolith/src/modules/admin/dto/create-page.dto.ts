@@ -52,4 +52,8 @@ export class CreatePageDto {
   @Min(0)
   @IsOptional()
   sortOrder?: number;
+
+  @IsEnum(['draft', 'published', 'archived'])
+  @IsOptional()
+  status?: string;
 }

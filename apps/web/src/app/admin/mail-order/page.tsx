@@ -6,6 +6,7 @@ import apiClient from '@/lib/api-client';
 import { showApiError } from '@/components/api-error-toast';
 import { PageHeader, Button } from '@/components/ui';
 import { CreditCard, ShieldAlert, CheckCircle2 } from 'lucide-react';
+import { EntityPicker } from '@/components/entity-picker';
 
 function Banner({
   variant,
@@ -168,11 +169,18 @@ export default function AdminMailOrderPage() {
         </h3>
 
         <div className="grid grid-cols-2 gap-4">
-          <Field
-            label="Kullanıcı UUID"
+          <EntityPicker
+            label="Kullanıcı"
             required
             value={form.userId}
             onChange={(v) => update('userId', v)}
+            searchUrl="/admin/users"
+            placeholder="Ad, e-posta veya telefon ile ara…"
+            toItem={(u: any) => ({
+              id: u.id,
+              label: [u.firstName, u.lastName].filter(Boolean).join(' ') || u.email || u.id,
+              sub: u.email || u.phone || '',
+            })}
           />
           <Field
             label="Tutar (TRY)"
@@ -185,10 +193,17 @@ export default function AdminMailOrderPage() {
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-          <Field
-            label="Parsel UUID (opsiyonel)"
+          <EntityPicker
+            label="Parsel (opsiyonel)"
             value={form.parcelId}
             onChange={(v) => update('parcelId', v)}
+            searchUrl="/admin/parcels"
+            placeholder="Başlık veya şehir ile ara…"
+            toItem={(p: any) => ({
+              id: p.id,
+              label: p.title || p.listingId || p.id,
+              sub: [p.city, p.district].filter(Boolean).join(' / '),
+            })}
           />
           <Field
             label="Açık Artırma UUID (opsiyonel)"

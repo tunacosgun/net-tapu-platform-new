@@ -14,12 +14,22 @@ import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { JwtPayload } from '../../auth/auth.service';
 import { AuditInterceptor } from '../interceptors/audit.interceptor';
 import { AdminBroadcastService } from '../services/admin-broadcast.service';
+import { IsArray, IsIn, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
 
 class BroadcastDto {
+  @IsString() @MaxLength(500)
   subject!: string;
+
+  @IsString() @MaxLength(5000)
   message!: string;
-  channels!: string[]; // ['email', 'sms', 'push']
-  audience!: string; // 'all' | 'verified' | 'specific'
+
+  @IsArray() @IsString({ each: true })
+  channels!: string[];
+
+  @IsIn(['all', 'verified', 'specific'])
+  audience!: string;
+
+  @IsOptional() @IsUUID()
   targetUserId?: string;
 }
 

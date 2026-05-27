@@ -34,8 +34,9 @@ export class PageService {
       metaTitle: dto.metaTitle ?? null,
       metaDescription: dto.metaDescription ?? null,
       sortOrder: dto.sortOrder ?? 0,
-      status: 'draft',
+      status: dto.status ?? 'draft',
       createdBy: userId,
+      publishedAt: dto.status === 'published' ? new Date() : null,
     });
 
     const saved = await this.pageRepo.save(page);
