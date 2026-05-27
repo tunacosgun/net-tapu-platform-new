@@ -674,6 +674,19 @@ export default function AdminParcelsPage() {
       {showBulkPrice && (
         <BulkPriceModal
           selectedIds={[...selectedIds]}
+          filters={{
+            city: cityFilter || undefined,
+            district: districtFilter || undefined,
+            neighborhood: neighborhoodFilter || undefined,
+            status: statusFilter || undefined,
+            zoningStatus: zoningFilter || undefined,
+            parcelType: parcelTypeFilter || undefined,
+            minPrice: minPriceFilter ? Number(minPriceFilter) : undefined,
+            maxPrice: maxPriceFilter ? Number(maxPriceFilter) : undefined,
+            minArea: minAreaFilter ? Number(minAreaFilter) : undefined,
+            maxArea: maxAreaFilter ? Number(maxAreaFilter) : undefined,
+          }}
+          totalMatching={data?.meta?.total ?? 0}
           onClose={() => setShowBulkPrice(false)}
           onSuccess={() => {
             setShowBulkPrice(false);
@@ -699,10 +712,14 @@ export default function AdminParcelsPage() {
 /* ═══ Bulk Price Update Modal ═══ */
 function BulkPriceModal({
   selectedIds,
+  filters,
+  totalMatching,
   onClose,
   onSuccess,
 }: {
   selectedIds: string[];
+  filters: Record<string, string | number | undefined>;
+  totalMatching: number;
   onClose: () => void;
   onSuccess: () => void;
 }) {
@@ -710,18 +727,28 @@ function BulkPriceModal({
   const [roundTo, setRoundTo] = useState('1000');
   const [saving, setSaving] = useState(false);
   const [result, setResult] = useState<string | null>(null);
+  // 'selected' = only checked rows; 'filtered' = all rows matching current filters
+  const [mode, setMode] = useState<'selected' | 'filtered'>(selectedIds.length > 0 ? 'selected' : 'filtered');
+
+  const activeFilters = Object.entries(filters).filter(([, v]) => v !== undefined && v !== '');
+  const target = mode === 'selected' ? selectedIds.length : totalMatching;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!percentage) return;
+    if (!percentage || target === 0) return;
     setSaving(true);
     try {
-      await apiClient.post('/admin/parcels/bulk-price-update', {
-        parcelIds: selectedIds,
+      const payload: Record<string, unknown> = {
         percentageIncrease: parseFloat(percentage),
         roundUpTo: parseInt(roundTo, 10),
-      });
-      setResult(`${selectedIds.length} arsa fiyatı güncellendi.`);
+      };
+      if (mode === 'selected') {
+        payload.parcelIds = selectedIds;
+      } else {
+        payload.filters = Object.fromEntries(activeFilters);
+      }
+      await apiClient.post('/admin/parcels/bulk-price-update', payload);
+      setResult(`${target} arsa fiyatı güncellendi.`);
       setTimeout(onSuccess, 1500);
     } catch (err) {
       showApiError(err);
@@ -737,9 +764,37 @@ function BulkPriceModal({
     >
       <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-2xl border border-slate-200">
         <h3 className="text-lg font-semibold text-slate-900">Toplu Fiyat Güncelleme</h3>
-        <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-          {selectedIds.length} arsa için fiyat güncellemesi yapın.
-        </p>
+
+        {/* Target selection */}
+        <div className="mt-3 space-y-2">
+          <label className={`flex items-start gap-2 p-2 rounded border cursor-pointer ${mode === 'selected' ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200'} ${selectedIds.length === 0 ? 'opacity-50' : ''}`}>
+            <input
+              type="radio"
+              checked={mode === 'selected'}
+              onChange={() => setMode('selected')}
+              disabled={selectedIds.length === 0}
+              className="mt-0.5"
+            />
+            <div className="text-sm">
+              <div className="font-semibold">Seçili arsalar ({selectedIds.length})</div>
+              <div className="text-xs text-slate-500">Sadece listede işaretlediğiniz arsalar.</div>
+            </div>
+          </label>
+          <label className={`flex items-start gap-2 p-2 rounded border cursor-pointer ${mode === 'filtered' ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200'}`}>
+            <input
+              type="radio"
+              checked={mode === 'filtered'}
+              onChange={() => setMode('filtered')}
+              className="mt-0.5"
+            />
+            <div className="text-sm">
+              <div className="font-semibold">Filtreye uyan TÜM arsalar ({totalMatching})</div>
+              <div className="text-xs text-slate-500">
+                {activeFilters.length === 0 ? 'Tüm arsalar — filtre eklemek için sayfada filtre kullanın.' : `Aktif filtreler: ${activeFilters.map(([k, v]) => `${k}=${v}`).join(', ')}`}
+              </div>
+            </div>
+          </label>
+        </div>
 
         {result ? (
           <Alert variant="success" className="mt-4">
