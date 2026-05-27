@@ -467,11 +467,17 @@ export default function ParcelDetailClient() {
   wpLines.push(parcelUrl);
   const whatsappMessage = encodeURIComponent(wpLines.join('\n'));
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${whatsappMessage}`;
-  // TKGM parselsorgu uses its own internal ilçe codes (e.g. 207685) that
-  // are different from our geocoding ilceId (608) — building a deep-link with
-  // the wrong code produces "Kayıt Bulunamadı". Open the search form instead
-  // and let the clipboard fallback supply the values.
-  const tkgmBaseUrl = 'https://parselsorgu.tkgm.gov.tr';
+  // TKGM parselsorgu deep-link format: /#ara/idari/{mahalleId}/{ada}/{parsel}/{ts}
+  // We resolve mahalleId in the backend (tkgm.service.ts) by calling TKGM's own
+  // mahalleListe endpoint and matching by name, then store it in tkgm_cache.
+  const tkgmBaseUrl = (() => {
+    const home = 'https://parselsorgu.tkgm.gov.tr';
+    const mahalleId = (parcel as any)?.tkgmCache?.responseData?.tkgmMahalleId;
+    if (mahalleId && parcel.ada && parcel.parsel) {
+      return `${home}/#ara/idari/${mahalleId}/${parcel.ada}/${parcel.parsel}/${Date.now()}`;
+    }
+    return home;
+  })();
   const pricePerM2 = parcel.pricePerM2
     ? Math.round(parseFloat(parcel.pricePerM2))
     : (parcel.price && parcel.areaM2 ? Math.round(parseFloat(parcel.price) / parseFloat(parcel.areaM2)) : null);
