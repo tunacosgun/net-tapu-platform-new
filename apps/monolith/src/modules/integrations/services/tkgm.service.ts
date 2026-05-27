@@ -244,33 +244,13 @@ export class TkgmService {
         } catch { /* ignore parse errors */ }
       }
 
-      // Look up TKGM mahalle (neighborhood) ID so the frontend can build deep
-      // links of the form parselsorgu.tkgm.gov.tr/#ara/idari/{mahalleId}/{ada}/{parsel}
-      // (TKGM site routes by mahalle, not by ilçe — the value we already have).
-      let tkgmMahalleId: number | null = null;
-      const ilceId = properties?.ilceId;
-      if (ilceId && foundMahalle) {
-        try {
-          const mahalleRes = await fetch(
-            `https://cbsapi.tkgm.gov.tr/megsiswebapi.v3.1/api/idariYapi/mahalleListe/${ilceId}`,
-            { signal: AbortSignal.timeout(5000) },
-          );
-          if (mahalleRes.ok) {
-            const mahalleJson: any = await mahalleRes.json();
-            const features: any[] = mahalleJson?.features ?? [];
-            const norm = (s: string) => s
-              .toLocaleLowerCase('tr')
-              .replace(/ı/g, 'i').replace(/ö/g, 'o').replace(/ü/g, 'u')
-              .replace(/ş/g, 's').replace(/ç/g, 'c').replace(/ğ/g, 'g')
-              .replace(/\b(köyü|mahallesi|mah\.|mah)\b/g, '')
-              .replace(/[^a-z0-9]+/g, '')
-              .trim();
-            const target = norm(String(foundMahalle));
-            const match = features.find((f) => norm(String(f?.properties?.text ?? '')) === target);
-            if (match?.properties?.id) tkgmMahalleId = Number(match.properties.id);
-          }
-        } catch { /* non-critical — deep-link just falls back to homepage */ }
-      }
+      // TKGM ham yanıtında parselin bağlı olduğu mahalle ID'si zaten geliyor
+      // (rawProperties.mahalleId). Frontend, parselsorgu.tkgm.gov.tr/#ara/idari/
+      // {mahalleId}/{ada}/{parsel} deep-link'ini bu değerden kuruyor.
+      const rawMahalleId = (properties as any)?.mahalleId;
+      const tkgmMahalleId: number | null = rawMahalleId != null && !isNaN(Number(rawMahalleId))
+        ? Number(rawMahalleId)
+        : null;
 
       responseData = {
         source: 'tkgm',
