@@ -49,6 +49,9 @@ export interface Parcel {
   sellerType?: string | null;
   tradeAccepted?: boolean | null;
   hiddenFields?: string[];
+  guideUrl?: string | null;
+  videoUrl?: string | null;
+  embedCode?: string | null;
   createdAt: string;
   updatedAt: string;
   favoriteCount?: number;

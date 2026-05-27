@@ -483,8 +483,8 @@ export default function AdminNewParcelPage() {
             {...register('embedCode')}
           />
           <FormField
-            label="Kent Rehberi Sayfa Bağlantısı"
-            placeholder="https://nettapu.tunasoft.tech/rehber/..."
+            label="📖 Kent Rehberi Linki (E-Kent / Kent Rehberi butonunun gideceği URL)"
+            placeholder="https://kentrehberi.istanbul.bel.tr/?ada=1042&parsel=15  (boş bırakırsanız belediye sitesinin ana sayfasına yönlendirir)"
             error={errors.guideUrl?.message}
             {...register('guideUrl')}
           />

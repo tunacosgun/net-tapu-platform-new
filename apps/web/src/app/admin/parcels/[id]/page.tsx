@@ -445,7 +445,7 @@ export default function AdminEditParcelPage() {
             {...register('embedCode')}
           />
           <FormField
-            label="Kent Rehberi Sayfa Bağlantısı"
+            label="📖 Kent Rehberi Linki (E-Kent / Kent Rehberi butonunun gideceği URL)"
             placeholder="https://nettapu.tunasoft.tech/rehber/..."
             error={errors.guideUrl?.message}
             {...register('guideUrl')}

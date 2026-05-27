@@ -29,6 +29,7 @@ import {
   ReferralController,
   AdminReferralController,
 } from './controllers/referral.controller';
+import { NewsletterController } from './controllers/newsletter.controller';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import {
     DealerController,
     ReferralController,
     AdminReferralController,
+    NewsletterController,
   ],
   providers: [
     ContactRequestService,

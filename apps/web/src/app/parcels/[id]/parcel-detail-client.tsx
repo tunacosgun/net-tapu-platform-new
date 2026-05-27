@@ -666,8 +666,10 @@ export default function ParcelDetailClient() {
                   <ExternalLink className="h-3.5 w-3.5" />
                   TKGM Parsel Sorgu
                 </button>
-                {parcel.city && (
-                  <a href={`https://kentrehberi.${parcel.city.toLocaleLowerCase('tr').replace(/ı/g,'i').replace(/ö/g,'o').replace(/ü/g,'u').replace(/ş/g,'s').replace(/ç/g,'c').replace(/ğ/g,'g')}.bel.tr`} target="_blank" rel="noopener noreferrer"
+                {(parcel.guideUrl || parcel.city) && (
+                  <a
+                    href={parcel.guideUrl || `https://kentrehberi.${parcel.city!.toLocaleLowerCase('tr').replace(/ı/g,'i').replace(/ö/g,'o').replace(/ü/g,'u').replace(/ş/g,'s').replace(/ç/g,'c').replace(/ğ/g,'g')}.bel.tr`}
+                    target="_blank" rel="noopener noreferrer"
                     className="flex items-center gap-1.5 rounded-lg bg-white border border-slate-200 px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50 transition-all duration-150 cursor-pointer"
                   >
                     <ExternalLink className="h-3.5 w-3.5" />

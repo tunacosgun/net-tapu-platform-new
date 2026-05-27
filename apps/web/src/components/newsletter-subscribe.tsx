@@ -24,13 +24,7 @@ export function NewsletterSubscribe() {
     }
     setStatus('submitting');
     try {
-      await apiClient.post('/crm/contact-requests', {
-        type: 'general',
-        name: 'Bülten Abonesi',
-        phone: '-',
-        email,
-        message: `[MAİL ABONELİĞİ] Site footer'ından bülten aboneliği talebi: ${email}`,
-      });
+      await apiClient.post('/newsletter/subscribe', { email, source: 'footer' });
       setStatus('success');
       setEmail('');
       setTimeout(() => setStatus('idle'), 4000);
