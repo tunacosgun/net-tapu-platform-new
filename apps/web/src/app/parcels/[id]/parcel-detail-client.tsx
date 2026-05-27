@@ -646,12 +646,28 @@ export default function ParcelDetailClient() {
           {(parcel.ada || parcel.city) && (
             <div className="border-x border-b border-slate-200 bg-slate-50 px-4 py-3 print:hidden">
               <div className="flex flex-wrap gap-2">
-                <a href={tkgmBaseUrl} target="_blank" rel="noopener noreferrer"
+                <button
+                  type="button"
+                  onClick={async () => {
+                    // Copy Ada/Parsel/Il/Ilce so user can paste into TKGM's form
+                    // (their site uses internal ilce codes we don't have, so a
+                    // direct deep-link is unreliable — clipboard + opening the
+                    // search form is the most robust path).
+                    const text = [
+                      `İl: ${parcel.city || ''}`,
+                      `İlçe: ${parcel.district || ''}`,
+                      `Ada: ${parcel.ada || ''}`,
+                      `Parsel: ${parcel.parsel || ''}`,
+                    ].join('  •  ');
+                    try { await navigator.clipboard.writeText(text); } catch { /* ignore */ }
+                    window.open(tkgmBaseUrl, '_blank', 'noopener,noreferrer');
+                  }}
+                  title="Bilgiler panoya kopyalanır, sonra TKGM formuna yapıştırın"
                   className="flex items-center gap-1.5 rounded-lg bg-white border border-slate-200 px-3 py-1.5 text-xs font-medium text-emerald-600 hover:bg-emerald-50 transition-all duration-150 cursor-pointer"
                 >
                   <ExternalLink className="h-3.5 w-3.5" />
                   TKGM Parsel Sorgu
-                </a>
+                </button>
                 {parcel.city && (
                   <a href={`https://kentrehberi.${parcel.city.toLocaleLowerCase('tr').replace(/ı/g,'i').replace(/ö/g,'o').replace(/ü/g,'u').replace(/ş/g,'s').replace(/ç/g,'c').replace(/ğ/g,'g')}.bel.tr`} target="_blank" rel="noopener noreferrer"
                     className="flex items-center gap-1.5 rounded-lg bg-white border border-slate-200 px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50 transition-all duration-150 cursor-pointer"
