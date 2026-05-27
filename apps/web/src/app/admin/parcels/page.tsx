@@ -56,6 +56,8 @@ export default function AdminParcelsPage() {
   const [maxAreaFilter, setMaxAreaFilter] = useState('');
   const [minPriceFilter, setMinPriceFilter] = useState('');
   const [maxPriceFilter, setMaxPriceFilter] = useState('');
+  const [sortBy, setSortBy] = useState<'createdAt' | 'price' | 'areaM2'>('createdAt');
+  const [sortOrder, setSortOrder] = useState<'ASC' | 'DESC'>('DESC');
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showBulkPrice, setShowBulkPrice] = useState(false);
@@ -70,8 +72,8 @@ export default function AdminParcelsPage() {
       const params: Record<string, string | number> = {
         page,
         limit: 20,
-        sortBy: 'createdAt',
-        sortOrder: 'DESC',
+        sortBy,
+        sortOrder,
       };
       if (statusFilter) params.status = statusFilter;
       if (search) params.search = search;
@@ -95,6 +97,7 @@ export default function AdminParcelsPage() {
     page, statusFilter, search,
     cityFilter, districtFilter, neighborhoodFilter, parcelTypeFilter,
     zoningFilter, minAreaFilter, maxAreaFilter, minPriceFilter, maxPriceFilter,
+    sortBy, sortOrder,
   ]);
 
   useEffect(() => {
@@ -448,6 +451,39 @@ export default function AdminParcelsPage() {
         >
           {showAdvancedFilters ? 'Filtreleri Gizle' : 'Gelişmiş Filtreler'}
         </Button>
+
+        {/* Sort controls */}
+        <div className="flex items-center gap-1 rounded-md border border-slate-200 bg-slate-100 p-1">
+          <span className="px-2 text-xs font-semibold text-slate-500">Sırala:</span>
+          <button
+            type="button"
+            onClick={() => { setSortBy('price'); setSortOrder('ASC'); setPage(1); }}
+            className={`px-2.5 py-1 rounded text-xs font-semibold transition-colors ${sortBy === 'price' && sortOrder === 'ASC' ? 'bg-emerald-600 text-white' : 'text-slate-700 hover:bg-white'}`}
+          >
+            Fiyat ↑
+          </button>
+          <button
+            type="button"
+            onClick={() => { setSortBy('price'); setSortOrder('DESC'); setPage(1); }}
+            className={`px-2.5 py-1 rounded text-xs font-semibold transition-colors ${sortBy === 'price' && sortOrder === 'DESC' ? 'bg-emerald-600 text-white' : 'text-slate-700 hover:bg-white'}`}
+          >
+            Fiyat ↓
+          </button>
+          <button
+            type="button"
+            onClick={() => { setSortBy('areaM2'); setSortOrder('DESC'); setPage(1); }}
+            className={`px-2.5 py-1 rounded text-xs font-semibold transition-colors ${sortBy === 'areaM2' ? 'bg-emerald-600 text-white' : 'text-slate-700 hover:bg-white'}`}
+          >
+            Alan
+          </button>
+          <button
+            type="button"
+            onClick={() => { setSortBy('createdAt'); setSortOrder('DESC'); setPage(1); }}
+            className={`px-2.5 py-1 rounded text-xs font-semibold transition-colors ${sortBy === 'createdAt' ? 'bg-emerald-600 text-white' : 'text-slate-700 hover:bg-white'}`}
+          >
+            En Yeni
+          </button>
+        </div>
 
         <div className="flex-1" />
 
