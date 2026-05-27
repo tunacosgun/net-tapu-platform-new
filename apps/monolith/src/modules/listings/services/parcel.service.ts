@@ -171,7 +171,9 @@ export class ParcelService {
     }[query.sortBy ?? 'createdAt'] ?? 'p.created_at';
 
     const sortOrder = query.sortOrder === 'ASC' ? 'ASC' : 'DESC';
-    qb.orderBy(sortColumn, sortOrder).skip(skip).take(limit);
+    // Push NULL price/area rows to the end regardless of sort direction
+    const nullsHandling = (query.sortBy === 'price' || query.sortBy === 'areaM2') ? 'NULLS LAST' : undefined;
+    qb.orderBy(sortColumn, sortOrder, nullsHandling).skip(skip).take(limit);
 
     const { entities, raw } = await qb.getRawAndEntities();
     const total = await qb.getCount();

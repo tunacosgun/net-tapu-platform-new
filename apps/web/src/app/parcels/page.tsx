@@ -303,7 +303,27 @@ function ParcelsContent() {
                   </button>
                 </div>
 
-                {/* Sort dropdown */}
+                {/* Quick price sort buttons */}
+                <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-100 p-1">
+                  <button
+                    type="button"
+                    onClick={() => handleSortChange('price-ASC')}
+                    className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${sortParam === 'price-ASC' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-700 hover:bg-white'}`}
+                    title="Fiyat: Düşükten yükseğe"
+                  >
+                    Fiyat ↑
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSortChange('price-DESC')}
+                    className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${sortParam === 'price-DESC' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-700 hover:bg-white'}`}
+                    title="Fiyat: Yüksekten düşüğe"
+                  >
+                    Fiyat ↓
+                  </button>
+                </div>
+
+                {/* Sort dropdown (all options) */}
                 <select
                   value={sortParam}
                   onChange={(e) => handleSortChange(e.target.value)}
