@@ -49,7 +49,7 @@ export class AppointmentService {
       qb.andWhere('a.consultant_id = :consultantId', { consultantId: query.consultant_id });
     }
 
-    qb.orderBy('a.scheduled_at', 'ASC').skip(skip).take(limit);
+    qb.orderBy('a.scheduledAt', 'ASC').skip(skip).take(limit);
 
     const [data, total] = await qb.getManyAndCount();
 
