@@ -467,7 +467,19 @@ export default function ParcelDetailClient() {
   wpLines.push(parcelUrl);
   const whatsappMessage = encodeURIComponent(wpLines.join('\n'));
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${whatsappMessage}`;
-  const tkgmBaseUrl = 'https://parselsorgu.tkgm.gov.tr';
+  // Build TKGM parselsorgu deep-link with ilçe + ada + parsel so the official
+  // site opens directly on the parcel result instead of the home page.
+  // Fallback to homepage when we don't have enough metadata yet.
+  const tkgmBaseUrl = (() => {
+    const home = 'https://parselsorgu.tkgm.gov.tr';
+    const tkgmIlceId = (parcel as any)?.tkgmCache?.responseData?.rawProperties?.ilceId
+      ?? (parcel as any)?.tkgmCache?.responseData?.ilceId
+      ?? (parcel as any)?.tkgmIlceId;
+    if (tkgmIlceId && parcel.ada && parcel.parsel) {
+      return `${home}/#ara/idari/${tkgmIlceId}/${parcel.ada}/${parcel.parsel}/${Date.now()}`;
+    }
+    return home;
+  })();
   const pricePerM2 = parcel.pricePerM2
     ? Math.round(parseFloat(parcel.pricePerM2))
     : (parcel.price && parcel.areaM2 ? Math.round(parseFloat(parcel.price) / parseFloat(parcel.areaM2)) : null);

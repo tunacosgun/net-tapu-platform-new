@@ -235,6 +235,23 @@ export class ParcelService {
     const result = parcel as Parcel & { favoriteCount: number; viewerCount: number };
     result.favoriteCount = parseInt(raw[0]?.p_favoriteCount ?? '0', 10);
     result.viewerCount = 0; // Will be populated by ViewerCountService in Phase 1.5
+
+    // Attach TKGM cache (if present) so the frontend can build deep-links to
+    // parselsorgu.tkgm.gov.tr/#ara/idari/{ilceId}/{ada}/{parsel}
+    if (parcel.city && parcel.district && parcel.ada && parcel.parsel) {
+      try {
+        const tkgmRow = await this.parcelRepo.manager.query(
+          `SELECT response_data FROM integrations.tkgm_cache
+           WHERE city = $1 AND district = $2 AND ada = $3 AND parsel = $4
+           ORDER BY fetched_at DESC LIMIT 1`,
+          [parcel.city, parcel.district, parcel.ada, parcel.parsel],
+        );
+        if (tkgmRow?.[0]?.response_data) {
+          (result as any).tkgmCache = { responseData: tkgmRow[0].response_data };
+        }
+      } catch { /* ignore — non-critical */ }
+    }
+
     return result;
   }
 
