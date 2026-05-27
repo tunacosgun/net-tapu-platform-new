@@ -55,6 +55,15 @@ export function connectToAuction(auctionId: string) {
 
   const token = useAuthStore.getState().accessToken;
   currentAuctionId = auctionId;
+
+  // Anonymous visitors cannot establish the auction WebSocket (server rejects
+  // unauthenticated connections). Skip the reconnect loop and surface a clear
+  // 'login required' state so the UI can show a CTA instead of spinning.
+  if (!token) {
+    useConnectionStore.getState().setStatus('disconnected');
+    return;
+  }
+
   useConnectionStore.getState().setStatus('connecting');
 
   socket = io(WS_URL, {
@@ -62,8 +71,18 @@ export function connectToAuction(auctionId: string) {
     auth: { token },
     transports: ['websocket'],
     reconnection: true,
-    reconnectionAttempts: 10,
-    reconnectionDelay: 1000,
+    reconnectionAttempts: 5,
+    reconnectionDelay: 1500,
+  });
+
+  // Surface a non-retryable auth error so UI can show 'Oturum süreniz dolmuş'.
+  socket.on('connect_error', (err: any) => {
+    const msg = (err && (err.message || err.data?.message)) ?? '';
+    if (/auth|jwt|token|unauthorized/i.test(String(msg))) {
+      useConnectionStore.getState().setStatus('disconnected');
+      socket?.disconnect();
+      socket = null;
+    }
   });
 
   socket.on('connect', () => {

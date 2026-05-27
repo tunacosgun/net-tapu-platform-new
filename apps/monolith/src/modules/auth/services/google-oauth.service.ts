@@ -169,9 +169,9 @@ export class GoogleOAuthService {
         await this.userRepo.save(user);
       } else {
         const randomPass = crypto.randomBytes(32).toString('hex');
-        const baseUsername = googleUser.email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '_').slice(0, 24);
+        const baseUsername = googleUser.email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '_').slice(0, 18);
         const suffix = crypto.randomBytes(3).toString('hex');
-        const username = `${baseUsername}_${suffix}`;
+        const username = `${baseUsername}_${suffix}`.slice(0, 30);
         user = this.userRepo.create({
           email: googleUser.email,
           username,
