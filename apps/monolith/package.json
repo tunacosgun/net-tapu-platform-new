@@ -26,6 +26,7 @@
     "@nettapu/shared": "*",
     "apple-signin-auth": "^2.0.0",
     "bcrypt": "^6.0.0",
+    "cheerio": "^1.2.0",
     "csv-parse": "^6.1.0",
     "exceljs": "^4.4.0",
     "helmet": "^8.1.0",

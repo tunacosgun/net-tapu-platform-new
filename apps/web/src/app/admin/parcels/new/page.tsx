@@ -11,6 +11,7 @@ import { FormField, FormTextarea, FormCheckbox, FormSelect } from '@/components/
 import { FormattedPriceInput } from '@/components/formatted-price-input';
 import { CategoryPicker } from '@/components/category-picker';
 import { ParcelExtraFields } from '@/components/parcel-extra-fields';
+import { SahibindenImporter } from '@/components/sahibinden-importer';
 import { AddressGeocoder } from '@/components/address-geocoder';
 import { ImageUpload } from '@/components/image-upload';
 import { useRateLimit } from '@/hooks/use-rate-limit';
@@ -241,6 +242,29 @@ export default function AdminNewParcelPage() {
   return (
     <div className="max-w-2xl space-y-6">
       <h1 className="text-2xl font-bold">Yeni Arsa</h1>
+
+      <SahibindenImporter
+        onImport={(d) => {
+          if (d.title) setValue('title', d.title.slice(0, 500));
+          if (d.description) setValue('description', d.description);
+          if (d.price != null) setValue('price', String(d.price));
+          if (d.city) setValue('city', d.city);
+          if (d.district) setValue('district', d.district);
+          if (d.neighborhood) setValue('neighborhood', d.neighborhood);
+          if (d.ada) setValue('ada', d.ada);
+          if (d.parsel) setValue('parsel', d.parsel);
+          if (d.areaM2 != null) setValue('areaM2', String(d.areaM2));
+          if (d.zoningStatus) setValue('zoningStatus', d.zoningStatus);
+          if (d.deedType) setValue('deedType', d.deedType);
+          if (d.paftaNo) setValue('paftaNo' as any, d.paftaNo);
+          if (d.kaksEmsal) setValue('kaksEmsal' as any, d.kaksEmsal);
+          if (d.gabari) setValue('gabari' as any, d.gabari);
+          if (d.creditEligible != null) setValue('creditEligible' as any, d.creditEligible ? 'yes' : 'no');
+          if (d.tradeAccepted != null) setValue('tradeAccepted' as any, d.tradeAccepted ? 'yes' : 'no');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+      />
+
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           label="Başlık *"
