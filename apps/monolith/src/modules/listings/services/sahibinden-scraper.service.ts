@@ -1,5 +1,6 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import * as cheerio from 'cheerio';
+import puppeteer, { Browser } from 'puppeteer-core';
 
 export interface ScrapedListing {
   source: 'sahibinden';
@@ -40,31 +41,69 @@ export interface ScrapedListing {
 export class SahibindenScraperService {
   private readonly logger = new Logger(SahibindenScraperService.name);
 
+  /**
+   * Launch a headless Chromium that's already on the host (apk add chromium
+   * in the Dockerfile, see CHROMIUM_PATH env). Each scrape spawns its own
+   * browser instance to keep the worker stateless and to make sure cookies
+   * from one request don't leak into another.
+   */
+  private async launchBrowser(): Promise<Browser> {
+    const executablePath = process.env.CHROMIUM_PATH || '/usr/bin/chromium-browser';
+    return puppeteer.launch({
+      executablePath,
+      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-blink-features=AutomationControlled',
+        '--lang=tr-TR',
+      ],
+    });
+  }
+
   async scrape(url: string): Promise<ScrapedListing> {
     if (!/^https?:\/\/(www\.)?sahibinden\.com\//i.test(url)) {
       throw new BadRequestException('Geçerli bir sahibinden.com bağlantısı girin.');
     }
 
     let html: string;
+    let browser: Browser | null = null;
     try {
-      const res = await fetch(url, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-          'Accept-Language': 'tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7',
-          'Accept-Encoding': 'gzip, deflate, br',
-          'Cache-Control': 'no-cache',
-        },
-        signal: AbortSignal.timeout(15000),
-        redirect: 'follow',
+      browser = await this.launchBrowser();
+      const page = await browser.newPage();
+      await page.setUserAgent(
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+      );
+      await page.setExtraHTTPHeaders({
+        'Accept-Language': 'tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7',
       });
-      if (!res.ok) {
-        throw new BadRequestException(`sahibinden.com yanıtı: HTTP ${res.status}`);
+      await page.setViewport({ width: 1280, height: 900 });
+
+      // Mask navigator.webdriver to slip past basic bot detection.
+      await page.evaluateOnNewDocument(() => {
+        Object.defineProperty(navigator, 'webdriver', { get: () => false });
+      });
+
+      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+      // Wait a beat for Cloudflare's JS challenge to resolve (issues a meta-refresh).
+      await new Promise((r) => setTimeout(r, 4000));
+      // If a CF challenge is still in flight, wait once more.
+      const stillChallenge = await page.evaluate(() =>
+        /Just a moment|cf-browser-verification|cf-challenge/.test(document.title + document.body.innerText.slice(0, 500)),
+      );
+      if (stillChallenge) {
+        await new Promise((r) => setTimeout(r, 6000));
       }
-      html = await res.text();
+
+      html = await page.content();
     } catch (err: any) {
       this.logger.error(`Scrape failed for ${url}: ${err?.message}`);
-      throw new BadRequestException('İlan sayfasına ulaşılamadı. Daha sonra tekrar deneyin.');
+      throw new BadRequestException('İlan sayfasına ulaşılamadı. Sahibinden bot koruması engellemiş olabilir; biraz sonra tekrar deneyin.');
+    } finally {
+      if (browser) {
+        try { await browser.close(); } catch { /* ignore */ }
+      }
     }
 
     const $ = cheerio.load(html);
