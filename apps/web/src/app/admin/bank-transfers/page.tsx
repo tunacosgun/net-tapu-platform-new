@@ -39,6 +39,8 @@ export default function BankTransfersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [filterText, setFilterText] = useState('');
+  const [filterStatus, setFilterStatus] = useState<string>('');
 
   async function fetchTransfers() {
     setError(null);
@@ -87,6 +89,17 @@ export default function BankTransfersPage() {
 
   const pendingCount = transfers.filter((t) => t.status === 'pending').length;
 
+  const filteredTransfers = transfers.filter((t) => {
+    if (filterStatus && t.status !== filterStatus) return false;
+    if (!filterText.trim()) return true;
+    const needle = filterText.toLocaleLowerCase('tr');
+    const hay = [
+      (t as any).user?.firstName, (t as any).user?.lastName, (t as any).user?.email,
+      (t as any).description, (t as any).transferCode,
+    ].filter(Boolean).join(' ').toLocaleLowerCase('tr');
+    return hay.includes(needle);
+  });
+
   if (loading) return <div className="p-8"><LoadingState /></div>;
 
   return (
@@ -97,6 +110,38 @@ export default function BankTransfersPage() {
       />
 
       {error && <Alert variant="error">{error}</Alert>}
+
+      {/* Filter / search */}
+      <div className="flex flex-wrap items-center gap-3">
+        <input
+          type="text"
+          value={filterText}
+          onChange={(e) => setFilterText(e.target.value)}
+          placeholder="🔍 Kullanıcı, e-posta, transfer kodu…"
+          className="flex-1 max-w-md rounded-md border border-slate-200 bg-white px-3 py-1.5 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+        />
+        <select
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value)}
+          className="rounded-md border border-slate-200 bg-white px-3 py-1.5 text-sm"
+        >
+          <option value="">Tüm durumlar</option>
+          <option value="pending">Onay Bekleyen</option>
+          <option value="provisioned">Onaylandı</option>
+          <option value="completed">Tamamlandı</option>
+          <option value="cancelled">İptal</option>
+          <option value="failed">Reddedildi</option>
+        </select>
+        {(filterText || filterStatus) && (
+          <button
+            type="button"
+            onClick={() => { setFilterText(''); setFilterStatus(''); }}
+            className="text-xs text-slate-500 hover:text-slate-700"
+          >
+            Temizle
+          </button>
+        )}
+      </div>
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4">
@@ -135,7 +180,7 @@ export default function BankTransfersPage() {
                   </td>
                 </tr>
               ) : (
-                transfers.map((t) => (
+                filteredTransfers.map((t) => (
                   <tr key={t.id} className="border-b hover:bg-[var(--muted)] transition-colors">
                     <td className="px-4 py-3">
                       <code className="rounded bg-blue-100 px-2 py-0.5 text-xs font-bold text-blue-800">

@@ -871,12 +871,12 @@ function ParcelListItem({ parcel }: { parcel: Parcel }) {
       data-testid={`parcel-list-${parcel.id}`}
     >
       <div className="flex flex-col sm:flex-row">
-        {/* Image */}
-        <div className="relative w-full sm:w-64 h-48 sm:h-auto shrink-0 bg-slate-100">
+        {/* Image — fixed aspect ratio so all cards align uniformly */}
+        <div className="relative w-full sm:w-64 h-48 shrink-0 bg-slate-100 overflow-hidden">
           <img
             src={mainImage}
             alt={parcel.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
           {parcel.isFeatured && (
             <span className="absolute top-3 left-3 inline-flex items-center gap-1 px-2 py-1 bg-amber-500 text-white text-xs font-bold rounded-md shadow-lg">

@@ -89,11 +89,14 @@ export class AuctionGateway
           '',
         );
 
+      // Anonymous viewers can watch live auctions read-only. They receive
+      // AUCTION_STATE / BID_ACCEPTED broadcasts but cannot place bids — the
+      // bid handler checks socket.data.userId and rejects null users.
       if (!token) {
-        this.logger.warn(
-          `Connection rejected: no token provided (${socket.id})`,
-        );
-        return next(new Error('Authentication required'));
+        socket.data.userId = null;
+        socket.data.roles = ['anonymous'];
+        socket.data.requestId = randomUUID();
+        return next();
       }
 
       try {
@@ -104,10 +107,15 @@ export class AuctionGateway
         socket.data.requestId = randomUUID();
         next();
       } catch (err) {
+        // Invalid/expired token: fall back to anonymous viewer so the page
+        // still shows live state. Bid attempts will be rejected.
         this.logger.warn(
-          `Connection rejected: invalid token (${socket.id}) – ${(err as Error).message}`,
+          `Token invalid (${socket.id}) – ${(err as Error).message}; downgrading to anonymous`,
         );
-        return next(new Error('Invalid or expired token'));
+        socket.data.userId = null;
+        socket.data.roles = ['anonymous'];
+        socket.data.requestId = randomUUID();
+        return next();
       }
     });
 

@@ -72,7 +72,7 @@ export const parcelSchema = z.object({
   areaM2: z.string().optional().or(z.literal('')),
   price: z.string().optional().or(z.literal('')),
   zoningStatus: z.string().max(200).optional().or(z.literal('')),
-  landType: z.string().max(100).optional().or(z.literal('')),
+  landType: z.string().min(1, 'Arazi türü seçimi zorunludur').max(100),
   ada: z
     .string()
     .min(1, 'Ada bilgisi zorunludur')

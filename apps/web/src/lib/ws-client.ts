@@ -56,14 +56,8 @@ export function connectToAuction(auctionId: string) {
   const token = useAuthStore.getState().accessToken;
   currentAuctionId = auctionId;
 
-  // Anonymous visitors cannot establish the auction WebSocket (server rejects
-  // unauthenticated connections). Skip the reconnect loop and surface a clear
-  // 'login required' state so the UI can show a CTA instead of spinning.
-  if (!token) {
-    useConnectionStore.getState().setStatus('disconnected');
-    return;
-  }
-
+  // Anonymous viewers are allowed — server downgrades them to a read-only
+  // socket so they can watch live state. Only bid attempts will be rejected.
   useConnectionStore.getState().setStatus('connecting');
 
   socket = io(WS_URL, {

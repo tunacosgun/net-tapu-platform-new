@@ -52,14 +52,14 @@ export class CreateParcelDto {
   longitude?: string;
 
   @IsString()
-  @IsOptional()
+  @IsNotEmpty({ message: 'Ada bilgisi zorunludur' })
   @MaxLength(20)
-  ada?: string;
+  ada!: string;
 
   @IsString()
-  @IsOptional()
+  @IsNotEmpty({ message: 'Parsel bilgisi zorunludur' })
   @MaxLength(20)
-  parsel?: string;
+  parsel!: string;
 
   @IsNumberString()
   @IsOptional()
@@ -71,9 +71,9 @@ export class CreateParcelDto {
   zoningStatus?: string;
 
   @IsString()
-  @IsOptional()
+  @IsNotEmpty({ message: 'Arazi türü seçimi zorunludur' })
   @MaxLength(100)
-  landType?: string;
+  landType!: string;
 
   @IsNumberString()
   @IsOptional()
