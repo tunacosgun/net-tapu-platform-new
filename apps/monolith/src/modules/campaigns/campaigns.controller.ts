@@ -20,9 +20,8 @@ import { JwtPayload } from '../auth/auth.service';
 import {
   CampaignsService,
   ListCampaignsQuery,
-  CreateCampaignInput,
-  UpdateCampaignInput,
 } from './campaigns.service';
+import { CreateCampaignDto, UpdateCampaignDto, AddRuleDto, AssignParcelsDto } from './dto/campaign.dto';
 
 @Controller('admin/campaigns')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -43,7 +42,7 @@ export class CampaignsController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async create(
-    @Body() dto: CreateCampaignInput,
+    @Body() dto: CreateCampaignDto,
     @CurrentUser() user: JwtPayload,
   ) {
     return this.campaignsService.create(dto, user.sub);
@@ -52,7 +51,7 @@ export class CampaignsController {
   @Patch(':id')
   async update(
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: UpdateCampaignInput,
+    @Body() dto: UpdateCampaignDto,
   ) {
     return this.campaignsService.update(id, dto);
   }
@@ -69,7 +68,7 @@ export class CampaignsController {
   @HttpCode(HttpStatus.CREATED)
   async addRule(
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() body: { ruleType: string; ruleValue: Record<string, unknown> },
+    @Body() body: AddRuleDto,
   ) {
     return this.campaignsService.addRule(id, body.ruleType, body.ruleValue);
   }
@@ -86,7 +85,7 @@ export class CampaignsController {
   @HttpCode(HttpStatus.CREATED)
   async assignParcels(
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() body: { parcelIds: string[] },
+    @Body() body: AssignParcelsDto,
   ) {
     return this.campaignsService.assignParcels(id, body.parcelIds);
   }

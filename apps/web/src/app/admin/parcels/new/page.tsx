@@ -12,6 +12,7 @@ import { FormattedPriceInput } from '@/components/formatted-price-input';
 import { CategoryPicker } from '@/components/category-picker';
 import { ParcelExtraFields } from '@/components/parcel-extra-fields';
 import { SahibindenImporter } from '@/components/sahibinden-importer';
+import { LocationAutocomplete } from '@/components/location-autocomplete';
 import { AddressGeocoder } from '@/components/address-geocoder';
 import { ImageUpload } from '@/components/image-upload';
 import { useRateLimit } from '@/hooks/use-rate-limit';
@@ -315,14 +316,13 @@ export default function AdminNewParcelPage() {
           />
         </div>
         <div className="grid grid-cols-2 gap-4">
-          <FormSelect
-            label="Mahalle"
-            error={errors.neighborhood?.message}
-            options={neighborhoods}
-            placeholder="Mahalle seçiniz..."
+          <LocationAutocomplete
+            label="Mahalle / Köy"
+            type="neighborhood"
+            city={selectedCity}
+            district={selectedDistrict}
             value={watch('neighborhood') || ''}
-            onChange={handleNeighborhoodChange}
-            disabled={!selectedDistrict}
+            onChange={(v) => setValue('neighborhood', v, { shouldValidate: true })}
           />
           <FormField
             label="Cadde / Sokak / Adres"

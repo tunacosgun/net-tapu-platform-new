@@ -12,6 +12,7 @@ import { FormField, FormTextarea, FormCheckbox } from '@/components/form-field';
 import { FormattedPriceInput } from '@/components/formatted-price-input';
 import { CategoryPicker } from '@/components/category-picker';
 import { ParcelExtraFields } from '@/components/parcel-extra-fields';
+import { LocationAutocomplete } from '@/components/location-autocomplete';
 import { AddressGeocoder } from '@/components/address-geocoder';
 import { ImageUpload } from '@/components/image-upload';
 import { useRateLimit } from '@/hooks/use-rate-limit';
@@ -273,10 +274,13 @@ export default function AdminEditParcelPage() {
           />
         </div>
         <div className="grid grid-cols-2 gap-4">
-          <FormField
-            label="Mahalle"
-            error={errors.neighborhood?.message}
-            {...register('neighborhood')}
+          <LocationAutocomplete
+            label="Mahalle / Köy"
+            type="neighborhood"
+            city={watchedCity || ''}
+            district={watchedDistrict || ''}
+            value={watch('neighborhood') || ''}
+            onChange={(v) => setValue('neighborhood', v, { shouldValidate: true })}
           />
           <FormField
             label="Cadde / Sokak / Adres"
