@@ -81,6 +81,31 @@ export class SahibindenScraperService {
     }
 
     let html: string;
+
+    // Prefer ScraperAPI when SCRAPERAPI_KEY is set — it runs the JS challenge
+    // on residential IPs and returns the resolved HTML. Falls back to local
+    // headless Chromium when the key is missing (works for sites without
+    // Cloudflare; sahibinden currently always fails the local path).
+    const scraperApiKey = process.env.SCRAPERAPI_KEY;
+    if (scraperApiKey) {
+      try {
+        const apiUrl = `https://api.scraperapi.com/?api_key=${scraperApiKey}` +
+          `&url=${encodeURIComponent(url)}&country_code=tr&render=true`;
+        const res = await fetch(apiUrl, { signal: AbortSignal.timeout(60000) });
+        if (!res.ok) {
+          throw new Error(`ScraperAPI HTTP ${res.status}`);
+        }
+        html = await res.text();
+        if (html && html.length > 500 && !/Bir dakika|Just a moment/i.test(html.slice(0, 2000))) {
+          return this.parseHtml(html, url);
+        }
+        // Otherwise fall through to local Chromium attempt
+        this.logger.warn('ScraperAPI returned a challenge page, retrying with local Chromium');
+      } catch (err: any) {
+        this.logger.warn(`ScraperAPI failed (${err?.message}), falling back to local Chromium`);
+      }
+    }
+
     let browser: Browser | null = null;
     try {
       browser = await this.launchBrowser();
@@ -136,6 +161,12 @@ export class SahibindenScraperService {
       }
     }
 
+    return this.parseHtml(html, url);
+  }
+
+  /** Run cheerio parsing on a resolved HTML payload. Shared by both the
+   *  ScraperAPI path and the local Chromium fallback. */
+  private parseHtml(html: string, url: string): ScrapedListing {
     const $ = cheerio.load(html);
 
     // Title
