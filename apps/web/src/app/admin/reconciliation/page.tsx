@@ -96,6 +96,26 @@ export default function AdminReconciliationPage() {
         }
       />
 
+      {/* Global name/email filter for pending tables (client-side) */}
+      <div className="flex items-center gap-2 max-w-md">
+        <input
+          type="text"
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          placeholder="Kullanıcı adı / e-posta ile filtrele (örn. Ercan)..."
+          className="flex-1 rounded-md border border-[var(--input)] bg-[var(--background)] px-3 py-1.5 text-sm"
+        />
+        {searchInput && (
+          <button
+            type="button"
+            onClick={() => { setSearchInput(''); setSearch(''); }}
+            className="text-xs text-slate-500 hover:text-slate-700"
+          >
+            Temizle
+          </button>
+        )}
+      </div>
+
       {/* Reconciliation report — stale records */}
       {report && (
         <div className="space-y-4">
@@ -131,7 +151,13 @@ export default function AdminReconciliationPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {report.stalePendingPayments.map((p) => {
+                    {report.stalePendingPayments
+                      .filter((p: any) => {
+                        if (!searchInput.trim()) return true;
+                        const needle = searchInput.toLocaleLowerCase('tr');
+                        return ((p.userName || '') + ' ' + (p.userEmail || '')).toLocaleLowerCase('tr').includes(needle);
+                      })
+                      .map((p) => {
                       const u = p as any;
                       const displayName = u.userName || u.userEmail || (u.userId ? 'Silinmiş kullanıcı' : '—');
                       return (
@@ -175,7 +201,13 @@ export default function AdminReconciliationPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {report.stalePendingRefunds.map((r) => {
+                    {report.stalePendingRefunds
+                      .filter((r: any) => {
+                        if (!searchInput.trim()) return true;
+                        const needle = searchInput.toLocaleLowerCase('tr');
+                        return ((r.userName || '') + ' ' + (r.userEmail || '')).toLocaleLowerCase('tr').includes(needle);
+                      })
+                      .map((r) => {
                       const u = r as any;
                       const displayName = u.userName || u.userEmail || 'Silinmiş kullanıcı';
                       return (
