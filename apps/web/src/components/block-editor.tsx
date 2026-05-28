@@ -678,6 +678,40 @@ export function blocksToHtml(blocks: ContentBlock[]): string {
 /* ── HTML to Blocks parser (for existing content) ── */
 export function htmlToBlocks(html: string): ContentBlock[] {
   if (!html || html.trim() === '') return [];
+
+  // Some pages were saved as a JSON-encoded array of {type, data} blocks (from
+  // an older / external editor). Detect and convert to plain HTML before parsing.
+  const trimmed = html.trim();
+  if (trimmed.startsWith('[') && trimmed.includes('"type"')) {
+    try {
+      const arr = JSON.parse(trimmed);
+      if (Array.isArray(arr)) {
+        const html2 = arr.map((b: any) => {
+          const d = b?.data || {};
+          if (b?.type === 'heading') {
+            const lvl = Math.min(Math.max(Number(d.level) || 2, 1), 6);
+            return `<h${lvl}>${(d.text || '').toString()}</h${lvl}>`;
+          }
+          if (b?.type === 'paragraph') return `<p>${(d.text || '').toString()}</p>`;
+          if (b?.type === 'list') {
+            const items = Array.isArray(d.items) ? d.items : [];
+            const tag = d.style === 'ordered' ? 'ol' : 'ul';
+            return `<${tag}>${items.map((i: string) => `<li>${i}</li>`).join('')}</${tag}>`;
+          }
+          if (b?.type === 'quote') return `<blockquote>${(d.text || '').toString()}</blockquote>`;
+          if (b?.type === 'code') return `<pre><code>${(d.code || '').toString()}</code></pre>`;
+          if (b?.type === 'table' && Array.isArray(d.content)) {
+            const rows = d.content.map((r: string[]) => `<tr>${r.map((c) => `<td>${c}</td>`).join('')}</tr>`).join('');
+            return `<table>${rows}</table>`;
+          }
+          if (b?.type === 'image' && d.file?.url) return `<p><img src="${d.file.url}" alt="${d.caption || ''}" /></p>`;
+          return '';
+        }).join('\n');
+        return [{ type: 'text', content: html2 }];
+      }
+    } catch { /* fall through to regular handling */ }
+  }
+
   // If the content contains nt- classes, try parsing structured blocks
   // Otherwise treat as a single text block
   if (!html.includes('nt-')) {

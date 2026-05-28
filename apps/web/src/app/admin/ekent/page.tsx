@@ -20,6 +20,7 @@ export default function EkentAdminPage() {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [draft, setDraft] = useState({ city: '', district: '', name: '', url: '' });
+  const [providerSearch, setProviderSearch] = useState('');
 
   // Probe panel
   const [probe, setProbe] = useState({ city: '', district: '', ada: '', parsel: '' });
@@ -148,6 +149,15 @@ export default function EkentAdminPage() {
 
       {/* Providers table */}
       <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+        <div className="px-4 py-2.5 border-b border-slate-200 bg-slate-50">
+          <input
+            type="text"
+            value={providerSearch}
+            onChange={(e) => setProviderSearch(e.target.value)}
+            placeholder="🔍 Ara: il, ilçe veya belediye adı (örn. ant)…"
+            className="w-full max-w-md px-3 py-1.5 rounded-md border border-slate-200 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+          />
+        </div>
         <table className="w-full text-sm">
           <thead className="bg-slate-50 text-xs uppercase tracking-wider text-slate-600">
             <tr>
@@ -166,30 +176,124 @@ export default function EkentAdminPage() {
             {!loading && providers.length === 0 && (
               <tr><td colSpan={6} className="px-4 py-8 text-center text-slate-400">Henüz sağlayıcı yok.</td></tr>
             )}
-            {providers.map((p) => (
-              <tr key={p.id} className="hover:bg-slate-50">
-                <td className="px-4 py-3 font-medium">{p.city}</td>
-                <td className="px-4 py-3">{p.district}</td>
-                <td className="px-4 py-3">{p.name}</td>
-                <td className="px-4 py-3"><a href={p.url} target="_blank" rel="noreferrer" className="text-brand-700 hover:underline truncate inline-block max-w-xs">{p.url}</a></td>
-                <td className="px-4 py-3 text-center">
-                  <button
-                    onClick={() => toggleActive(p)}
-                    className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${p.active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}
-                  >
-                    {p.active ? 'Aktif' : 'Pasif'}
-                  </button>
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <button onClick={() => deleteProvider(p.id)} className="text-slate-400 hover:text-red-600 transition-colors">
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </td>
-              </tr>
+            {providers
+              .filter((p) => {
+                if (!providerSearch.trim()) return true;
+                const needle = providerSearch.toLocaleLowerCase('tr');
+                return p.city.toLocaleLowerCase('tr').includes(needle)
+                  || p.district.toLocaleLowerCase('tr').includes(needle)
+                  || p.name.toLocaleLowerCase('tr').includes(needle);
+              })
+              .map((p) => (
+              <ProviderRow
+                key={p.id}
+                provider={p}
+                onToggleActive={() => toggleActive(p)}
+                onSave={async (patch) => {
+                  await apiClient.patch(`/admin/ekent/providers/${p.id}`, patch);
+                  load();
+                }}
+                onDelete={() => deleteProvider(p.id)}
+              />
             ))}
           </tbody>
         </table>
       </div>
     </div>
+  );
+}
+
+function ProviderRow({
+  provider,
+  onToggleActive,
+  onSave,
+  onDelete,
+}: {
+  provider: Provider;
+  onToggleActive: () => void;
+  onSave: (patch: Partial<Provider>) => Promise<void>;
+  onDelete: () => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState({ name: provider.name, url: provider.url });
+  const [saving, setSaving] = useState(false);
+
+  async function save() {
+    setSaving(true);
+    try {
+      await onSave({ name: draft.name, url: draft.url });
+      setEditing(false);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (editing) {
+    return (
+      <tr className="bg-amber-50">
+        <td className="px-4 py-3 font-medium text-slate-500">{provider.city}</td>
+        <td className="px-4 py-3 text-slate-500">{provider.district}</td>
+        <td className="px-4 py-3">
+          <input
+            value={draft.name}
+            onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+            className="w-full px-2 py-1 rounded border border-slate-300 text-sm"
+          />
+        </td>
+        <td className="px-4 py-3">
+          <input
+            value={draft.url}
+            onChange={(e) => setDraft({ ...draft, url: e.target.value })}
+            placeholder="https://..."
+            className="w-full px-2 py-1 rounded border border-slate-300 text-sm"
+          />
+        </td>
+        <td className="px-4 py-3" colSpan={2}>
+          <div className="flex gap-2 justify-end">
+            <button onClick={save} disabled={saving} className="px-3 py-1 rounded bg-emerald-600 text-white text-xs font-bold disabled:opacity-40">
+              {saving ? 'Kaydediliyor…' : 'Kaydet'}
+            </button>
+            <button onClick={() => { setDraft({ name: provider.name, url: provider.url }); setEditing(false); }} className="px-3 py-1 rounded border border-slate-300 text-xs">
+              İptal
+            </button>
+          </div>
+        </td>
+      </tr>
+    );
+  }
+
+  return (
+    <tr className="hover:bg-slate-50">
+      <td className="px-4 py-3 font-medium">{provider.city}</td>
+      <td className="px-4 py-3">{provider.district}</td>
+      <td className="px-4 py-3">{provider.name}</td>
+      <td className="px-4 py-3">
+        <a href={provider.url} target="_blank" rel="noreferrer" className="text-brand-700 hover:underline truncate inline-block max-w-xs">
+          {provider.url}
+        </a>
+      </td>
+      <td className="px-4 py-3 text-center">
+        <button
+          onClick={onToggleActive}
+          className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${provider.active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}
+        >
+          {provider.active ? 'Aktif' : 'Pasif'}
+        </button>
+      </td>
+      <td className="px-4 py-3 text-right">
+        <div className="flex gap-2 justify-end">
+          <button
+            onClick={() => setEditing(true)}
+            className="px-2 py-1 rounded border border-slate-200 text-xs hover:bg-slate-50"
+            title="URL veya adı düzenle"
+          >
+            ✎ Düzenle
+          </button>
+          <button onClick={onDelete} className="text-slate-400 hover:text-red-600 transition-colors">
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
+      </td>
+    </tr>
   );
 }
