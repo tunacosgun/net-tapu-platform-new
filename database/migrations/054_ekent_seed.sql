@@ -8,7 +8,7 @@ BEGIN;
 -- Clear any prior il-level seed so re-running the migration is idempotent.
 DELETE FROM integrations.ekent_providers WHERE district IS NULL;
 
-INSERT INTO integrations.ekent_providers (city, district, name, url, active) VALUES
+INSERT INTO integrations.ekent_providers (city, district, name, url_pattern, active) VALUES
   ('Adana',          NULL, 'Adana Büyükşehir Belediyesi CBS',            'https://cbs.adana.bel.tr', true),
   ('Afyonkarahisar', NULL, 'Afyonkarahisar Belediyesi CBS',              'https://cbs.afyon.bel.tr', true),
   ('Amasya',         NULL, 'Amasya Belediyesi Kent Rehberi',             'https://kentrehberi.amasya.bel.tr', true),

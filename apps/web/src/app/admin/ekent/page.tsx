@@ -9,9 +9,15 @@ type Provider = {
   city: string;
   district: string;
   name: string;
-  url: string;
+  /** Backend column: url_pattern. We accept both names so old/new API shapes work. */
+  urlPattern?: string;
+  url?: string;
   active: boolean;
 };
+
+function getProviderUrl(p: Provider): string {
+  return p.urlPattern || p.url || '';
+}
 
 type LookupResult = { url: string | null; cached?: boolean; error?: string };
 
@@ -19,7 +25,7 @@ export default function EkentAdminPage() {
   const [providers, setProviders] = useState<Provider[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
-  const [draft, setDraft] = useState({ city: '', district: '', name: '', url: '' });
+  const [draft, setDraft] = useState({ city: '', district: '', name: '', urlPattern: '' });
   const [providerSearch, setProviderSearch] = useState('');
 
   // Probe panel
@@ -40,9 +46,9 @@ export default function EkentAdminPage() {
   useEffect(() => { load(); }, []);
 
   async function createProvider() {
-    if (!draft.city || !draft.district || !draft.name || !draft.url) return;
+    if (!draft.city || !draft.district || !draft.name || !draft.urlPattern) return;
     await apiClient.post('/admin/ekent/providers', draft);
-    setDraft({ city: '', district: '', name: '', url: '' });
+    setDraft({ city: '', district: '', name: '', urlPattern: '' });
     setCreating(false);
     load();
   }
@@ -138,7 +144,7 @@ export default function EkentAdminPage() {
             <input placeholder="İl (ör. İstanbul)" value={draft.city} onChange={(e) => setDraft({ ...draft, city: e.target.value })} className="px-3 py-2 rounded-md border border-slate-200 text-sm" />
             <input placeholder="İlçe" value={draft.district} onChange={(e) => setDraft({ ...draft, district: e.target.value })} className="px-3 py-2 rounded-md border border-slate-200 text-sm" />
             <input placeholder="Belediye Adı" value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} className="px-3 py-2 rounded-md border border-slate-200 text-sm" />
-            <input placeholder="https://..." value={draft.url} onChange={(e) => setDraft({ ...draft, url: e.target.value })} className="px-3 py-2 rounded-md border border-slate-200 text-sm" />
+            <input placeholder="https://..." value={draft.urlPattern} onChange={(e) => setDraft({ ...draft, urlPattern: e.target.value })} className="px-3 py-2 rounded-md border border-slate-200 text-sm" />
           </div>
           <button onClick={createProvider} className="mt-3 flex items-center gap-2 px-4 py-2 rounded-md bg-brand-600 text-white text-sm font-bold hover:bg-brand-700">
             <Save className="h-4 w-4" />
@@ -215,13 +221,13 @@ function ProviderRow({
   onDelete: () => void;
 }) {
   const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState({ name: provider.name, url: provider.url });
+  const [draft, setDraft] = useState({ name: provider.name, urlPattern: getProviderUrl(provider) });
   const [saving, setSaving] = useState(false);
 
   async function save() {
     setSaving(true);
     try {
-      await onSave({ name: draft.name, url: draft.url });
+      await onSave({ name: draft.name, urlPattern: draft.urlPattern });
       setEditing(false);
     } finally {
       setSaving(false);
@@ -242,8 +248,8 @@ function ProviderRow({
         </td>
         <td className="px-4 py-3">
           <input
-            value={draft.url}
-            onChange={(e) => setDraft({ ...draft, url: e.target.value })}
+            value={draft.urlPattern}
+            onChange={(e) => setDraft({ ...draft, urlPattern: e.target.value })}
             placeholder="https://..."
             className="w-full px-2 py-1 rounded border border-slate-300 text-sm"
           />
@@ -253,7 +259,7 @@ function ProviderRow({
             <button onClick={save} disabled={saving} className="px-3 py-1 rounded bg-emerald-600 text-white text-xs font-bold disabled:opacity-40">
               {saving ? 'Kaydediliyor…' : 'Kaydet'}
             </button>
-            <button onClick={() => { setDraft({ name: provider.name, url: provider.url }); setEditing(false); }} className="px-3 py-1 rounded border border-slate-300 text-xs">
+            <button onClick={() => { setDraft({ name: provider.name, urlPattern: getProviderUrl(provider) }); setEditing(false); }} className="px-3 py-1 rounded border border-slate-300 text-xs">
               İptal
             </button>
           </div>
@@ -268,8 +274,8 @@ function ProviderRow({
       <td className="px-4 py-3">{provider.district}</td>
       <td className="px-4 py-3">{provider.name}</td>
       <td className="px-4 py-3">
-        <a href={provider.url} target="_blank" rel="noreferrer" className="text-brand-700 hover:underline truncate inline-block max-w-xs">
-          {provider.url}
+        <a href={getProviderUrl(provider)} target="_blank" rel="noreferrer" className="text-brand-700 hover:underline truncate inline-block max-w-xs">
+          {getProviderUrl(provider)}
         </a>
       </td>
       <td className="px-4 py-3 text-center">
