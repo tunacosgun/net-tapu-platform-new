@@ -1,6 +1,19 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import * as cheerio from 'cheerio';
-import puppeteer, { Browser } from 'puppeteer-core';
+import { Browser } from 'puppeteer-core';
+// puppeteer-extra wraps puppeteer-core; the stealth plugin patches every
+// known fingerprint vector Cloudflare/Turnstile/Datadome inspect.
+// Use addExtra() so the plugin attaches to puppeteer-core specifically
+// (puppeteer-extra's default require('puppeteer') would crash since the
+// monolith only has puppeteer-core installed).
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { addExtra } = require('puppeteer-extra');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const puppeteerCore = require('puppeteer-core');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+const puppeteerExtra = addExtra(puppeteerCore);
+puppeteerExtra.use(StealthPlugin());
 
 export interface ScrapedListing {
   source: 'sahibinden';
@@ -49,7 +62,7 @@ export class SahibindenScraperService {
    */
   private async launchBrowser(): Promise<Browser> {
     const executablePath = process.env.CHROMIUM_PATH || '/usr/bin/chromium-browser';
-    return puppeteer.launch({
+    return puppeteerExtra.launch({
       executablePath,
       headless: true,
       args: [
@@ -59,7 +72,7 @@ export class SahibindenScraperService {
         '--disable-blink-features=AutomationControlled',
         '--lang=tr-TR',
       ],
-    });
+    }) as Promise<Browser>;
   }
 
   async scrape(url: string): Promise<ScrapedListing> {
@@ -80,13 +93,9 @@ export class SahibindenScraperService {
       });
       await page.setViewport({ width: 1280, height: 900 });
 
-      // Mask navigator.webdriver to slip past basic bot detection. The
-      // function body runs inside the browser context; pass it as a string so
-      // the monolith's Node TS config (no 'dom' lib) doesn't try to type-check
-      // browser-only globals.
-      await page.evaluateOnNewDocument(
-        "Object.defineProperty(navigator, 'webdriver', { get: () => false });",
-      );
+      // Note: navigator.webdriver / chrome.runtime / WebGL / permissions /
+      // user-agent metadata fingerprints are all handled by the stealth
+      // plugin via puppeteerExtra.use(StealthPlugin()) at module init.
 
       await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
 
