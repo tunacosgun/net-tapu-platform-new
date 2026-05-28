@@ -86,9 +86,9 @@ export default function NewCampaignPage() {
                 className="mt-1 w-full rounded-md border border-[var(--input)] bg-[var(--background)] px-3 py-2 text-sm"
               >
                 <option value="discount">İndirim</option>
-                <option value="promotion">Promosyon</option>
-                <option value="spin_wheel">Çark</option>
-                <option value="referral">Referans</option>
+                <option value="installment">Taksit Önerisi</option>
+                <option value="special_pricing">Özel Fiyatlandırma</option>
+                <option value="gamification">Oyunlaştırma / Çark</option>
               </select>
             </div>
             <div>

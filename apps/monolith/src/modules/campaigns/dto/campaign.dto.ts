@@ -11,7 +11,7 @@ export class CreateCampaignDto {
   @IsOptional() @IsString()
   description?: string;
 
-  @IsString() @MaxLength(50)
+  @IsIn(['discount', 'installment', 'special_pricing', 'gamification'])
   campaignType!: string;
 
   @IsISO8601()
