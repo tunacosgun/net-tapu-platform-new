@@ -80,18 +80,21 @@ export class SahibindenScraperService {
       });
       await page.setViewport({ width: 1280, height: 900 });
 
-      // Mask navigator.webdriver to slip past basic bot detection.
-      await page.evaluateOnNewDocument(() => {
-        Object.defineProperty(navigator, 'webdriver', { get: () => false });
-      });
+      // Mask navigator.webdriver to slip past basic bot detection. The
+      // function body runs inside the browser context; pass it as a string so
+      // the monolith's Node TS config (no 'dom' lib) doesn't try to type-check
+      // browser-only globals.
+      await page.evaluateOnNewDocument(
+        "Object.defineProperty(navigator, 'webdriver', { get: () => false });",
+      );
 
       await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
       // Wait a beat for Cloudflare's JS challenge to resolve (issues a meta-refresh).
       await new Promise((r) => setTimeout(r, 4000));
       // If a CF challenge is still in flight, wait once more.
-      const stillChallenge = await page.evaluate(() =>
-        /Just a moment|cf-browser-verification|cf-challenge/.test(document.title + document.body.innerText.slice(0, 500)),
-      );
+      const stillChallenge = await page.evaluate(
+        "/Just a moment|cf-browser-verification|cf-challenge/.test(document.title + document.body.innerText.slice(0, 500))",
+      ) as boolean;
       if (stillChallenge) {
         await new Promise((r) => setTimeout(r, 6000));
       }
