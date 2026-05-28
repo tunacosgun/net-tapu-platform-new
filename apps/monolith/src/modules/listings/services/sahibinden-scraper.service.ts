@@ -102,7 +102,7 @@ export class SahibindenScraperService {
       if (label && value) raw[label] = value;
     });
 
-    const num = (s: string | undefined) => {
+    const num = (s: string | null | undefined) => {
       if (!s) return null;
       const m = s.replace(/\./g, '').replace(/,/g, '.').match(/-?\d+(\.\d+)?/);
       return m ? Number(m[0]) : null;
