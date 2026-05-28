@@ -89,14 +89,32 @@ export class SahibindenScraperService {
       );
 
       await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
-      // Wait a beat for Cloudflare's JS challenge to resolve (issues a meta-refresh).
-      await new Promise((r) => setTimeout(r, 4000));
-      // If a CF challenge is still in flight, wait once more.
-      const stillChallenge = await page.evaluate(
-        "/Just a moment|cf-browser-verification|cf-challenge/.test(document.title + document.body.innerText.slice(0, 500))",
-      ) as boolean;
-      if (stillChallenge) {
-        await new Promise((r) => setTimeout(r, 6000));
+
+      // Cloudflare's JS challenge replaces the body, then redirects/reloads.
+      // Poll up to 30 s for either: (a) the real listing markup (h1 +
+      // classifiedInfo) to appear, or (b) the title to lose the challenge
+      // string in any language sahibinden serves it in.
+      const challengeRe = /Just a moment|Bir dakika|cf-browser-verification|cf-challenge|Checking your browser|Verifying you are human/i;
+      const deadline = Date.now() + 30000;
+      let pageReady = false;
+      while (Date.now() < deadline) {
+        await new Promise((r) => setTimeout(r, 1500));
+        const state: any = await page.evaluate(`(function() {
+          var t = document.title || '';
+          var bodyText = (document.body && document.body.innerText || '').slice(0, 1000);
+          var hasListing = !!document.querySelector('h1.classifiedDetailTitle, ul.classifiedInfoList, #classifiedDescription');
+          return { title: t, bodyText: bodyText, hasListing: hasListing };
+        })()`);
+        if (state.hasListing) { pageReady = true; break; }
+        if (!challengeRe.test(state.title + ' ' + state.bodyText) && state.title && state.title.length > 5) {
+          // Page is past the challenge but listing markers not found —
+          // probably a generic page, exit loop and let cheerio parse it.
+          pageReady = true;
+          break;
+        }
+      }
+      if (!pageReady) {
+        this.logger.warn(`Sahibinden scraper timed out waiting for Cloudflare challenge to clear: ${url}`);
       }
 
       html = await page.content();
