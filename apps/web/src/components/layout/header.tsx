@@ -8,6 +8,7 @@ import { useSiteSettings } from '@/hooks/use-site-settings';
 import {
   Map, Heart, Shield, User, LogOut, Menu, X,
   ChevronDown, Phone, Mail, HelpCircle, Gavel, Clock, TrendingUp, ArrowRight,
+  MessageSquare,
 } from 'lucide-react';
 import type { Auction } from '@/types';
 import apiClient from '@/lib/api-client';
@@ -230,6 +231,7 @@ export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [supportUnread, setSupportUnread] = useState(0);
   const profileRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -241,6 +243,21 @@ export function Header() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Pull the support unread count for the dropdown badge. Cheap: a single
+  // SUM query, gated on isAuthenticated.
+  useEffect(() => {
+    if (!isAuthenticated) { setSupportUnread(0); return; }
+    const fetchCount = () => {
+      apiClient
+        .get<{ count: number }>('/support/unread-count')
+        .then(({ data }) => setSupportUnread(data.count))
+        .catch(() => undefined);
+    };
+    fetchCount();
+    const id = setInterval(fetchCount, 30000);
+    return () => clearInterval(id);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     function onScroll() { setScrolled(window.scrollY > 0); }
@@ -366,6 +383,13 @@ export function Header() {
                       <Link href="/profile/favorites" onClick={() => setProfileOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
                         <Heart className="h-4 w-4 text-gray-400" />
                         Favorilerim
+                      </Link>
+                      <Link href="/profile/support" onClick={() => setProfileOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                        <MessageSquare className="h-4 w-4 text-gray-400" />
+                        <span className="flex-1">Destek Taleplerim</span>
+                        {supportUnread > 0 && (
+                          <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-red-500 text-white">{supportUnread}</span>
+                        )}
                       </Link>
                     </div>
                     <div className="border-t border-gray-100 py-1">

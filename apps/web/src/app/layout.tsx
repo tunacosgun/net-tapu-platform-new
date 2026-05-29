@@ -12,6 +12,7 @@ import { OrganizationJsonLd, WebSiteJsonLd, RealEstateAgentJsonLd } from '@/comp
 import { GoogleOneTap } from '@/components/google-one-tap';
 import { ScrollToTop } from '@/components/ui/scroll-to-top';
 import { MobileBottomNav } from '@/components/layout/mobile-bottom-nav';
+import { FloatingSupportWidget } from '@/components/floating-support-widget';
 import { Toaster } from 'sonner';
 import './globals.css';
 
@@ -109,6 +110,7 @@ export default function RootLayout({
                 <Footer />
               </div>
               <MobileBottomNav />
+              <FloatingSupportWidget />
               <ApiErrorToastContainer />
               <Toaster position="top-right" richColors closeButton />
               <ScrollToTop />

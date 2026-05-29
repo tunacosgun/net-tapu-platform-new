@@ -2,11 +2,12 @@
 
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuthStore } from '@/stores/auth-store';
 import NotificationBell from '@/components/admin/NotificationBell';
 import { NetTapuLogo } from '@/components/ui/nettapu-logo';
 import apiClient from '@/lib/api-client';
+import { toast } from 'sonner';
 import {
   LayoutDashboard, BarChart3, Users, ShieldBan, Map, Gavel,
   CreditCard, Landmark, ClipboardList, Phone, CalendarDays,
@@ -144,18 +145,49 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   useEffect(() => { setSidebarOpen(false); }, [pathname]);
 
+  // Track the previous support count so we can play a beep + show a toast
+  // when it bumps — admins who leave /admin/support running in another tab
+  // get a real "new message" cue instead of having to refresh.
+  const lastSupportCountRef = useRef<number | null>(null);
+
   useEffect(() => {
     if (!isAuthenticated || !user?.roles?.some((r) => ADMIN_ROLES.includes(r))) return;
-    const fetchBadges = () => {
-      apiClient
-        .get<{ count: number }>('/admin/support/unread-count')
-        .then(({ data }) => setBadges((b) => ({ ...b, support: data.count })))
-        .catch(() => undefined);
+    const fetchBadges = async () => {
+      try {
+        const { data } = await apiClient.get<{ count: number }>('/admin/support/unread-count');
+        const prev = lastSupportCountRef.current;
+        if (prev !== null && data.count > prev) {
+          // Inline beep via Web Audio API — no asset to ship.
+          try {
+            const Ctx = (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext);
+            const ctx = new Ctx();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.frequency.value = 880;
+            osc.type = 'sine';
+            gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.3, ctx.currentTime + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.35);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.4);
+            setTimeout(() => ctx.close().catch(() => undefined), 600);
+          } catch { /* autoplay policy / context create failed — silent */ }
+          const delta = data.count - prev;
+          toast.message(`📩 ${delta} yeni destek mesajı`, {
+            description: 'Destek Mesajları sayfasından cevaplayabilirsin.',
+            action: { label: 'Aç', onClick: () => router.push('/admin/support') },
+          });
+        }
+        lastSupportCountRef.current = data.count;
+        setBadges((b) => ({ ...b, support: data.count }));
+      } catch { /* ignore */ }
     };
     fetchBadges();
-    const id = setInterval(fetchBadges, 30000);
+    const id = setInterval(fetchBadges, 20000);
     return () => clearInterval(id);
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, router]);
 
   if (isLoading) {
     return (
