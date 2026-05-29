@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import apiClient from '@/lib/api-client';
 import {
   Search,
@@ -99,6 +100,8 @@ function MessageAttachment({ url, type, name }: { url: string; type: string | nu
 }
 
 export default function AdminSupportPage() {
+  const searchParams = useSearchParams();
+  const ticketParam = searchParams.get('ticket');
   const [tickets, setTickets] = useState<TicketRow[]>([]);
   const [filter, setFilter] = useState<'all' | 'open' | 'in_progress' | 'waiting_user' | 'closed'>('all');
   const [search, setSearch] = useState('');
@@ -117,6 +120,19 @@ export default function AdminSupportPage() {
   }, [filter, search]);
 
   useEffect(() => { loadList(); }, [loadList]);
+
+  // Auto-open a ticket if the URL was deep-linked with ?ticket=<id>
+  // (e.g. coming from the contacts page "Görüşmeyi Başlat" button).
+  useEffect(() => {
+    if (!ticketParam || active?.ticket.id === ticketParam) return;
+    apiClient
+      .get<FullTicket>(`/admin/support/tickets/${ticketParam}`)
+      .then(({ data }) => {
+        setActive(data);
+        apiClient.post(`/admin/support/tickets/${ticketParam}/read`).catch(() => undefined);
+      })
+      .catch(() => undefined);
+  }, [ticketParam, active]);
 
   // Polling: every 8s refresh the list, and if a ticket is open, refresh the
   // thread too. Simple, robust; we can replace with WS in a follow-up.
