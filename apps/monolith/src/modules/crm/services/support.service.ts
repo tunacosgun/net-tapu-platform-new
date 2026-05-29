@@ -126,42 +126,79 @@ export class SupportService {
   }
 
   async unreadCountForUser(userId: string): Promise<number> {
-    const { sum } = await this.ticketRepo
-      .createQueryBuilder('t')
-      .select('COALESCE(SUM(t.unread_user),0)', 'sum')
-      .where('t.user_id = :uid', { uid: userId })
-      .getRawOne<{ sum: string }>() || { sum: '0' };
-    return Number(sum) || 0;
+    const rows = await this.dataSource.query<{ sum: string }[]>(
+      `SELECT COALESCE(SUM(unread_user),0)::text AS sum FROM crm.support_tickets WHERE user_id = $1`,
+      [userId],
+    );
+    return Number(rows[0]?.sum) || 0;
   }
 
   // ── Admin-facing actions ───────────────────────────────────────────────
 
   async listAllTickets(query: { status?: string; search?: string }) {
-    const qb = this.ticketRepo
-      .createQueryBuilder('t')
-      .leftJoin('auth.users', 'u', 'u.id = t.user_id')
-      .addSelect(['u.first_name AS u_first_name', 'u.last_name AS u_last_name', 'u.email AS u_email'])
-      .orderBy('t.last_message_at', 'DESC', 'NULLS LAST')
-      .addOrderBy('t.created_at', 'DESC');
+    // Raw SQL — TypeORM's qb.leftJoin + addSelect with AS aliases was
+    // silently returning 0 rows on the live DB even though the underlying
+    // table had data. Going direct keeps the code obvious and verifiable.
+    const params: unknown[] = [];
+    const where: string[] = [];
+
     if (query.status && query.status !== 'all') {
-      qb.andWhere('t.status = :s', { s: query.status });
+      params.push(query.status);
+      where.push(`t.status = $${params.length}`);
     }
     if (query.search) {
-      qb.andWhere(
-        '(t.subject ILIKE :q OR u.first_name ILIKE :q OR u.last_name ILIKE :q OR u.email ILIKE :q OR t.guest_name ILIKE :q OR t.guest_email ILIKE :q)',
-        { q: `%${query.search}%` },
+      params.push(`%${query.search}%`);
+      const i = params.length;
+      where.push(
+        `(t.subject ILIKE $${i} OR u.first_name ILIKE $${i} OR u.last_name ILIKE $${i} OR u.email ILIKE $${i} OR t.guest_name ILIKE $${i} OR t.guest_email ILIKE $${i})`,
       );
     }
-    const { entities, raw } = await qb.getRawAndEntities();
-    return entities.map((t, idx) => {
-      const r = raw[idx] || {};
-      const first = r.u_first_name || '';
-      const last = r.u_last_name || '';
-      const display = `${first} ${last}`.trim() || r.u_email || t.guestName || 'Bilinmeyen';
+    const whereClause = where.length ? `WHERE ${where.join(' AND ')}` : '';
+
+    const rows = await this.dataSource.query<Array<Record<string, unknown>>>(
+      `SELECT
+         t.id, t.subject, t.status, t.source, t.source_ref_id AS "sourceRefId",
+         t.parcel_id AS "parcelId", t.assigned_to AS "assignedTo",
+         t.guest_name AS "guestName", t.guest_email AS "guestEmail", t.guest_phone AS "guestPhone",
+         t.unread_admin AS "unreadAdmin", t.unread_user AS "unreadUser",
+         t.last_message_at AS "lastMessageAt", t.created_at AS "createdAt",
+         t.user_id AS "userId",
+         u.first_name AS "uFirstName", u.last_name AS "uLastName", u.email AS "uEmail"
+       FROM crm.support_tickets t
+       LEFT JOIN auth.users u ON u.id = t.user_id
+       ${whereClause}
+       ORDER BY t.last_message_at DESC NULLS LAST, t.created_at DESC
+       LIMIT 200`,
+      params,
+    );
+
+    return rows.map((r) => {
+      const first = (r.uFirstName as string) || '';
+      const last = (r.uLastName as string) || '';
+      const display =
+        `${first} ${last}`.trim() ||
+        (r.uEmail as string) ||
+        (r.guestName as string) ||
+        (r.guestEmail as string) ||
+        'Bilinmeyen';
       return {
-        ...t,
+        id: r.id,
+        subject: r.subject,
+        status: r.status,
+        source: r.source,
+        sourceRefId: r.sourceRefId,
+        parcelId: r.parcelId,
+        assignedTo: r.assignedTo,
+        guestName: r.guestName,
+        guestEmail: r.guestEmail,
+        guestPhone: r.guestPhone,
+        unreadAdmin: Number(r.unreadAdmin) || 0,
+        unreadUser: Number(r.unreadUser) || 0,
+        lastMessageAt: r.lastMessageAt,
+        createdAt: r.createdAt,
+        userId: r.userId,
         userDisplayName: display,
-        userEmail: r.u_email || t.guestEmail || null,
+        userEmail: r.uEmail || r.guestEmail || null,
       };
     });
   }
@@ -240,12 +277,10 @@ export class SupportService {
   }
 
   async unreadCountForAdmin(): Promise<number> {
-    const { sum } = await this.ticketRepo
-      .createQueryBuilder('t')
-      .select('COALESCE(SUM(t.unread_admin),0)', 'sum')
-      .where(`t.status <> 'closed'`)
-      .getRawOne<{ sum: string }>() || { sum: '0' };
-    return Number(sum) || 0;
+    const rows = await this.dataSource.query<{ sum: string }[]>(
+      `SELECT COALESCE(SUM(unread_admin),0)::text AS sum FROM crm.support_tickets WHERE status <> 'closed'`,
+    );
+    return Number(rows[0]?.sum) || 0;
   }
 
   /**
