@@ -22,6 +22,9 @@ import SettingsScreen from '../screens/profile/SettingsScreen';
 import NotificationsScreen from '../screens/profile/NotificationsScreen';
 import { SavedSearchesScreen } from '../screens/profile/SavedSearchesScreen';
 import { BecomeConsultantScreen } from '../screens/profile/BecomeConsultantScreen';
+import SupportTicketsScreen from '../screens/support/SupportTicketsScreen';
+import SupportChatScreen from '../screens/support/SupportChatScreen';
+import SupportNewTicketScreen from '../screens/support/SupportNewTicketScreen';
 
 export type RootStackParamList = {
   Splash: undefined;
@@ -43,6 +46,9 @@ export type RootStackParamList = {
   Notifications: undefined;
   SavedSearches: undefined;
   BecomeConsultant: undefined;
+  SupportTickets: undefined;
+  SupportChat: { ticketId: string };
+  SupportNewTicket: undefined;
 };
 
 import { useSettingsStore } from '../stores/settings-store';
@@ -96,6 +102,9 @@ export default function RootNavigator() {
           <Stack.Screen name="Notifications" component={NotificationsScreen} />
           <Stack.Screen name="SavedSearches" component={SavedSearchesScreen} />
           <Stack.Screen name="BecomeConsultant" component={BecomeConsultantScreen} />
+          <Stack.Screen name="SupportTickets" component={SupportTicketsScreen} />
+          <Stack.Screen name="SupportChat" component={SupportChatScreen} />
+          <Stack.Screen name="SupportNewTicket" component={SupportNewTicketScreen} />
         </Stack.Group>
       )}
     </Stack.Navigator>

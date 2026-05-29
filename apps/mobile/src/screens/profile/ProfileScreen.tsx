@@ -183,6 +183,7 @@ export default function ProfileScreen() {
         { icon: 'document-text-outline', label: 'Tekliflerim', screen: 'Offers', color: c.warning },
         { icon: 'flash-outline', label: 'İhale Geçmişim', screen: 'Offers', color: c.primary },
         { icon: 'card-outline', label: 'Ödeme Geçmişim', screen: 'Payments', color: c.success },
+        { icon: 'chatbubbles-outline', label: 'Destek Mesajlarım', screen: 'SupportTickets', color: c.info },
       ],
     },
     {
