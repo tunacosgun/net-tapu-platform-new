@@ -9,6 +9,8 @@ import { NotificationLog } from './entities/notification-log.entity';
 import { UserActivityLog } from './entities/user-activity-log.entity';
 import { Dealer } from './entities/dealer.entity';
 import { ReferralCredit } from './entities/referral-credit.entity';
+import { SupportTicket } from './entities/support-ticket.entity';
+import { SupportMessage } from './entities/support-message.entity';
 import { User } from '../auth/entities/user.entity';
 import { Parcel } from '../listings/entities/parcel.entity';
 import { NotificationsModule } from '../notifications/notifications.module';
@@ -19,6 +21,7 @@ import { OfferService } from './services/offer.service';
 import { ActivityTrackingService } from './services/activity-tracking.service';
 import { DealerService } from './services/dealer.service';
 import { ReferralService } from './services/referral.service';
+import { SupportService } from './services/support.service';
 
 import { ContactRequestController } from './controllers/contact-request.controller';
 import { AppointmentController } from './controllers/appointment.controller';
@@ -30,6 +33,7 @@ import {
   AdminReferralController,
 } from './controllers/referral.controller';
 import { NewsletterController } from './controllers/newsletter.controller';
+import { SupportController, AdminSupportController } from './controllers/support.controller';
 
 @Module({
   imports: [
@@ -43,6 +47,8 @@ import { NewsletterController } from './controllers/newsletter.controller';
       UserActivityLog,
       Dealer,
       ReferralCredit,
+      SupportTicket,
+      SupportMessage,
       User,
       Parcel,
     ]),
@@ -57,6 +63,8 @@ import { NewsletterController } from './controllers/newsletter.controller';
     ReferralController,
     AdminReferralController,
     NewsletterController,
+    SupportController,
+    AdminSupportController,
   ],
   providers: [
     ContactRequestService,
@@ -65,7 +73,8 @@ import { NewsletterController } from './controllers/newsletter.controller';
     ActivityTrackingService,
     DealerService,
     ReferralService,
+    SupportService,
   ],
-  exports: [TypeOrmModule, ContactRequestService, AppointmentService, OfferService, ActivityTrackingService, DealerService, ReferralService],
+  exports: [TypeOrmModule, ContactRequestService, AppointmentService, OfferService, ActivityTrackingService, DealerService, ReferralService, SupportService],
 })
 export class CrmModule {}

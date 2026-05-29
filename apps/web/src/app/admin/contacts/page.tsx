@@ -195,6 +195,7 @@ export default function AdminContactsPage() {
                   <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--muted-foreground)]">Durum</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--muted-foreground)]">Zaman</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--muted-foreground)]">Atanan</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--muted-foreground)]">İşlem</th>
                   <th className="px-4 py-3"></th>
                 </tr>
               </thead>
@@ -289,6 +290,36 @@ export default function AdminContactsPage() {
                         >
                           {Object.entries(statusLabels).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                         </select>
+                      </td>
+
+                      {/* Start live conversation */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <button
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            try {
+                              const greeting = window.prompt(
+                                'İlk mesaj (boş bırakırsanız sadece talep açılır):',
+                                `Merhaba ${c.name}, talebinizi aldık. Size nasıl yardımcı olabilirim?`,
+                              );
+                              if (greeting === null) return;
+                              const { data } = await apiClient.post<{ id: string }>(
+                                '/admin/support/tickets/from-contact',
+                                {
+                                  contactRequestId: c.id,
+                                  greeting: greeting || undefined,
+                                },
+                              );
+                              window.location.href = `/admin/support?ticket=${data.id}`;
+                            } catch (err) {
+                              alert('Görüşme başlatılamadı: ' + (err as Error).message);
+                            }
+                          }}
+                          className="rounded-md bg-emerald-600 text-white px-2.5 py-1 text-xs font-semibold hover:bg-emerald-700"
+                          title="Bu talep için canlı destek görüşmesi başlat"
+                        >
+                          💬 Görüşmeyi Başlat
+                        </button>
                       </td>
                     </tr>
 

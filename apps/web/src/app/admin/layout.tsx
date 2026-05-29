@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/stores/auth-store';
 import NotificationBell from '@/components/admin/NotificationBell';
 import { NetTapuLogo } from '@/components/ui/nettapu-logo';
+import apiClient from '@/lib/api-client';
 import {
   LayoutDashboard, BarChart3, Users, ShieldBan, Map, Gavel,
   CreditCard, Landmark, ClipboardList, Phone, CalendarDays,
@@ -18,7 +19,7 @@ const ADMIN_ROLES = ['superadmin', 'admin'];
 
 const navSections: Array<{
   title: string | null;
-  items: Array<{ href: string; label: string; icon: LucideIcon }>;
+  items: Array<{ href: string; label: string; icon: LucideIcon; badgeKey?: string }>;
 }> = [
   { title: null, items: [
     { href: '/admin',           label: 'Genel Bakış', icon: LayoutDashboard },
@@ -45,10 +46,12 @@ const navSections: Array<{
     { href: '/admin/ekent', label: 'E-Kent Sağlayıcılar', icon: Map },
   ]},
   { title: 'CRM', items: [
-    { href: '/admin/contacts',     label: 'İletişim Talepleri', icon: Phone },
-    { href: '/admin/appointments', label: 'Randevular',         icon: CalendarDays },
-    { href: '/admin/offers',       label: 'Teklifler',          icon: HandCoins },
-    { href: '/admin/newsletter',   label: 'E-Bülten Aboneleri', icon: Mail },
+    { href: '/admin/support',                 label: 'Destek Mesajları',     icon: MessageSquare, badgeKey: 'support' },
+    { href: '/admin/contacts',                label: 'İletişim Talepleri',   icon: Phone },
+    { href: '/admin/consultants/applications', label: 'Danışman Başvuruları', icon: Handshake },
+    { href: '/admin/appointments',            label: 'Randevular',           icon: CalendarDays },
+    { href: '/admin/offers',                  label: 'Teklifler',            icon: HandCoins },
+    { href: '/admin/newsletter',              label: 'E-Bülten Aboneleri',   icon: Mail },
   ]},
   { title: 'İçerik', items: [
     { href: '/admin/pages',               label: 'Sayfalar',          icon: FileText },
@@ -67,7 +70,7 @@ const navSections: Array<{
   ]},
 ];
 
-function NavItems({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
+function NavItems({ pathname, onNavigate, badges }: { pathname: string; onNavigate?: () => void; badges: Record<string, number> }) {
   return (
     <nav className="space-y-5 px-2">
       {navSections.map((section, i) => (
@@ -80,6 +83,7 @@ function NavItems({ pathname, onNavigate }: { pathname: string; onNavigate?: () 
               const Icon = item.icon;
               const exact = item.href === '/admin';
               const isActive = exact ? pathname === '/admin' : pathname.startsWith(item.href);
+              const count = item.badgeKey ? badges[item.badgeKey] || 0 : 0;
               return (
                 <Link
                   key={item.href}
@@ -93,7 +97,12 @@ function NavItems({ pathname, onNavigate }: { pathname: string; onNavigate?: () 
                 >
                   {isActive && <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 bg-brand-600 rounded-r" />}
                   <Icon className={`h-[15px] w-[15px] shrink-0 ${isActive ? 'text-brand-700' : 'text-slate-400'}`} />
-                  {item.label}
+                  <span className="flex-1">{item.label}</span>
+                  {count > 0 && (
+                    <span className="ml-auto px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-red-500 text-white min-w-[18px] text-center">
+                      {count}
+                    </span>
+                  )}
                 </Link>
               );
             })}
@@ -125,6 +134,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [badges, setBadges] = useState<Record<string, number>>({});
 
   useEffect(() => {
     if (isLoading) return;
@@ -133,6 +143,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, [isLoading, isAuthenticated, user, router]);
 
   useEffect(() => { setSidebarOpen(false); }, [pathname]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !user?.roles?.some((r) => ADMIN_ROLES.includes(r))) return;
+    const fetchBadges = () => {
+      apiClient
+        .get<{ count: number }>('/admin/support/unread-count')
+        .then(({ data }) => setBadges((b) => ({ ...b, support: data.count })))
+        .catch(() => undefined);
+    };
+    fetchBadges();
+    const id = setInterval(fetchBadges, 30000);
+    return () => clearInterval(id);
+  }, [isAuthenticated, user]);
 
   if (isLoading) {
     return (
@@ -158,7 +181,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <aside className="absolute left-0 top-0 bottom-0 w-72 bg-white shadow-2xl overflow-y-auto z-10 flex flex-col">
             <SidebarHeader compact onClose={() => setSidebarOpen(false)} />
             <div className="flex-1 overflow-y-auto py-4">
-              <NavItems pathname={pathname} onNavigate={() => setSidebarOpen(false)} />
+              <NavItems pathname={pathname} onNavigate={() => setSidebarOpen(false)} badges={badges} />
             </div>
           </aside>
         </div>
@@ -168,7 +191,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <aside className="hidden w-60 shrink-0 border-r border-slate-200 bg-white lg:flex flex-col overflow-y-auto">
         <SidebarHeader />
         <div className="flex-1 overflow-y-auto py-4">
-          <NavItems pathname={pathname} />
+          <NavItems pathname={pathname} badges={badges} />
         </div>
 
         {/* Footer / user card */}

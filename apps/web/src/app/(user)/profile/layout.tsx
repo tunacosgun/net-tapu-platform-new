@@ -2,19 +2,21 @@
 
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/stores/auth-store';
+import apiClient from '@/lib/api-client';
 import {
-  User, Heart, FileText, Gavel, CreditCard, Search, Bell, LogOut,
+  User, Heart, FileText, Gavel, CreditCard, Search, Bell, LogOut, MessageSquare,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
-const profileNavItems: Array<{ href: string; label: string; icon: LucideIcon }> = [
+const profileNavItems: Array<{ href: string; label: string; icon: LucideIcon; badgeKey?: string }> = [
   { href: '/profile',                label: 'Profilim',           icon: User },
   { href: '/profile/favorites',      label: 'Favorilerim',        icon: Heart },
   { href: '/profile/offers',         label: 'Tekliflerim',        icon: FileText },
   { href: '/profile/auctions',       label: 'İhale Geçmişim',     icon: Gavel },
   { href: '/profile/payments',       label: 'Ödeme Geçmişim',     icon: CreditCard },
+  { href: '/profile/support',        label: 'Destek Mesajları',   icon: MessageSquare, badgeKey: 'support' },
   { href: '/profile/saved-searches', label: 'Kayıtlı Aramalar',   icon: Search },
   { href: '/profile/notifications',  label: 'Bildirim Ayarları',  icon: Bell },
 ];
@@ -27,6 +29,7 @@ export default function ProfileLayout({
   const { user, isLoading, isAuthenticated } = useAuthStore();
   const router = useRouter();
   const pathname = usePathname();
+  const [badges, setBadges] = useState<Record<string, number>>({});
 
   useEffect(() => {
     if (isLoading) return;
@@ -34,6 +37,19 @@ export default function ProfileLayout({
       router.replace('/login?returnTo=/profile');
     }
   }, [isLoading, isAuthenticated, router]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const fetchBadges = () => {
+      apiClient
+        .get<{ count: number }>('/support/unread-count')
+        .then(({ data }) => setBadges((b) => ({ ...b, support: data.count })))
+        .catch(() => undefined);
+    };
+    fetchBadges();
+    const id = setInterval(fetchBadges, 30000);
+    return () => clearInterval(id);
+  }, [isAuthenticated]);
 
   if (isLoading) {
     return (
@@ -94,7 +110,12 @@ export default function ProfileLayout({
                   >
                     {isActive && <span className="absolute left-0 top-2 bottom-2 w-0.5 bg-brand-600 rounded-r" />}
                     <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-brand-700' : 'text-slate-400'}`} />
-                    {item.label}
+                    <span className="flex-1">{item.label}</span>
+                    {item.badgeKey && badges[item.badgeKey] > 0 && (
+                      <span className="ml-auto px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-red-500 text-white min-w-[18px] text-center">
+                        {badges[item.badgeKey]}
+                      </span>
+                    )}
                   </Link>
                 );
               })}
