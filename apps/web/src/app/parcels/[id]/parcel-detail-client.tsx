@@ -1006,20 +1006,35 @@ export default function ParcelDetailClient() {
             )}
 
             <div className="space-y-4">
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-900">Teklif Tutarı (TL) *</label>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={offerAmount}
-                  onChange={(e) => {
-                    const raw = e.target.value.replace(/[^0-9]/g, '');
-                    setOfferAmount(raw ? Number(raw).toLocaleString('tr-TR') : '');
-                  }}
-                  placeholder="Örn: 5.000.000"
-                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                />
-              </div>
+              {(() => {
+                const askingPrice = parcel.price ? parseFloat(parcel.price) : 0;
+                const minOffer = askingPrice ? Math.floor(askingPrice * 0.8) : 0;
+                const offerNumeric = Number(offerAmount.replace(/[^0-9]/g, '')) || 0;
+                const tooLow = minOffer > 0 && offerNumeric > 0 && offerNumeric < minOffer;
+                return (
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-slate-900">Teklif Tutarı (TL) *</label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={offerAmount}
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(/[^0-9]/g, '');
+                        setOfferAmount(raw ? Number(raw).toLocaleString('tr-TR') : '');
+                      }}
+                      placeholder={minOffer ? `En düşük ${minOffer.toLocaleString('tr-TR')} TL` : 'Örn: 5.000.000'}
+                      className={`w-full rounded-lg border bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-1 ${tooLow ? 'border-red-400 focus:border-red-500 focus:ring-red-500' : 'border-slate-300 focus:border-emerald-500 focus:ring-emerald-500'}`}
+                    />
+                    {minOffer > 0 && (
+                      <p className={`mt-1 text-xs ${tooLow ? 'text-red-600' : 'text-slate-500'}`}>
+                        {tooLow
+                          ? `Teklif ilan fiyatının %80'inden düşük olamaz. En düşük: ${minOffer.toLocaleString('tr-TR')} TL`
+                          : `İlan fiyatının %80'i (${minOffer.toLocaleString('tr-TR')} TL) altına teklif verilemez.`}
+                      </p>
+                    )}
+                  </div>
+                );
+              })()}
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-slate-900">Mesajınız (opsiyonel)</label>
                 <textarea
@@ -1032,7 +1047,13 @@ export default function ParcelDetailClient() {
               </div>
               <button
                 onClick={handleOfferSubmit}
-                disabled={!offerAmount || offerSubmitting}
+                disabled={
+                  !offerAmount
+                  || offerSubmitting
+                  || (parcel.price
+                    ? (Number(offerAmount.replace(/[^0-9]/g, '')) || 0) < Math.floor(parseFloat(parcel.price) * 0.8)
+                    : false)
+                }
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-3 text-sm font-semibold text-white hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {offerSubmitting ? (

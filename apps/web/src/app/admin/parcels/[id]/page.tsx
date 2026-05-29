@@ -363,15 +363,17 @@ export default function AdminEditParcelPage() {
               {...register('landType')}
               className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
             >
-              <option value="">Seçiniz</option>
+              <option value="">Seçiniz *</option>
               <option value="arsa">Arsa</option>
               <option value="tarla">Tarla</option>
-              <option value="bağ">Bağ</option>
-              <option value="bahçe">Bahçe</option>
+              <option value="bag">Bağ</option>
+              <option value="bahce">Bahçe</option>
               <option value="zeytinlik">Zeytinlik</option>
               <option value="orman">Orman</option>
               <option value="mera">Mera</option>
-              <option value="diğer">Diğer</option>
+              <option value="imarli">İmarlı</option>
+              <option value="imarsiz">İmarsız</option>
+              <option value="diger">Diğer</option>
             </select>
             {errors.landType?.message && <p className="mt-1 text-xs text-red-600">{errors.landType.message}</p>}
           </div>

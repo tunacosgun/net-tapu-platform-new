@@ -72,7 +72,10 @@ export class CreateParcelDto {
 
   @IsString()
   @IsNotEmpty({ message: 'Arazi türü seçimi zorunludur' })
-  @MaxLength(100)
+  @IsIn(
+    ['arsa', 'tarla', 'bag', 'bahce', 'zeytinlik', 'orman', 'mera', 'imarli', 'imarsiz', 'diger'],
+    { message: 'Geçersiz arazi türü' },
+  )
   landType!: string;
 
   @IsNumberString()

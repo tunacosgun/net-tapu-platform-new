@@ -10,8 +10,9 @@ function isAdminPath(pathname: string): boolean {
 }
 
 function isProtectedPath(pathname: string): boolean {
+  // Auctions are publicly viewable; only bid/payment actions require auth and
+  // are enforced server-side. Watching a live auction must not paywall users.
   return (
-    pathname.startsWith('/auctions/') ||
     pathname.startsWith('/profile') ||
     isAdminPath(pathname)
   );
@@ -52,5 +53,5 @@ export function middleware(request: NextRequest) {
 // /login and / are NOT matched → no infinite redirect loops.
 
 export const config = {
-  matcher: ['/auctions/:path*', '/profile/:path*', '/admin/:path*'],
+  matcher: ['/profile/:path*', '/admin/:path*'],
 };
