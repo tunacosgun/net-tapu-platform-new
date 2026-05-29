@@ -32,14 +32,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 # dumb-init: PID 1 signal forwarding for graceful cluster shutdown
-# chromium: headless browser for sahibinden scraper (Cloudflare bypass via puppeteer-core)
-RUN apk add --no-cache \
-      dumb-init fontconfig ttf-dejavu ttf-liberation font-noto \
-      chromium nss freetype harfbuzz ca-certificates ttf-freefont
-
-# Tell puppeteer-core where Chromium lives so SahibindenScraperService can launch it
-ENV CHROMIUM_PATH=/usr/bin/chromium-browser
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+RUN apk add --no-cache dumb-init
 
 # Preserve monorepo layout so workspace symlinks keep working:
 #   node_modules/@nettapu/shared  →  ../../packages/shared

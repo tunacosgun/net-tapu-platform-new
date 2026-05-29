@@ -26,7 +26,6 @@ import { PriceAlertService } from './services/price-alert.service';
 import { ReservationService } from './services/reservation.service';
 import { CategoryService } from './services/category.service';
 import { FavoriteDigestWorker } from './services/favorite-digest.worker';
-import { SahibindenScraperService } from './services/sahibinden-scraper.service';
 
 import { ParcelController } from './controllers/parcel.controller';
 import { ParcelMediaController } from './controllers/parcel-media.controller';
@@ -38,7 +37,6 @@ import { ViewerCountController } from './controllers/viewer-count.controller';
 import { PriceAlertController, UserPriceAlertController } from './controllers/price-alert.controller';
 import { ReservationController, UserReservationController } from './controllers/reservation.controller';
 import { CategoryController, AdminCategoryController } from './controllers/category.controller';
-import { SahibindenImportController } from './controllers/sahibinden-import.controller';
 
 import { PRICING_STRATEGY } from './pricing/pricing-strategy.interface';
 import { BasePricingStrategy } from './pricing/base-pricing.strategy';
@@ -78,7 +76,6 @@ import { NotificationsModule } from '../notifications/notifications.module';
     UserReservationController,
     CategoryController,
     AdminCategoryController,
-    SahibindenImportController,
   ],
   providers: [
     ParcelService,
@@ -95,7 +92,6 @@ import { NotificationsModule } from '../notifications/notifications.module';
     ReservationService,
     CategoryService,
     FavoriteDigestWorker,
-    SahibindenScraperService,
     {
       provide: PRICING_STRATEGY,
       useClass: BasePricingStrategy,
