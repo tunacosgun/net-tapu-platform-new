@@ -8,6 +8,15 @@ import { Card, Badge, Alert, EmptyState, LoadingState, Button } from '@/componen
 import { showApiError } from '@/components/api-error-toast';
 import type { Offer } from '@/types';
 
+type MyOffer = Offer & {
+  parcelTitle?: string | null;
+  parcelListingId?: string | null;
+  parcelPrice?: string | null;
+  parcelCurrency?: string;
+  lastCounterAmount?: string | null;
+  responses?: Array<{ id: string; responseType: string; counterAmount: string | null; message: string | null; createdAt: string }>;
+};
+
 const offerStatusMap: Record<string, { variant: 'success' | 'danger' | 'warning' | 'info' | 'default'; label: string; icon: string }> = {
   pending: { variant: 'warning', label: 'Değerlendiriliyor', icon: '⏳' },
   accepted: { variant: 'success', label: 'Kabul Edildi', icon: '✅' },
@@ -18,17 +27,25 @@ const offerStatusMap: Record<string, { variant: 'success' | 'danger' | 'warning'
 };
 
 export default function OffersPage() {
-  const [offers, setOffers] = useState<Offer[]>([]);
+  const [offers, setOffers] = useState<MyOffer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [counterOpen, setCounterOpen] = useState<string | null>(null);
+  const [counterAmount, setCounterAmount] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    apiClient
-      .get<Offer[]>('/crm/offers/mine')
-      .then(({ data }) => setOffers(Array.isArray(data) ? data : []))
-      .catch(() => setError('Teklifler yüklenemedi.'))
-      .finally(() => setLoading(false));
-  }, []);
+  async function reload() {
+    try {
+      const { data } = await apiClient.get<MyOffer[]>('/crm/offers/mine');
+      setOffers(Array.isArray(data) ? data : []);
+    } catch {
+      setError('Teklifler yüklenemedi.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => { reload(); }, []);
 
   async function handleWithdraw(offerId: string) {
     try {
@@ -38,6 +55,27 @@ export default function OffersPage() {
       );
     } catch (err) {
       showApiError(err);
+    }
+  }
+
+  async function respondToCounter(offerId: string, type: 'accept' | 'reject' | 'counter') {
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      const body: Record<string, string> = { responseType: type };
+      if (type === 'counter') {
+        const raw = counterAmount.replace(/[^0-9]/g, '');
+        if (!raw) { setSubmitting(false); return; }
+        body.counterAmount = raw;
+      }
+      await apiClient.post(`/crm/offers/${offerId}/buyer-respond`, body);
+      setCounterOpen(null);
+      setCounterAmount('');
+      await reload();
+    } catch (err) {
+      showApiError(err);
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -131,6 +169,69 @@ export default function OffersPage() {
                     </Button>
                   )}
                 </div>
+
+                {offer.status === 'countered' && offer.lastCounterAmount && (
+                  <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 dark:bg-blue-950/20 p-4">
+                    <div className="flex items-center justify-between flex-wrap gap-3">
+                      <div>
+                        <p className="text-xs text-blue-700 font-semibold uppercase tracking-wide">Satıcının karşı teklifi</p>
+                        <p className="text-2xl font-bold text-blue-700 mt-1">
+                          {formatPrice(offer.lastCounterAmount)}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          size="sm"
+                          variant="primary"
+                          onClick={() => respondToCounter(offer.id, 'accept')}
+                          disabled={submitting}
+                        >
+                          Kabul Et
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => { setCounterOpen(counterOpen === offer.id ? null : offer.id); setCounterAmount(''); }}
+                          disabled={submitting}
+                        >
+                          Karşı Teklif
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="danger"
+                          onClick={() => respondToCounter(offer.id, 'reject')}
+                          disabled={submitting}
+                        >
+                          Reddet
+                        </Button>
+                      </div>
+                    </div>
+
+                    {counterOpen === offer.id && (
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          placeholder="Yeni teklif tutarı"
+                          value={counterAmount}
+                          onChange={(e) => {
+                            const raw = e.target.value.replace(/[^0-9]/g, '');
+                            setCounterAmount(raw ? Number(raw).toLocaleString('tr-TR') : '');
+                          }}
+                          className="flex-1 min-w-[180px] rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        />
+                        <Button
+                          size="sm"
+                          variant="primary"
+                          onClick={() => respondToCounter(offer.id, 'counter')}
+                          disabled={submitting || !counterAmount}
+                        >
+                          Gönder
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </Card>
             );
           })}

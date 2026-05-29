@@ -71,4 +71,19 @@ export class OfferController {
   ) {
     return this.service.withdraw(id, user.sub);
   }
+
+  /**
+   * Buyer-side response to a counter-offer. Buyer can accept the seller's
+   * counter, reject it, or push back with their own counter (which flips
+   * status back to 'pending' so the seller sees a fresh offer).
+   */
+  @Post(':id/buyer-respond')
+  @HttpCode(HttpStatus.OK)
+  async buyerRespond(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: RespondToOfferDto,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.service.buyerRespond(id, dto, user.sub);
+  }
 }

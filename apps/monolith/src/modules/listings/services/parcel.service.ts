@@ -14,6 +14,7 @@ import { CreateParcelDto } from '../dto/create-parcel.dto';
 import { UpdateParcelDto } from '../dto/update-parcel.dto';
 import { UpdateParcelStatusDto } from '../dto/update-parcel-status.dto';
 import { ListParcelsQueryDto } from '../dto/list-parcels-query.dto';
+import { NotificationService } from '../../notifications/notification.service';
 
 const ALLOWED_TRANSITIONS: Record<string, string[]> = {
   [ParcelStatus.DRAFT]: [ParcelStatus.ACTIVE],
@@ -34,6 +35,7 @@ export class ParcelService {
     @InjectRepository(ParcelStatusHistory)
     private readonly historyRepo: Repository<ParcelStatusHistory>,
     private readonly dataSource: DataSource,
+    private readonly notifications: NotificationService,
   ) {}
 
   private async nextListingId(): Promise<string> {
@@ -156,6 +158,15 @@ export class ParcelService {
     if (query.roadAccess) {
       qb.andWhere('p.road_access = :roadAccess', { roadAccess: query.roadAccess });
     }
+    if (query.ada) {
+      qb.andWhere('p.ada = :ada', { ada: query.ada });
+    }
+    if (query.parsel) {
+      qb.andWhere('p.parsel = :parsel', { parsel: query.parsel });
+    }
+    if (query.landType) {
+      qb.andWhere('p.land_type = :landType', { landType: query.landType });
+    }
 
     // Add favoriteCount subquery
     qb.addSelect(
@@ -257,6 +268,7 @@ export class ParcelService {
 
   async update(id: string, dto: UpdateParcelDto, userId: string): Promise<Parcel> {
     const parcel = await this.findById(id);
+    const oldPrice = parcel.price != null ? Number(parcel.price) : null;
 
     const updateData: Partial<Parcel> = {};
     for (const [key, value] of Object.entries(dto)) {
@@ -268,7 +280,61 @@ export class ParcelService {
     Object.assign(parcel, updateData);
     const saved = await this.parcelRepo.save(parcel);
     this.logger.log(`Parcel ${id} updated by user ${userId}`);
+
+    const newPrice = saved.price != null ? Number(saved.price) : null;
+    if (oldPrice != null && newPrice != null && oldPrice !== newPrice) {
+      // Fire-and-forget: don't make the admin's PATCH wait for the fan-out.
+      this.notifyFavoritersOfPriceChange(saved, oldPrice, newPrice).catch((err) => {
+        this.logger.warn(`Price-change notify failed for ${saved.id}: ${(err as Error).message}`);
+      });
+    }
+
     return saved;
+  }
+
+  /**
+   * Notify every user who favorited this parcel that the price moved.
+   * Sends push + email via the existing notification queue. Sender of the
+   * update is excluded (no point notifying the editor themselves).
+   */
+  private async notifyFavoritersOfPriceChange(
+    parcel: Parcel,
+    oldPrice: number,
+    newPrice: number,
+  ): Promise<void> {
+    const rows = await this.dataSource.query<{ user_id: string }[]>(
+      `SELECT user_id FROM listings.favorites WHERE parcel_id = $1`,
+      [parcel.id],
+    );
+    if (!rows.length) return;
+
+    const direction = newPrice < oldPrice ? 'düştü' : 'yükseldi';
+    const currency = parcel.currency || 'TRY';
+    const oldFmt = oldPrice.toLocaleString('tr-TR');
+    const newFmt = newPrice.toLocaleString('tr-TR');
+    const title = parcel.title || 'İlan';
+    const body = `Favorinizdeki "${title}" ilanının fiyatı ${direction}: ${oldFmt} → ${newFmt} ${currency}.`;
+
+    await Promise.allSettled(
+      rows.map((r) =>
+        Promise.all([
+          this.notifications.enqueue({
+            userId: r.user_id,
+            channel: 'push',
+            subject: 'Favori ilanda fiyat değişti',
+            body,
+            metadata: { type: 'favorite.price_changed', parcelId: parcel.id, oldPrice, newPrice },
+          }),
+          this.notifications.enqueue({
+            userId: r.user_id,
+            channel: 'email',
+            subject: `Fiyat ${direction}: ${title}`,
+            body,
+            metadata: { type: 'favorite.price_changed', parcelId: parcel.id, oldPrice, newPrice },
+          }),
+        ]),
+      ),
+    );
   }
 
   async updateStatus(id: string, dto: UpdateParcelStatusDto, userId: string): Promise<Parcel> {

@@ -1,6 +1,6 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
+import { Repository, DataSource, In } from 'typeorm';
 import { Offer } from '../entities/offer.entity';
 import { OfferResponse } from '../entities/offer-response.entity';
 import { CreateOfferDto } from '../dto/create-offer.dto';
@@ -154,10 +154,43 @@ export class OfferService {
     };
   }
 
-  async findByUser(userId: string): Promise<Offer[]> {
-    return this.offerRepo.find({
+  async findByUser(userId: string): Promise<any[]> {
+    const offers = await this.offerRepo.find({
       where: { userId },
       order: { createdAt: 'DESC' },
+    });
+    if (!offers.length) return [];
+
+    // Pull responses + parcel metadata so the buyer's "My Offers" page can
+    // show counter amounts and parcel titles in one round-trip.
+    const ids = offers.map((o) => o.id);
+    const responses = await this.responseRepo.find({
+      where: { offerId: In(ids) },
+      order: { createdAt: 'ASC' },
+    });
+    const parcelIds = Array.from(new Set(offers.map((o) => o.parcelId)));
+    const parcels = await this.parcelRepo.find({ where: { id: In(parcelIds) } });
+    const parcelMap = new Map(parcels.map((p) => [p.id, p]));
+    const responsesByOffer = new Map<string, OfferResponse[]>();
+    for (const r of responses) {
+      const arr = responsesByOffer.get(r.offerId) ?? [];
+      arr.push(r);
+      responsesByOffer.set(r.offerId, arr);
+    }
+
+    return offers.map((o) => {
+      const p = parcelMap.get(o.parcelId);
+      const respArr = responsesByOffer.get(o.id) ?? [];
+      const lastCounter = [...respArr].reverse().find((r) => r.responseType === 'counter');
+      return {
+        ...o,
+        parcelTitle: p?.title || null,
+        parcelListingId: p?.listingId || null,
+        parcelPrice: p?.price || null,
+        parcelCurrency: p?.currency || 'TRY',
+        responses: respArr,
+        lastCounterAmount: lastCounter?.counterAmount ?? null,
+      };
     });
   }
 
@@ -208,6 +241,13 @@ export class OfferService {
 
       await qr.commitTransaction();
       this.logger.log(`Offer ${id} responded: ${dto.responseType} by ${respondedBy}`);
+
+      // Notify the original bidder. Buyer needs to know whether their offer
+      // was accepted/rejected/countered — without this they're left guessing.
+      this.notifyBidderOfResponse(offer, dto).catch((err) => {
+        this.logger.warn(`Failed to notify bidder of offer ${id} response: ${(err as Error).message}`);
+      });
+
       return response;
     } catch (err) {
       await qr.rollbackTransaction();
@@ -215,6 +255,140 @@ export class OfferService {
     } finally {
       await qr.release();
     }
+  }
+
+  private async notifyBidderOfResponse(offer: Offer, dto: RespondToOfferDto): Promise<void> {
+    const parcel = await this.parcelRepo.findOne({ where: { id: offer.parcelId } });
+    const parcelTitle = parcel?.title || 'İlan';
+    const currency = parcel?.currency || 'TRY';
+
+    let subject = '';
+    let body = '';
+    if (dto.responseType === 'accept') {
+      subject = 'Teklifiniz kabul edildi';
+      body = `"${parcelTitle}" ilanı için verdiğiniz teklif kabul edildi. Satıcı sizinle iletişime geçecek.`;
+    } else if (dto.responseType === 'reject') {
+      subject = 'Teklifiniz reddedildi';
+      body = `"${parcelTitle}" ilanı için verdiğiniz teklif reddedildi. Daha yüksek bir teklifle tekrar deneyebilirsiniz.`;
+    } else if (dto.responseType === 'counter') {
+      const counterFmt = dto.counterAmount ? Number(dto.counterAmount).toLocaleString('tr-TR') : '';
+      subject = 'Size karşı teklif yapıldı';
+      body = `"${parcelTitle}" ilanında satıcıdan karşı teklif: ${counterFmt} ${currency}. Profilinizden cevaplayabilirsiniz.${dto.message ? `\n\nNot: ${dto.message}` : ''}`;
+    }
+    if (!subject) return;
+
+    const metadata = {
+      type: `offer.${dto.responseType}`,
+      offerId: offer.id,
+      parcelId: offer.parcelId,
+      counterAmount: dto.counterAmount ?? null,
+    };
+    await Promise.allSettled([
+      this.notifications.enqueue({ userId: offer.userId, channel: 'push', subject, body, metadata }),
+      this.notifications.enqueue({ userId: offer.userId, channel: 'email', subject, body, metadata }),
+    ]);
+  }
+
+  /**
+   * Buyer-side response to a seller's counter-offer.
+   *
+   * After a seller counters (status = 'countered'), the buyer can:
+   *   - 'accept'  → deal closed at the seller's counter amount (status = 'accepted')
+   *   - 'reject'  → buyer drops out (status = 'rejected')
+   *   - 'counter' → buyer makes their own counter; status flips back to 'pending'
+   *                 so the seller sees it as a fresh actionable offer
+   */
+  async buyerRespond(id: string, dto: RespondToOfferDto, userId: string): Promise<OfferResponse> {
+    const qr = this.dataSource.createQueryRunner();
+    await qr.connect();
+    await qr.startTransaction();
+    try {
+      const offer = await qr.manager
+        .createQueryBuilder(Offer, 'o')
+        .setLock('pessimistic_write')
+        .where('o.id = :id', { id })
+        .getOne();
+      if (!offer) throw new NotFoundException(`Offer ${id} not found`);
+      if (offer.userId !== userId) {
+        throw new ForbiddenException('Yalnızca teklif sahibi karşı teklife cevap verebilir');
+      }
+      if (offer.status !== 'countered') {
+        throw new BadRequestException(`Offer is not in countered state (current: ${offer.status})`);
+      }
+
+      if (dto.responseType === 'accept') {
+        offer.status = 'accepted';
+      } else if (dto.responseType === 'reject') {
+        offer.status = 'rejected';
+      } else if (dto.responseType === 'counter') {
+        if (!dto.counterAmount) {
+          throw new BadRequestException('Karşı teklif için tutar zorunludur');
+        }
+        offer.amount = dto.counterAmount;
+        offer.status = 'pending';
+      } else {
+        throw new BadRequestException(`Invalid response type: ${dto.responseType}`);
+      }
+      await qr.manager.save(Offer, offer);
+
+      const response = qr.manager.create(OfferResponse, {
+        offerId: id,
+        respondedBy: userId,
+        responseType: dto.responseType,
+        counterAmount: dto.counterAmount ?? null,
+        message: dto.message ?? null,
+      });
+      await qr.manager.save(OfferResponse, response);
+      await qr.commitTransaction();
+      this.logger.log(`Offer ${id} buyer-responded: ${dto.responseType} by ${userId}`);
+
+      // Notify the seller (parcel owner) about the buyer's response.
+      this.notifySellerOfBuyerResponse(offer, dto).catch((err) => {
+        this.logger.warn(`Failed to notify seller of buyer response: ${(err as Error).message}`);
+      });
+
+      return response;
+    } catch (err) {
+      await qr.rollbackTransaction();
+      throw err;
+    } finally {
+      await qr.release();
+    }
+  }
+
+  private async notifySellerOfBuyerResponse(offer: Offer, dto: RespondToOfferDto): Promise<void> {
+    const parcel = await this.parcelRepo.findOne({ where: { id: offer.parcelId } });
+    if (!parcel) return;
+    const recipientId = parcel.assignedConsultant || parcel.createdBy;
+    if (!recipientId) return;
+
+    const title = parcel.title || 'İlan';
+    const currency = parcel.currency || 'TRY';
+    let subject = '';
+    let body = '';
+    if (dto.responseType === 'accept') {
+      subject = 'Alıcı karşı teklifinizi kabul etti';
+      body = `"${title}" ilanında alıcı, karşı teklifinizi kabul etti.`;
+    } else if (dto.responseType === 'reject') {
+      subject = 'Alıcı karşı teklifinizi reddetti';
+      body = `"${title}" ilanında alıcı, karşı teklifinizi reddetti.`;
+    } else if (dto.responseType === 'counter') {
+      const amt = dto.counterAmount ? Number(dto.counterAmount).toLocaleString('tr-TR') : '';
+      subject = 'Alıcı yeni teklif gönderdi';
+      body = `"${title}" ilanında alıcı yeni bir teklif gönderdi: ${amt} ${currency}.`;
+    }
+    if (!subject) return;
+
+    await Promise.allSettled([
+      this.notifications.enqueue({
+        userId: recipientId, channel: 'push', subject, body,
+        metadata: { type: `offer.buyer_${dto.responseType}`, offerId: offer.id, parcelId: parcel.id },
+      }),
+      this.notifications.enqueue({
+        userId: recipientId, channel: 'email', subject, body,
+        metadata: { type: `offer.buyer_${dto.responseType}`, offerId: offer.id, parcelId: parcel.id },
+      }),
+    ]);
   }
 
   async withdraw(id: string, userId: string): Promise<Offer> {

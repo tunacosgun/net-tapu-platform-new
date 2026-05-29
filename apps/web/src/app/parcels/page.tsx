@@ -92,6 +92,8 @@ function ParcelsContent() {
   const [isFeatured, setIsFeatured] = useState(false);
   const [zoningFilter, setZoningFilter] = useState(searchParams.get('zoning') || '');
   const [roadFilter, setRoadFilter] = useState(searchParams.get('road') || '');
+  const [adaFilter, setAdaFilter] = useState(searchParams.get('ada') || '');
+  const [parselFilter, setParselFilter] = useState(searchParams.get('parsel') || '');
 
   const fetchParcels = useCallback(async () => {
     setLoading(true);
@@ -121,6 +123,8 @@ function ParcelsContent() {
       if (areaRange.max) params.maxArea = areaRange.max;
       if (zoningFilter) params.zoningStatus = zoningFilter;
       if (roadFilter) params.roadAccess = roadFilter;
+      if (adaFilter) params.ada = adaFilter;
+      if (parselFilter) params.parsel = parselFilter;
 
       const { data: res } = await apiClient.get<PaginatedResponse<Parcel>>('/parcels', { params });
       setData(res);
@@ -129,7 +133,7 @@ function ParcelsContent() {
     } finally {
       setLoading(false);
     }
-  }, [page, selectedCity, selectedDistrict, selectedNeighborhood, parcelTypeFilter, categoryFilter, search, statusFilter, viewMode, sortParam, isFeatured, priceRange, areaRange, zoningFilter, roadFilter]);
+  }, [page, selectedCity, selectedDistrict, selectedNeighborhood, parcelTypeFilter, categoryFilter, search, statusFilter, viewMode, sortParam, isFeatured, priceRange, areaRange, zoningFilter, roadFilter, adaFilter, parselFilter]);
 
   useEffect(() => { fetchParcels(); }, [fetchParcels]);
 
@@ -517,12 +521,39 @@ function ParcelsContent() {
                         <option value="">Tümü</option>
                         <option value="arsa">Arsa</option>
                         <option value="tarla">Tarla</option>
-                        <option value="bağ">Bağ</option>
-                        <option value="bahçe">Bahçe</option>
+                        <option value="bag">Bağ</option>
+                        <option value="bahce">Bahçe</option>
                         <option value="zeytinlik">Zeytinlik</option>
                         <option value="orman">Orman</option>
-                        <option value="diğer">Diğer</option>
+                        <option value="mera">Mera</option>
+                        <option value="imarli">İmarlı</option>
+                        <option value="imarsiz">İmarsız</option>
+                        <option value="diger">Diğer</option>
                       </select>
+                    </FilterSection>
+
+                    {/* Ada / Parsel */}
+                    <FilterSection title="Ada / Parsel">
+                      <div className="grid grid-cols-2 gap-2">
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          placeholder="Ada No"
+                          value={adaFilter}
+                          onChange={(e) => setAdaFilter(e.target.value)}
+                          onBlur={(e) => updateSearchParams({ ada: e.target.value, page: '1' })}
+                          className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                        />
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          placeholder="Parsel No"
+                          value={parselFilter}
+                          onChange={(e) => setParselFilter(e.target.value)}
+                          onBlur={(e) => updateSearchParams({ parsel: e.target.value, page: '1' })}
+                          className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                        />
+                      </div>
                     </FilterSection>
 
                     {/* Price range */}

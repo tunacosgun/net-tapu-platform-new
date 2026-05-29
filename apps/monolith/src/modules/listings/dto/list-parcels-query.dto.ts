@@ -67,6 +67,18 @@ export class ListParcelsQueryDto {
 
   @IsString()
   @IsOptional()
+  ada?: string;
+
+  @IsString()
+  @IsOptional()
+  parsel?: string;
+
+  @IsString()
+  @IsOptional()
+  landType?: string;
+
+  @IsString()
+  @IsOptional()
   sortBy?: 'price' | 'areaM2' | 'createdAt' | 'listedAt';
 
   @IsString()
