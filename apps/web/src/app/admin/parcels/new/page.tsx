@@ -41,7 +41,7 @@ export default function AdminNewParcelPage() {
     formState: { errors, isSubmitting },
   } = useForm<ParcelFormData>({
     resolver: zodResolver(parcelSchema),
-    defaultValues: { isAuctionEligible: false, isFeatured: false, showListingDate: true, latitude: '', longitude: '' },
+    defaultValues: { isAuctionEligible: false, isFeatured: false, showListingDate: true, latitude: '', longitude: '', status: 'active' },
   });
 
   const selectedCity = watch('city');
@@ -437,6 +437,28 @@ export default function AdminNewParcelPage() {
           <FormCheckbox label="Öne Çıkan" {...register('isFeatured')} />
           <FormCheckbox label="İlan Tarihini Göster" {...register('showListingDate')} />
           <FormCheckbox label="Köşe Parsel" {...register('isCornerParcel')} />
+        </div>
+
+        {/* Yayın Durumu — admins almost always want "active" but we keep the
+            draft escape hatch for incomplete listings. */}
+        <div className="rounded-lg border border-slate-200 bg-slate-50/40 p-4">
+          <p className="text-sm font-bold text-ink-900 mb-2">Yayın Durumu</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label className="flex items-start gap-3 rounded-lg border-2 border-slate-200 bg-white p-3 cursor-pointer hover:border-emerald-300 has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50 transition-colors">
+              <input type="radio" value="active" {...register('status')} className="mt-1 h-4 w-4 accent-emerald-600" />
+              <div>
+                <p className="text-sm font-semibold text-slate-900">Hemen Yayınla</p>
+                <p className="text-xs text-slate-500 mt-0.5">İlan oluşturulduğu anda canlıya alınır ve sitede görünür.</p>
+              </div>
+            </label>
+            <label className="flex items-start gap-3 rounded-lg border-2 border-slate-200 bg-white p-3 cursor-pointer hover:border-amber-300 has-[:checked]:border-amber-500 has-[:checked]:bg-amber-50 transition-colors">
+              <input type="radio" value="draft" {...register('status')} className="mt-1 h-4 w-4 accent-amber-600" />
+              <div>
+                <p className="text-sm font-semibold text-slate-900">Taslak Olarak Kaydet</p>
+                <p className="text-xs text-slate-500 mt-0.5">İlan kayıt edilir ama yayınlanmaz; sonra elle yayına alabilirsiniz.</p>
+              </div>
+            </label>
+          </div>
         </div>
         <FormTextarea
           label="Açıklama"

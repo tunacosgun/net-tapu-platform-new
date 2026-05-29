@@ -274,7 +274,7 @@ export default function AdminNewAuctionPage() {
     formState: { errors, isSubmitting },
   } = useForm<AuctionFormData>({
     resolver: zodResolver(auctionSchema),
-    defaultValues: { currency: 'TRY', sniperEnabled: true },
+    defaultValues: { currency: 'TRY', sniperEnabled: true, status: 'scheduled' },
   });
 
   // Auto-fill title when parcel selected
@@ -298,6 +298,7 @@ export default function AdminNewAuctionPage() {
       parcelId: data.parcelId,
       title: data.title,
       description: data.description || undefined,
+      status: data.status || 'scheduled',
       startTime: new Date(data.startTime).toISOString(),
       endTime: new Date(data.endTime).toISOString(),
       depositDeadline: new Date(data.depositDeadline).toISOString(),
@@ -487,6 +488,28 @@ export default function AdminNewAuctionPage() {
             </ul>
           </div>
         )}
+
+        {/* Yayın Durumu: scheduled (visible immediately, bidding opens at
+            startTime) vs. draft (saved but hidden until manually published) */}
+        <div className="rounded-lg border border-slate-200 bg-slate-50/40 p-4">
+          <p className="text-sm font-bold text-ink-900 mb-2">Yayın Durumu</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label className="flex items-start gap-3 rounded-lg border-2 border-slate-200 bg-white p-3 cursor-pointer hover:border-emerald-300 has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50 transition-colors">
+              <input type="radio" value="scheduled" {...register('status')} className="mt-1 h-4 w-4 accent-emerald-600" />
+              <div>
+                <p className="text-sm font-semibold text-slate-900">Hemen Yayınla</p>
+                <p className="text-xs text-slate-500 mt-0.5">İhale ilan edilir, başlangıç tarihinde otomatik canlıya geçer.</p>
+              </div>
+            </label>
+            <label className="flex items-start gap-3 rounded-lg border-2 border-slate-200 bg-white p-3 cursor-pointer hover:border-amber-300 has-[:checked]:border-amber-500 has-[:checked]:bg-amber-50 transition-colors">
+              <input type="radio" value="draft" {...register('status')} className="mt-1 h-4 w-4 accent-amber-600" />
+              <div>
+                <p className="text-sm font-semibold text-slate-900">Taslak Olarak Kaydet</p>
+                <p className="text-xs text-slate-500 mt-0.5">İhale kaydedilir ama sitede görünmez; sonra elle yayına alırsınız.</p>
+              </div>
+            </label>
+          </div>
+        </div>
 
         <div className="flex gap-3 pt-2">
           <Button type="submit" disabled={isSubmitting || isLimited}>

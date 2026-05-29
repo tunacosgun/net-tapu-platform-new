@@ -15,6 +15,15 @@ import {
 import { Type } from 'class-transformer';
 
 export class CreateParcelDto {
+  /**
+   * Publication state at creation time.
+   * - 'active'  : listing goes live immediately (default — what admins almost always want)
+   * - 'draft'   : saved but hidden from the public listing until manually activated
+   */
+  @IsOptional()
+  @IsIn(['draft', 'active'])
+  status?: 'draft' | 'active';
+
   @IsString()
   @IsNotEmpty()
   @MaxLength(500)

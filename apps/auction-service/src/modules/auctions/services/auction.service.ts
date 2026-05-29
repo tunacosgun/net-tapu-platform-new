@@ -43,11 +43,17 @@ export class AuctionService {
   ) {}
 
   async create(dto: CreateAuctionDto, userId: string): Promise<Auction> {
+    // Default to SCHEDULED — admins overwhelmingly want auctions to be
+    // visible immediately (bidding opens automatically at startTime).
+    // Draft remains available as an explicit escape hatch.
+    const initialStatus =
+      dto.status === 'draft' ? AuctionStatus.DRAFT : AuctionStatus.SCHEDULED;
+
     const auction = this.auctionRepo.create({
       parcelId: dto.parcelId,
       title: dto.title,
       description: dto.description ?? null,
-      status: AuctionStatus.DRAFT,
+      status: initialStatus,
       startingPrice: dto.startingPrice,
       minimumIncrement: dto.minimumIncrement,
       requiredDeposit: dto.requiredDeposit,
@@ -63,7 +69,7 @@ export class AuctionService {
     });
 
     const saved = await this.auctionRepo.save(auction);
-    this.logger.log(`Auction created: ${saved.id} by user ${userId}`);
+    this.logger.log(`Auction created: ${saved.id} by user ${userId} (status=${initialStatus})`);
     return saved;
   }
 

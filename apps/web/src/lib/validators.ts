@@ -102,6 +102,7 @@ export const parcelSchema = z.object({
   sellerType: z.enum(['sahibinden', 'emlakcidan', 'danisman', '']).optional(),
   tradeAccepted: z.enum(['yes', 'no', '']).optional(),
   hiddenFields: z.array(z.string()).optional(),
+  status: z.enum(['active', 'draft']).optional(),
 });
 export type ParcelFormData = z.infer<typeof parcelSchema>;
 
@@ -125,5 +126,6 @@ export const auctionSchema = z.object({
   sniperWindowSeconds: z.number().optional(),
   sniperExtensionSeconds: z.number().optional(),
   maxSniperExtensions: z.number().optional(),
+  status: z.enum(['draft', 'scheduled']).optional(),
 });
 export type AuctionFormData = z.infer<typeof auctionSchema>;

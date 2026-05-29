@@ -6,6 +6,7 @@ import {
   IsUUID,
   IsBoolean,
   IsInt,
+  IsIn,
   Min,
   Max,
   MaxLength,
@@ -13,6 +14,15 @@ import {
 } from 'class-validator';
 
 export class CreateAuctionDto {
+  /**
+   * Publication state at creation time.
+   * - 'scheduled' : auction is announced & visible immediately, bidding opens at startTime (default)
+   * - 'draft'     : saved but hidden from the public list until manually published
+   */
+  @IsOptional()
+  @IsIn(['draft', 'scheduled'])
+  status?: 'draft' | 'scheduled';
+
   @IsUUID()
   parcelId!: string;
 

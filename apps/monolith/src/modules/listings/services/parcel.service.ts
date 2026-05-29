@@ -61,11 +61,15 @@ export class ParcelService {
   async create(dto: CreateParcelDto, userId: string): Promise<Parcel> {
     const listingId = await this.nextListingId();
 
+    // Default to ACTIVE — admins overwhelmingly want listings live immediately.
+    // Only flip to DRAFT when the form explicitly asks for it.
+    const initialStatus = dto.status === 'draft' ? ParcelStatus.DRAFT : ParcelStatus.ACTIVE;
+
     const parcel = this.parcelRepo.create({
       listingId,
       title: dto.title,
       description: dto.description ?? null,
-      status: ParcelStatus.DRAFT,
+      status: initialStatus,
       city: dto.city,
       district: dto.district,
       neighborhood: dto.neighborhood ?? null,
@@ -93,10 +97,14 @@ export class ParcelService {
       tradeAccepted: dto.tradeAccepted ?? null,
       hiddenFields: dto.hiddenFields ?? [],
       createdBy: userId,
+      // listedAt marks "first time this listing went public" — set it on
+      // create if we're publishing directly, otherwise the activation path
+      // in updateStatus() will fill it in.
+      listedAt: initialStatus === ParcelStatus.ACTIVE ? new Date() : null,
     });
 
     const saved = await this.parcelRepo.save(parcel);
-    this.logger.log(`Parcel created: ${saved.id} (${saved.listingId}) by user ${userId}`);
+    this.logger.log(`Parcel created: ${saved.id} (${saved.listingId}) by user ${userId} (status=${initialStatus})`);
     return saved;
   }
 
