@@ -21,6 +21,17 @@ struct AdminParcelsView: View {
         }
         .navigationTitle("Tüm Arsalar")
         .toolbarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                NavigationLink {
+                    AdminParcelEditView(parcelId: nil)
+                } label: {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.title2)
+                        .foregroundStyle(Color.brandPrimary)
+                }
+            }
+        }
         .task { await load() }
         .refreshable { await load() }
     }

@@ -45,8 +45,8 @@ struct ProfileView: View {
                 case .auctions:      ProfileEmptyView(title: "İhale Geçmişim", icon: "hammer")
                 case .payments:      ProfileEmptyView(title: "Ödeme Geçmişim", icon: "creditcard")
                 case .support:       SupportTicketsView()
-                case .savedSearches: ProfileEmptyView(title: "Kayıtlı Aramalar", icon: "magnifyingglass")
-                case .notifications: ProfileEmptyView(title: "Bildirim Ayarları", icon: "bell")
+                case .savedSearches: SavedSearchesView()
+                case .notifications: NotificationsSettingsView()
                 }
             }
         }

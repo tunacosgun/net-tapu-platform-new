@@ -27,12 +27,18 @@ struct AuctionsListView: View {
         ScrollView {
             LazyVStack(spacing: 14) {
                 ForEach(auctions) { a in
-                    AuctionCard(auction: a)
+                    NavigationLink(value: a) {
+                        AuctionCard(auction: a)
+                    }
+                    .buttonStyle(.plain)
                 }
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 4)
             .padding(.bottom, 32)
+        }
+        .navigationDestination(for: Auction.self) { a in
+            LiveAuctionView(auction: a)
         }
     }
 
