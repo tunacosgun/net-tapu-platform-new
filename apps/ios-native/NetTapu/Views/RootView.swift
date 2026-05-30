@@ -28,8 +28,8 @@ private struct SplashView: View {
             VStack(spacing: 16) {
                 Text("NetTapu")
                     .font(.system(size: 36, weight: .black, design: .rounded))
-                    .foregroundStyle(.brandPrimary)
-                ProgressView().tint(.brandPrimary)
+                    .foregroundStyle(Color.brandPrimary)
+                ProgressView().tint(Color.brandPrimary)
             }
         }
     }

@@ -126,7 +126,7 @@ private struct MessageBubble: View {
                 Spacer()
                 Text(msg.body ?? "")
                     .font(.caption)
-                    .foregroundStyle(.inkSecondary)
+                    .foregroundStyle(Color.inkSecondary)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 4)
                     .background(.ultraThinMaterial, in: Capsule())
@@ -169,11 +169,11 @@ private struct MessageBubble: View {
                     HStack(spacing: 3) {
                         Text(shortTime(msg.createdAt))
                             .font(.system(size: 10))
-                            .foregroundStyle(.inkMuted)
+                            .foregroundStyle(Color.inkMuted)
                         if mine {
                             Image(systemName: msg.readAt != nil ? "checkmark.message.fill" : "checkmark")
                                 .font(.system(size: 9, weight: .bold))
-                                .foregroundStyle(msg.readAt != nil ? .brandSuccess : .inkMuted)
+                                .foregroundStyle(msg.readAt != nil ? Color.brandSuccess : Color.inkMuted)
                         }
                     }
                 }

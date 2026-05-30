@@ -1,0 +1,424 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0D48F8697D21DD03197C3445 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279086D7C4305A3A8B853B44 /* Models.swift */; };
+		2098608F1FEB50DF336BBCC6 /* SupportTicketsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B6018FF7EC63BFD50A62BB8 /* SupportTicketsView.swift */; };
+		224FCB413F42199B28FCADFE /* SupportChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5DC47743BD98413AE612D1A /* SupportChatView.swift */; };
+		2C4DA3D349470B24F931D443 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99F5687B4A363B6A479BDE2B /* LoginView.swift */; };
+		470330B46804BABFF1D81502 /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED9CFE0F85BF1DFD3053C2F0 /* Colors.swift */; };
+		5E06CA1D39B2607997B41D08 /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 597C140D0208F938FD5295F8 /* AppConfig.swift */; };
+		6F3371F972B3515D64B619E7 /* NetTapuApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88D37A476B77CBEF3FA4F014 /* NetTapuApp.swift */; };
+		74D5C5AA3BDA68D3783352C9 /* AuthStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CBC9A6357B91E75B3EDC615 /* AuthStore.swift */; };
+		924B440DE04D6BBBC3C266F0 /* LiquidGlass.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0881B4B3E8E6FC1B3BFDA52 /* LiquidGlass.swift */; };
+		BD1ADA3243640E97D2D2C736 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E12E63429644627749F31B0 /* HomeView.swift */; };
+		CC5FEDDAD6BABC0B4B46B8FD /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 745860FD14882B89833D61C6 /* APIClient.swift */; };
+		F2BAA30EEF294D10AC3670BC /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C6622C7FE6E095DAD222281 /* RootView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		279086D7C4305A3A8B853B44 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		2B6018FF7EC63BFD50A62BB8 /* SupportTicketsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupportTicketsView.swift; sourceTree = "<group>"; };
+		4C6622C7FE6E095DAD222281 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		4CBC9A6357B91E75B3EDC615 /* AuthStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthStore.swift; sourceTree = "<group>"; };
+		4E94643A9E0B024ECB1E140C /* NetTapu.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = NetTapu.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		597C140D0208F938FD5295F8 /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
+		5E12E63429644627749F31B0 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		745860FD14882B89833D61C6 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
+		88D37A476B77CBEF3FA4F014 /* NetTapuApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetTapuApp.swift; sourceTree = "<group>"; };
+		99F5687B4A363B6A479BDE2B /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		B5DC47743BD98413AE612D1A /* SupportChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupportChatView.swift; sourceTree = "<group>"; };
+		E0881B4B3E8E6FC1B3BFDA52 /* LiquidGlass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidGlass.swift; sourceTree = "<group>"; };
+		ED9CFE0F85BF1DFD3053C2F0 /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
+		F71F986ABB3A1CC5BB47CFB1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		1DD9F738C496969A79A45CCF /* Home */ = {
+			isa = PBXGroup;
+			children = (
+				5E12E63429644627749F31B0 /* HomeView.swift */,
+			);
+			path = Home;
+			sourceTree = "<group>";
+		};
+		53E2FCAE5ECC9C3363E34701 /* Theme */ = {
+			isa = PBXGroup;
+			children = (
+				ED9CFE0F85BF1DFD3053C2F0 /* Colors.swift */,
+				E0881B4B3E8E6FC1B3BFDA52 /* LiquidGlass.swift */,
+			);
+			path = Theme;
+			sourceTree = "<group>";
+		};
+		616162732B6739AAC9250981 /* Stores */ = {
+			isa = PBXGroup;
+			children = (
+				4CBC9A6357B91E75B3EDC615 /* AuthStore.swift */,
+			);
+			path = Stores;
+			sourceTree = "<group>";
+		};
+		62F3A5667857E8598CCA20CC /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				597C140D0208F938FD5295F8 /* AppConfig.swift */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
+		6ED64E923070907FC9BBB57D /* Auth */ = {
+			isa = PBXGroup;
+			children = (
+				99F5687B4A363B6A479BDE2B /* LoginView.swift */,
+			);
+			path = Auth;
+			sourceTree = "<group>";
+		};
+		7650F62EC225F9053EF88579 /* NetTapu */ = {
+			isa = PBXGroup;
+			children = (
+				F71F986ABB3A1CC5BB47CFB1 /* Info.plist */,
+				88D37A476B77CBEF3FA4F014 /* NetTapuApp.swift */,
+				62F3A5667857E8598CCA20CC /* Config */,
+				EF73F8ED5383BCA1A63445B6 /* Models */,
+				CC4FD89376A29751E827CF62 /* Networking */,
+				616162732B6739AAC9250981 /* Stores */,
+				53E2FCAE5ECC9C3363E34701 /* Theme */,
+				E66069DE5415C8836022C6AC /* Views */,
+			);
+			path = NetTapu;
+			sourceTree = "<group>";
+		};
+		915374C9AFFB8D692085BB52 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4E94643A9E0B024ECB1E140C /* NetTapu.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		B31D853BAD1DA7DEB68DA021 = {
+			isa = PBXGroup;
+			children = (
+				7650F62EC225F9053EF88579 /* NetTapu */,
+				915374C9AFFB8D692085BB52 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		CC4FD89376A29751E827CF62 /* Networking */ = {
+			isa = PBXGroup;
+			children = (
+				745860FD14882B89833D61C6 /* APIClient.swift */,
+			);
+			path = Networking;
+			sourceTree = "<group>";
+		};
+		D313FCE5E6025AA6115EA169 /* Support */ = {
+			isa = PBXGroup;
+			children = (
+				B5DC47743BD98413AE612D1A /* SupportChatView.swift */,
+				2B6018FF7EC63BFD50A62BB8 /* SupportTicketsView.swift */,
+			);
+			path = Support;
+			sourceTree = "<group>";
+		};
+		E66069DE5415C8836022C6AC /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				4C6622C7FE6E095DAD222281 /* RootView.swift */,
+				6ED64E923070907FC9BBB57D /* Auth */,
+				1DD9F738C496969A79A45CCF /* Home */,
+				D313FCE5E6025AA6115EA169 /* Support */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		EF73F8ED5383BCA1A63445B6 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				279086D7C4305A3A8B853B44 /* Models.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		7DCCB2C496DE382D3AF45C91 /* NetTapu */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 59C3B427BAC6C78FA50A178C /* Build configuration list for PBXNativeTarget "NetTapu" */;
+			buildPhases = (
+				DB9468DE7377D7DA0DCF0B05 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = NetTapu;
+			packageProductDependencies = (
+			);
+			productName = NetTapu;
+			productReference = 4E94643A9E0B024ECB1E140C /* NetTapu.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		889CB365AD44C0F19AAD2946 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					7DCCB2C496DE382D3AF45C91 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 8EF15AACB5A850DEB4C2B330 /* Build configuration list for PBXProject "NetTapu" */;
+			developmentRegion = tr;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				tr,
+			);
+			mainGroup = B31D853BAD1DA7DEB68DA021;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 915374C9AFFB8D692085BB52 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				7DCCB2C496DE382D3AF45C91 /* NetTapu */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		DB9468DE7377D7DA0DCF0B05 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CC5FEDDAD6BABC0B4B46B8FD /* APIClient.swift in Sources */,
+				5E06CA1D39B2607997B41D08 /* AppConfig.swift in Sources */,
+				74D5C5AA3BDA68D3783352C9 /* AuthStore.swift in Sources */,
+				470330B46804BABFF1D81502 /* Colors.swift in Sources */,
+				BD1ADA3243640E97D2D2C736 /* HomeView.swift in Sources */,
+				924B440DE04D6BBBC3C266F0 /* LiquidGlass.swift in Sources */,
+				2C4DA3D349470B24F931D443 /* LoginView.swift in Sources */,
+				0D48F8697D21DD03197C3445 /* Models.swift in Sources */,
+				6F3371F972B3515D64B619E7 /* NetTapuApp.swift in Sources */,
+				F2BAA30EEF294D10AC3670BC /* RootView.swift in Sources */,
+				224FCB413F42199B28FCADFE /* SupportChatView.swift in Sources */,
+				2098608F1FEB50DF336BBCC6 /* SupportTicketsView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		85BC93E93C3E7327765B669A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.10;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		ABA384B887EEA04D03591797 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = NetTapu/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = tech.tunasoft.nettapu;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		BC97DBB5B8C4910ACF210E29 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.10;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		F043BA29272705A032AF1555 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = NetTapu/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = tech.tunasoft.nettapu;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		59C3B427BAC6C78FA50A178C /* Build configuration list for PBXNativeTarget "NetTapu" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F043BA29272705A032AF1555 /* Debug */,
+				ABA384B887EEA04D03591797 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		8EF15AACB5A850DEB4C2B330 /* Build configuration list for PBXProject "NetTapu" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				85BC93E93C3E7327765B669A /* Debug */,
+				BC97DBB5B8C4910ACF210E29 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 889CB365AD44C0F19AAD2946 /* Project object */;
+}

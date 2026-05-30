@@ -1,0 +1,53 @@
+# XcodeGen spec — regenerate .xcodeproj with:
+#   cd apps/ios-native && xcodegen
+name: NetTapu
+options:
+  bundleIdPrefix: tech.tunasoft
+  deploymentTarget:
+    iOS: "18.0"
+  developmentLanguage: tr
+  createIntermediateGroups: true
+
+settings:
+  base:
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+    CODE_SIGN_IDENTITY: "-"
+    CODE_SIGNING_REQUIRED: NO
+    CODE_SIGNING_ALLOWED: NO
+    SWIFT_VERSION: "5.10"
+    IPHONEOS_DEPLOYMENT_TARGET: "18.0"
+    TARGETED_DEVICE_FAMILY: "1,2"
+    ENABLE_USER_SCRIPT_SANDBOXING: NO
+
+targets:
+  NetTapu:
+    type: application
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources:
+      - path: NetTapu
+    info:
+      path: NetTapu/Info.plist
+      properties:
+        CFBundleDisplayName: NetTapu
+        CFBundleShortVersionString: "0.1.0"
+        CFBundleVersion: "1"
+        UILaunchScreen:
+          UIColorName: ""
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: tech.tunasoft.nettapu
+        ASSETCATALOG_COMPILER_APPICON_NAME: ""
+        GENERATE_INFOPLIST_FILE: NO
+        CURRENT_PROJECT_VERSION: "1"
+        MARKETING_VERSION: "0.1.0"

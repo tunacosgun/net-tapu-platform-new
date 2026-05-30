@@ -21,13 +21,13 @@ struct LoginView: View {
                     VStack(spacing: 8) {
                         Image(systemName: "leaf.fill")
                             .font(.system(size: 44, weight: .bold))
-                            .foregroundStyle(.brandPrimary)
+                            .foregroundStyle(Color.brandPrimary)
                         Text("NetTapu")
                             .font(.system(size: 32, weight: .black, design: .rounded))
-                            .foregroundStyle(.brandPrimary)
+                            .foregroundStyle(Color.brandPrimary)
                         Text("Türkiye'nin güvenilir arsa & ihale platformu")
                             .font(.footnote)
-                            .foregroundStyle(.inkSecondary)
+                            .foregroundStyle(Color.inkSecondary)
                     }
 
                     // Glass card form
@@ -35,13 +35,13 @@ struct LoginView: View {
                         VStack(spacing: 16) {
                             Text("Hoş Geldiniz")
                                 .font(.title2.bold())
-                                .foregroundStyle(.inkPrimary)
+                                .foregroundStyle(Color.inkPrimary)
                                 .frame(maxWidth: .infinity, alignment: .leading)
 
                             // Email
                             HStack(spacing: 10) {
                                 Image(systemName: "envelope")
-                                    .foregroundStyle(.inkMuted)
+                                    .foregroundStyle(Color.inkMuted)
                                 TextField("E-posta", text: $email)
                                     .textInputAutocapitalization(.never)
                                     .keyboardType(.emailAddress)
@@ -57,7 +57,7 @@ struct LoginView: View {
                             // Password
                             HStack(spacing: 10) {
                                 Image(systemName: "lock")
-                                    .foregroundStyle(.inkMuted)
+                                    .foregroundStyle(Color.inkMuted)
                                 SecureField("Şifre", text: $password)
                                     .focused($focused, equals: .password)
                                     .submitLabel(.go)
@@ -70,7 +70,7 @@ struct LoginView: View {
                             if let errorMessage {
                                 Text(errorMessage)
                                     .font(.footnote)
-                                    .foregroundStyle(.brandDanger)
+                                    .foregroundStyle(Color.brandDanger)
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                     .transition(.opacity)
                             }
@@ -89,7 +89,7 @@ struct LoginView: View {
                                 Spacer()
                                 Button("Şifremi unuttum") { /* TODO */ }
                                     .font(.footnote)
-                                    .foregroundStyle(.inkSecondary)
+                                    .foregroundStyle(Color.inkSecondary)
                             }
                         }
                     }
@@ -98,9 +98,9 @@ struct LoginView: View {
                     // Register hint
                     HStack(spacing: 4) {
                         Text("Hesabınız yok mu?")
-                            .foregroundStyle(.inkSecondary)
+                            .foregroundStyle(Color.inkSecondary)
                         Button("Kayıt Ol") { /* TODO */ }
-                            .foregroundStyle(.brandPrimary)
+                            .foregroundStyle(Color.brandPrimary)
                             .bold()
                     }
                     .font(.footnote)

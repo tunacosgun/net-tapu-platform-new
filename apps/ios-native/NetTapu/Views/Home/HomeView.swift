@@ -28,7 +28,7 @@ struct HomeView: View {
                 .tabItem { Label("Profil", systemImage: "person.fill") }
                 .tag(Tab.profile)
         }
-        .tint(.brandPrimary)
+        .tint(Color.brandPrimary)
     }
 }
 
@@ -64,16 +64,16 @@ private struct HomeFeedView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Merhaba")
                     .font(.footnote)
-                    .foregroundStyle(.inkSecondary)
+                    .foregroundStyle(Color.inkSecondary)
                 Text(auth.user?.displayName ?? "")
                     .font(.title3.bold())
-                    .foregroundStyle(.inkPrimary)
+                    .foregroundStyle(Color.inkPrimary)
             }
             Spacer()
             Button { /* notifications */ } label: {
                 Image(systemName: "bell")
                     .font(.system(size: 20, weight: .semibold))
-                    .foregroundStyle(.inkPrimary)
+                    .foregroundStyle(Color.inkPrimary)
                     .padding(10)
                     .background(.ultraThinMaterial, in: .circle)
             }
@@ -91,10 +91,10 @@ private struct HomeFeedView: View {
                 }
                 Text("Aradığınız arsayı bulun.")
                     .font(.system(size: 26, weight: .heavy, design: .rounded))
-                    .foregroundStyle(.inkPrimary)
+                    .foregroundStyle(Color.inkPrimary)
                 Text("Türkiye'nin güvenilir arsa & ihale platformu — tapulu, sınırlı kaynaklı yatırım fırsatları.")
                     .font(.subheadline)
-                    .foregroundStyle(.inkSecondary)
+                    .foregroundStyle(Color.inkSecondary)
                 GlassButton(action: { /* search */ }) {
                     HStack {
                         Image(systemName: "magnifyingglass")
@@ -110,7 +110,7 @@ private struct HomeFeedView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Hızlı Erişim")
                 .font(.headline)
-                .foregroundStyle(.inkSecondary)
+                .foregroundStyle(Color.inkSecondary)
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 2),
                       spacing: 12) {
                 QuickActionTile(icon: "map.fill", title: "Tüm Arsalar", tint: .brandPrimary)
@@ -135,7 +135,7 @@ private struct QuickActionTile: View {
                 .background(tint, in: .circle)
             Text(title)
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(.inkPrimary)
+                .foregroundStyle(Color.inkPrimary)
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
@@ -158,12 +158,12 @@ private struct ParcelsPlaceholderView: View {
         ZStack {
             AnimatedMeshBackground().opacity(0.35)
             VStack(spacing: 8) {
-                Image(systemName: "map").font(.largeTitle).foregroundStyle(.brandPrimary)
+                Image(systemName: "map").font(.largeTitle).foregroundStyle(Color.brandPrimary)
                 Text("Arsalar")
                     .font(.title3.bold())
                 Text("Yakında — Phase 2'de eklenecek")
                     .font(.footnote)
-                    .foregroundStyle(.inkSecondary)
+                    .foregroundStyle(Color.inkSecondary)
             }
         }
     }
@@ -174,12 +174,12 @@ private struct AuctionsPlaceholderView: View {
         ZStack {
             AnimatedMeshBackground().opacity(0.35)
             VStack(spacing: 8) {
-                Image(systemName: "hammer").font(.largeTitle).foregroundStyle(.brandAccent)
+                Image(systemName: "hammer").font(.largeTitle).foregroundStyle(Color.brandAccent)
                 Text("İhaleler")
                     .font(.title3.bold())
                 Text("Yakında — Phase 2'de eklenecek")
                     .font(.footnote)
-                    .foregroundStyle(.inkSecondary)
+                    .foregroundStyle(Color.inkSecondary)
             }
         }
     }
@@ -193,12 +193,12 @@ private struct ProfilePlaceholderView: View {
             VStack(spacing: 16) {
                 Image(systemName: "person.circle.fill")
                     .font(.system(size: 64))
-                    .foregroundStyle(.brandPrimary)
+                    .foregroundStyle(Color.brandPrimary)
                 Text(auth.user?.displayName ?? "")
                     .font(.title3.bold())
                 Text(auth.user?.email ?? "")
                     .font(.footnote)
-                    .foregroundStyle(.inkSecondary)
+                    .foregroundStyle(Color.inkSecondary)
                 Button(role: .destructive) {
                     Task { await AuthStore.shared.signOut() }
                 } label: {

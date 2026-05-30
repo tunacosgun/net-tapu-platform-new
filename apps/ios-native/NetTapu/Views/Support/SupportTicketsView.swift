@@ -12,7 +12,7 @@ struct SupportTicketsView: View {
                 AnimatedMeshBackground().opacity(0.35)
 
                 if loading {
-                    ProgressView().tint(.brandPrimary)
+                    ProgressView().tint(Color.brandPrimary)
                 } else if tickets.isEmpty {
                     emptyState
                 } else {
@@ -26,7 +26,7 @@ struct SupportTicketsView: View {
                     Button { showingNew = true } label: {
                         Image(systemName: "plus.circle.fill")
                             .font(.title2)
-                            .foregroundStyle(.brandPrimary)
+                            .foregroundStyle(Color.brandPrimary)
                     }
                 }
             }
@@ -61,12 +61,12 @@ struct SupportTicketsView: View {
         VStack(spacing: 12) {
             Image(systemName: "bubble.left.and.bubble.right.fill")
                 .font(.system(size: 48))
-                .foregroundStyle(.brandPrimary.opacity(0.7))
+                .foregroundStyle(Color.brandPrimary.opacity(0.7))
             Text("Henüz konuşmanız yok")
                 .font(.title3.bold())
             Text("Sorularınız için destek ekibimizle hemen iletişime geçin.")
                 .font(.subheadline)
-                .foregroundStyle(.inkSecondary)
+                .foregroundStyle(Color.inkSecondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
             Button { showingNew = true } label: {
@@ -74,7 +74,7 @@ struct SupportTicketsView: View {
                     .font(.subheadline.bold())
                     .padding(.horizontal, 22)
                     .padding(.vertical, 12)
-                    .background(.brandPrimary, in: Capsule())
+                    .background(Color.brandPrimary, in: Capsule())
                     .foregroundStyle(.white)
             }
             .padding(.top, 8)
@@ -117,7 +117,7 @@ private struct SupportTicketRow: View {
                 HStack {
                     Text(ticket.subject)
                         .font(.subheadline.bold())
-                        .foregroundStyle(.inkPrimary)
+                        .foregroundStyle(Color.inkPrimary)
                         .lineLimit(1)
                     Spacer()
                     if ticket.unreadUser > 0 {
@@ -126,20 +126,20 @@ private struct SupportTicketRow: View {
                             .foregroundStyle(.white)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
-                            .background(.brandDanger, in: Capsule())
+                            .background(Color.brandDanger, in: Capsule())
                     }
                 }
                 HStack(spacing: 6) {
                     GlassChip(text: ticket.status.localized, tint: statusColor(ticket.status))
                     Text(relativeTime(ticket.lastMessageAt ?? ticket.createdAt))
                         .font(.caption)
-                        .foregroundStyle(.inkMuted)
+                        .foregroundStyle(Color.inkMuted)
                 }
             }
 
             Image(systemName: "chevron.right")
                 .font(.caption)
-                .foregroundStyle(.inkMuted)
+                .foregroundStyle(Color.inkMuted)
         }
         .padding(14)
         .background {
@@ -197,14 +197,14 @@ private struct SupportNewTicketSheet: View {
                             .font(.title3.bold())
 
                         VStack(alignment: .leading, spacing: 6) {
-                            Text("KONU").font(.caption.bold()).foregroundStyle(.inkSecondary)
+                            Text("KONU").font(.caption.bold()).foregroundStyle(Color.inkSecondary)
                             TextField("Örn. Depozito iadesi", text: $subject)
                                 .padding(12)
                                 .background(.white.opacity(0.7), in: .rect(cornerRadius: 12, style: .continuous))
                         }
 
                         VStack(alignment: .leading, spacing: 6) {
-                            Text("MESAJ").font(.caption.bold()).foregroundStyle(.inkSecondary)
+                            Text("MESAJ").font(.caption.bold()).foregroundStyle(Color.inkSecondary)
                             TextEditor(text: $message)
                                 .frame(minHeight: 150)
                                 .padding(8)
@@ -213,7 +213,7 @@ private struct SupportNewTicketSheet: View {
                         }
 
                         if let error {
-                            Text(error).font(.footnote).foregroundStyle(.brandDanger)
+                            Text(error).font(.footnote).foregroundStyle(Color.brandDanger)
                         }
 
                         GlassButton(action: { Task { await submit() } }) {
