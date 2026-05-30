@@ -31,6 +31,22 @@ struct UserSummary: Decodable, Hashable {
 
 // MARK: - Parcels
 
+struct ParcelImage: Decodable, Identifiable, Hashable {
+    let id: String?
+    let originalUrl: String?
+    let watermarkedUrl: String?
+    let thumbnailUrl: String?
+    let isCover: Bool?
+    let sortOrder: Int?
+
+    /// Prefer watermark for public display, fall back to original.
+    var bestURL: URL? {
+        let raw = watermarkedUrl ?? originalUrl ?? thumbnailUrl
+        return ImageURL.absolute(raw)
+    }
+    var thumbURL: URL? { ImageURL.absolute(thumbnailUrl ?? watermarkedUrl ?? originalUrl) }
+}
+
 struct Parcel: Decodable, Identifiable, Hashable {
     let id: String
     let listingId: String?
@@ -49,6 +65,7 @@ struct Parcel: Decodable, Identifiable, Hashable {
     let isAuctionEligible: Bool?
     let status: String?
     let createdAt: String?
+    let images: [ParcelImage]?
 
     var priceDecimal: Decimal? { price.flatMap { Decimal(string: $0) } }
     var areaDecimal: Decimal? { areaM2.flatMap { Decimal(string: $0) } }
@@ -57,6 +74,26 @@ struct Parcel: Decodable, Identifiable, Hashable {
     var minOfferAmount: Decimal? {
         guard let p = priceDecimal else { return nil }
         return p * Decimal(0.8)
+    }
+
+    var coverImageURL: URL? {
+        let arr = images ?? []
+        if let cover = arr.first(where: { $0.isCover == true }) { return cover.bestURL }
+        return arr.sorted(by: { ($0.sortOrder ?? 0) < ($1.sortOrder ?? 0) }).first?.bestURL
+    }
+}
+
+/// Resolves a backend-relative image path (e.g. `/uploads/parcels/.../x.jpg`)
+/// into a full URL against the configured API host.
+enum ImageURL {
+    static func absolute(_ raw: String?) -> URL? {
+        guard let raw, !raw.isEmpty else { return nil }
+        if raw.hasPrefix("http") { return URL(string: raw) }
+        // Strip /api/v1 if accidentally embedded
+        let base = AppConfig.baseURL.absoluteString
+            .replacingOccurrences(of: "/api/v1", with: "")
+        let sep = raw.hasPrefix("/") ? "" : "/"
+        return URL(string: base + sep + raw)
     }
 }
 
@@ -87,6 +124,22 @@ struct Auction: Decodable, Identifiable, Hashable {
     let scheduledStart: String?
     let scheduledEnd: String?
     let createdAt: String?
+    let parcel: AuctionParcel?
+
+    var coverImageURL: URL? { parcel?.coverImageURL }
+}
+
+struct AuctionParcel: Decodable, Hashable {
+    let title: String?
+    let city: String?
+    let district: String?
+    let images: [ParcelImage]?
+
+    var coverImageURL: URL? {
+        let arr = images ?? []
+        if let cover = arr.first(where: { $0.isCover == true }) { return cover.bestURL }
+        return arr.first?.bestURL
+    }
 }
 
 // MARK: - Offers

@@ -14,14 +14,17 @@ struct LiveAuctionView: View {
         ZStack {
             AnimatedMeshBackground().opacity(0.30)
             ScrollView {
-                VStack(spacing: 18) {
-                    header
-                    currentBidCard
-                    bidsFeed
-                    Spacer().frame(height: 24)
+                VStack(spacing: 16) {
+                    heroImage
+                    VStack(spacing: 18) {
+                        header
+                        currentBidCard
+                        bidsFeed
+                        Spacer().frame(height: 24)
+                    }
+                    .padding(.horizontal, 18)
                 }
-                .padding(.horizontal, 18)
-                .padding(.top, 16)
+                .padding(.top, 0)
             }
         }
         .navigationTitle(auction.title)
@@ -36,6 +39,30 @@ struct LiveAuctionView: View {
         }
         .task { startSocket() }
         .onDisappear { socket?.close() }
+    }
+
+    @ViewBuilder
+    private var heroImage: some View {
+        if let url = auction.coverImageURL {
+            AsyncImage(url: url) { phase in
+                switch phase {
+                case .success(let img): img.resizable().scaledToFill()
+                case .empty:
+                    ZStack {
+                        Color.brandPrimary.opacity(0.15)
+                        ProgressView()
+                    }
+                case .failure: Color.brandPrimary.opacity(0.15)
+                @unknown default: Color.brandPrimary.opacity(0.15)
+                }
+            }
+            .frame(height: 220)
+            .clipped()
+            .overlay {
+                LinearGradient(colors: [.black.opacity(0.20), .clear, .clear, .black.opacity(0.30)],
+                               startPoint: .top, endPoint: .bottom)
+            }
+        }
     }
 
     private var header: some View {

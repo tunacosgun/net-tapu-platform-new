@@ -74,6 +74,14 @@ struct AuctionsListView: View {
 private struct AuctionCard: View {
     let auction: Auction
 
+    private var gradient: some View {
+        LinearGradient(
+            colors: [Color.brandPrimary.opacity(0.35),
+                     Color.brandAccent.opacity(0.30)],
+            startPoint: .topLeading, endPoint: .bottomTrailing
+        )
+    }
+
     private var statusTint: Color {
         switch auction.status {
         case "live", "ending": return Color.brandDanger
@@ -96,17 +104,47 @@ private struct AuctionCard: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text(statusLabel)
-                    .font(.system(size: 10, weight: .black))
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(statusTint, in: Capsule())
-                Spacer()
-            }
+        VStack(alignment: .leading, spacing: 0) {
+            // Hero image
+            ZStack(alignment: .topLeading) {
+                if let url = auction.coverImageURL {
+                    AsyncImage(url: url) { phase in
+                        switch phase {
+                        case .success(let img): img.resizable().scaledToFill()
+                        case .empty:
+                            ZStack {
+                                gradient
+                                ProgressView().tint(.white)
+                            }
+                        case .failure: gradient
+                        @unknown default: gradient
+                        }
+                    }
+                    .frame(height: 160)
+                    .clipped()
+                } else {
+                    gradient.frame(height: 160)
+                }
+                LinearGradient(colors: [.black.opacity(0.30), .clear, .clear, .black.opacity(0.40)],
+                               startPoint: .top, endPoint: .bottom)
+                    .frame(height: 160)
+                    .allowsHitTesting(false)
 
+                HStack {
+                    Text(statusLabel)
+                        .font(.system(size: 10, weight: .black))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(statusTint, in: Capsule())
+                    Spacer()
+                }
+                .padding(10)
+            }
+            .frame(height: 160)
+            .clipShape(UnevenRoundedRectangle(topLeadingRadius: 18, topTrailingRadius: 18))
+
+            VStack(alignment: .leading, spacing: 12) {
             Text(auction.title)
                 .font(.system(size: 16, weight: .heavy))
                 .foregroundStyle(Color.inkPrimary)
@@ -131,8 +169,9 @@ private struct AuctionCard: View {
                 }
                 Spacer()
             }
+            }
+            .padding(14)
         }
-        .padding(16)
         .background {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .fill(.ultraThinMaterial)

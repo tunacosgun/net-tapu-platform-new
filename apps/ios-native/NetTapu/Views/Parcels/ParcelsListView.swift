@@ -79,16 +79,45 @@ struct ParcelsListView: View {
 struct ParcelCard: View {
     let parcel: Parcel
 
+    private var gradientFallback: some View {
+        LinearGradient(
+            colors: [Color.brandPrimary.opacity(0.35),
+                     Color.brandAccent.opacity(0.25)],
+            startPoint: .topLeading, endPoint: .bottomTrailing
+        )
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Image / placeholder
+            // Image / gradient fallback
             ZStack(alignment: .topTrailing) {
-                LinearGradient(
-                    colors: [Color.brandPrimary.opacity(0.35),
-                             Color.brandAccent.opacity(0.25)],
-                    startPoint: .topLeading, endPoint: .bottomTrailing
-                )
-                .frame(height: 160)
+                if let url = parcel.coverImageURL {
+                    AsyncImage(url: url) { phase in
+                        switch phase {
+                        case .success(let img):
+                            img.resizable().scaledToFill()
+                        case .empty:
+                            ZStack {
+                                gradientFallback
+                                ProgressView().tint(.white)
+                            }
+                        case .failure:
+                            gradientFallback
+                        @unknown default:
+                            gradientFallback
+                        }
+                    }
+                    .frame(height: 180)
+                    .clipped()
+                } else {
+                    gradientFallback.frame(height: 180)
+                }
+
+                // Dark overlay for label legibility
+                LinearGradient(colors: [.clear, .black.opacity(0.35)],
+                               startPoint: .center, endPoint: .bottom)
+                    .frame(height: 180)
+                    .allowsHitTesting(false)
 
                 if parcel.isFeatured == true {
                     Text("ÖNE ÇIKAN")
@@ -104,7 +133,7 @@ struct ParcelCard: View {
                     Spacer()
                     HStack {
                         if let area = parcel.areaM2 {
-                            Label(area + " m²", systemImage: "ruler")
+                            Label("\(area) m²", systemImage: "ruler")
                                 .font(.system(size: 11, weight: .bold))
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, 8)
@@ -116,7 +145,7 @@ struct ParcelCard: View {
                     .padding(10)
                 }
             }
-            .frame(height: 160)
+            .frame(height: 180)
             .clipShape(UnevenRoundedRectangle(topLeadingRadius: 18, topTrailingRadius: 18))
 
             // Body

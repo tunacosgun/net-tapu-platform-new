@@ -28,19 +28,51 @@ struct ParcelDetailView: View {
     }
 
     private var heroImage: some View {
-        ZStack(alignment: .topTrailing) {
-            LinearGradient(
-                colors: [Color.brandPrimary.opacity(0.45),
-                         Color.brandAccent.opacity(0.35)],
-                startPoint: .topLeading, endPoint: .bottomTrailing
-            )
-            .frame(height: 280)
+        let imgs = parcel.images?.compactMap { $0.bestURL } ?? []
+        return ZStack(alignment: .topTrailing) {
+            if imgs.isEmpty {
+                LinearGradient(
+                    colors: [Color.brandPrimary.opacity(0.45),
+                             Color.brandAccent.opacity(0.35)],
+                    startPoint: .topLeading, endPoint: .bottomTrailing
+                )
+                .frame(height: 320)
+            } else {
+                TabView {
+                    ForEach(Array(imgs.enumerated()), id: \.offset) { _, url in
+                        AsyncImage(url: url) { phase in
+                            switch phase {
+                            case .success(let img):
+                                img.resizable().scaledToFill()
+                            case .empty:
+                                ZStack {
+                                    Color.brandPrimary.opacity(0.15)
+                                    ProgressView()
+                                }
+                            case .failure:
+                                Color.brandPrimary.opacity(0.15)
+                            @unknown default:
+                                Color.brandPrimary.opacity(0.15)
+                            }
+                        }
+                        .frame(height: 320)
+                        .clipped()
+                    }
+                }
+                .tabViewStyle(.page(indexDisplayMode: imgs.count > 1 ? .always : .never))
+                .frame(height: 320)
+            }
+
+            LinearGradient(colors: [.black.opacity(0.20), .clear, .clear, .black.opacity(0.30)],
+                           startPoint: .top, endPoint: .bottom)
+                .frame(height: 320)
+                .allowsHitTesting(false)
 
             HStack {
                 Button { Task { await toggleFavorite() } } label: {
                     Image(systemName: isFavorite ? "heart.fill" : "heart")
                         .font(.system(size: 18, weight: .bold))
-                        .foregroundStyle(isFavorite ? Color.brandDanger : Color.inkPrimary)
+                        .foregroundStyle(isFavorite ? Color.brandDanger : .white)
                         .frame(width: 40, height: 40)
                         .background(.ultraThinMaterial, in: .circle)
                 }
@@ -61,10 +93,19 @@ struct ParcelDetailView: View {
                             .background(.black.opacity(0.45), in: Capsule())
                     }
                     Spacer()
+                    if imgs.count > 1 {
+                        Label("\(imgs.count) Fotoğraf", systemImage: "photo.stack")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(.black.opacity(0.45), in: Capsule())
+                    }
                 }
                 .padding(16)
             }
         }
+        .frame(height: 320)
     }
 
     private var content: some View {

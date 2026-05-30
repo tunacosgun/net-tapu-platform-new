@@ -1,4 +1,5 @@
 import SwiftUI
+import PhotosUI
 
 /// Full create/edit form for a parcel — mirrors web's /admin/parcels/new.
 /// Lazy-loads existing values when `parcelId` is passed, otherwise starts
