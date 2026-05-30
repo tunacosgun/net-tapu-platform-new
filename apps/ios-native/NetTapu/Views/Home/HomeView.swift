@@ -1,22 +1,31 @@
 import SwiftUI
 
+/// Top-level tab shell. Admin users get a "Yönetim" tab as the first
+/// entry so they see the management hub immediately on sign-in; regular
+/// users get the marketing home feed.
 struct HomeView: View {
     @State private var auth = AuthStore.shared
     @State private var selectedTab: Tab = .home
 
-    enum Tab { case home, parcels, auctions, support, profile }
+    enum Tab: Hashable { case admin, home, parcels, auctions, support, profile }
 
     var body: some View {
         TabView(selection: $selectedTab) {
+            if auth.user?.isAdmin == true {
+                AdminDashboardView()
+                    .tabItem { Label("Yönetim", systemImage: "shield.checkered") }
+                    .tag(Tab.admin)
+            }
+
             HomeFeedView()
                 .tabItem { Label("Ana Sayfa", systemImage: "house.fill") }
                 .tag(Tab.home)
 
-            ParcelsPlaceholderView()
+            ParcelsListView()
                 .tabItem { Label("İlanlar", systemImage: "map.fill") }
                 .tag(Tab.parcels)
 
-            AuctionsPlaceholderView()
+            AuctionsListView()
                 .tabItem { Label("İhaleler", systemImage: "hammer.fill") }
                 .tag(Tab.auctions)
 
@@ -24,18 +33,26 @@ struct HomeView: View {
                 .tabItem { Label("Destek", systemImage: "bubble.left.and.bubble.right.fill") }
                 .tag(Tab.support)
 
-            ProfilePlaceholderView()
+            ProfileView()
                 .tabItem { Label("Profil", systemImage: "person.fill") }
                 .tag(Tab.profile)
         }
         .tint(Color.brandPrimary)
+        .onAppear {
+            // Land admins on the dashboard the first time they reach Home,
+            // but don't fight them if they manually switch tabs later.
+            if auth.user?.isAdmin == true && selectedTab == .home {
+                selectedTab = .admin
+            }
+        }
     }
 }
 
-// MARK: - Home tab
+// MARK: - Home feed (regular user marketing surface)
 
 private struct HomeFeedView: View {
     @State private var auth = AuthStore.shared
+    @State private var featured: [Parcel] = []
 
     var body: some View {
         NavigationStack {
@@ -43,18 +60,24 @@ private struct HomeFeedView: View {
                 VStack(alignment: .leading, spacing: 24) {
                     heroCard
                     quickActions
+                    featuredSection
                     Spacer()
                 }
-                .padding(.horizontal, 20)
+                .padding(.horizontal, 18)
                 .padding(.top, 12)
+                .padding(.bottom, 32)
             }
             .background {
-                AnimatedMeshBackground().opacity(0.45)
+                AnimatedMeshBackground().opacity(0.40)
             }
             .navigationTitle("")
             .toolbar(.hidden, for: .navigationBar)
             .safeAreaInset(edge: .top) {
                 topBar
+            }
+            .task { await loadFeatured() }
+            .navigationDestination(for: Parcel.self) { p in
+                ParcelDetailView(parcel: p)
             }
         }
     }
@@ -70,23 +93,21 @@ private struct HomeFeedView: View {
                     .foregroundStyle(Color.inkPrimary)
             }
             Spacer()
-            Button { /* notifications */ } label: {
-                Image(systemName: "bell")
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundStyle(Color.inkPrimary)
-                    .padding(10)
-                    .background(.ultraThinMaterial, in: .circle)
-            }
+            Image(systemName: "bell")
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundStyle(Color.inkPrimary)
+                .padding(10)
+                .background(.ultraThinMaterial, in: .circle)
         }
         .padding(.horizontal, 20)
         .padding(.top, 8)
     }
 
     private var heroCard: some View {
-        GlassCard(cornerRadius: 28, tint: .brandPrimary.opacity(0.18)) {
+        GlassCard(cornerRadius: 28, tint: Color.brandPrimary.opacity(0.18)) {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
-                    GlassChip(text: "BUGÜN", tint: .brandAccent)
+                    GlassChip(text: "BUGÜN", tint: Color.brandAccent)
                     Spacer()
                 }
                 Text("Aradığınız arsayı bulun.")
@@ -95,7 +116,7 @@ private struct HomeFeedView: View {
                 Text("Türkiye'nin güvenilir arsa & ihale platformu — tapulu, sınırlı kaynaklı yatırım fırsatları.")
                     .font(.subheadline)
                     .foregroundStyle(Color.inkSecondary)
-                GlassButton(action: { /* search */ }) {
+                GlassButton(action: { }) {
                     HStack {
                         Image(systemName: "magnifyingglass")
                         Text("Arsa & İhale ara")
@@ -113,10 +134,49 @@ private struct HomeFeedView: View {
                 .foregroundStyle(Color.inkSecondary)
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 2),
                       spacing: 12) {
-                QuickActionTile(icon: "map.fill", title: "Tüm Arsalar", tint: .brandPrimary)
-                QuickActionTile(icon: "hammer.fill", title: "Canlı İhaleler", tint: .brandAccent)
-                QuickActionTile(icon: "heart.fill", title: "Favorilerim", tint: .brandDanger)
-                QuickActionTile(icon: "doc.text.fill", title: "Tekliflerim", tint: .brandInfo)
+                QuickActionTile(icon: "map.fill", title: "Tüm Arsalar", tint: Color.brandPrimary)
+                QuickActionTile(icon: "hammer.fill", title: "Canlı İhaleler", tint: Color.brandAccent)
+                QuickActionTile(icon: "heart.fill", title: "Favorilerim", tint: Color.brandDanger)
+                QuickActionTile(icon: "doc.text.fill", title: "Tekliflerim", tint: Color.brandInfo)
+            }
+        }
+    }
+
+    private var featuredSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Öne Çıkan Arsalar")
+                    .font(.headline)
+                    .foregroundStyle(Color.inkSecondary)
+                Spacer()
+            }
+            if featured.isEmpty {
+                Text("Yükleniyor…")
+                    .font(.caption)
+                    .foregroundStyle(Color.inkMuted)
+            } else {
+                ForEach(featured.prefix(5)) { p in
+                    NavigationLink(value: p) {
+                        ParcelCard(parcel: p)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+
+    private func loadFeatured() async {
+        do {
+            let resp: PaginatedResponse<Parcel> = try await APIClient.shared.get(
+                "/parcels", query: ["limit": "5", "isFeatured": "true", "status": "active"]
+            )
+            featured = resp.data
+        } catch {
+            // Fallback: any active parcels
+            if let resp: PaginatedResponse<Parcel> = try? await APIClient.shared.get(
+                "/parcels", query: ["limit": "5", "status": "active"]
+            ) {
+                featured = resp.data
             }
         }
     }
@@ -147,67 +207,6 @@ private struct QuickActionTile: View {
         .overlay {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .strokeBorder(.white.opacity(0.25), lineWidth: 0.5)
-        }
-    }
-}
-
-// MARK: - Tab placeholders (filled in next session)
-
-private struct ParcelsPlaceholderView: View {
-    var body: some View {
-        ZStack {
-            AnimatedMeshBackground().opacity(0.35)
-            VStack(spacing: 8) {
-                Image(systemName: "map").font(.largeTitle).foregroundStyle(Color.brandPrimary)
-                Text("Arsalar")
-                    .font(.title3.bold())
-                Text("Yakında — Phase 2'de eklenecek")
-                    .font(.footnote)
-                    .foregroundStyle(Color.inkSecondary)
-            }
-        }
-    }
-}
-
-private struct AuctionsPlaceholderView: View {
-    var body: some View {
-        ZStack {
-            AnimatedMeshBackground().opacity(0.35)
-            VStack(spacing: 8) {
-                Image(systemName: "hammer").font(.largeTitle).foregroundStyle(Color.brandAccent)
-                Text("İhaleler")
-                    .font(.title3.bold())
-                Text("Yakında — Phase 2'de eklenecek")
-                    .font(.footnote)
-                    .foregroundStyle(Color.inkSecondary)
-            }
-        }
-    }
-}
-
-private struct ProfilePlaceholderView: View {
-    @State private var auth = AuthStore.shared
-    var body: some View {
-        ZStack {
-            AnimatedMeshBackground().opacity(0.35)
-            VStack(spacing: 16) {
-                Image(systemName: "person.circle.fill")
-                    .font(.system(size: 64))
-                    .foregroundStyle(Color.brandPrimary)
-                Text(auth.user?.displayName ?? "")
-                    .font(.title3.bold())
-                Text(auth.user?.email ?? "")
-                    .font(.footnote)
-                    .foregroundStyle(Color.inkSecondary)
-                Button(role: .destructive) {
-                    Task { await AuthStore.shared.signOut() }
-                } label: {
-                    Label("Çıkış Yap", systemImage: "rectangle.portrait.and.arrow.right")
-                        .padding(.horizontal, 24)
-                        .padding(.vertical, 12)
-                }
-                .background(.ultraThinMaterial, in: Capsule())
-            }
         }
     }
 }

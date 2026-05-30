@@ -8,30 +8,50 @@
 
 /* Begin PBXBuildFile section */
 		0D48F8697D21DD03197C3445 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279086D7C4305A3A8B853B44 /* Models.swift */; };
+		1C1C64AFD3FB03FCDA7B90FA /* FavoritesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2592CE72B61DE43C05B12ECC /* FavoritesView.swift */; };
 		2098608F1FEB50DF336BBCC6 /* SupportTicketsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B6018FF7EC63BFD50A62BB8 /* SupportTicketsView.swift */; };
 		224FCB413F42199B28FCADFE /* SupportChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5DC47743BD98413AE612D1A /* SupportChatView.swift */; };
+		235613B1864DEA76B20764C0 /* ParcelsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E2B2C9A5EFA350BF66B6EAE /* ParcelsListView.swift */; };
 		2C4DA3D349470B24F931D443 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99F5687B4A363B6A479BDE2B /* LoginView.swift */; };
 		470330B46804BABFF1D81502 /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED9CFE0F85BF1DFD3053C2F0 /* Colors.swift */; };
+		51574DB9530C17BDE41D2D52 /* ParcelDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F779BF2BA1C44D7F9E53D3C /* ParcelDetailView.swift */; };
 		5E06CA1D39B2607997B41D08 /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 597C140D0208F938FD5295F8 /* AppConfig.swift */; };
 		6F3371F972B3515D64B619E7 /* NetTapuApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88D37A476B77CBEF3FA4F014 /* NetTapuApp.swift */; };
+		72FA20DD79EB7DF4AADC9660 /* AdminDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2891B5E2D9320DC699C1242 /* AdminDashboardView.swift */; };
 		74D5C5AA3BDA68D3783352C9 /* AuthStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CBC9A6357B91E75B3EDC615 /* AuthStore.swift */; };
+		77173876A89C3B9C78413664 /* OffersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A2C25FD556253A8BECF6446 /* OffersView.swift */; };
 		924B440DE04D6BBBC3C266F0 /* LiquidGlass.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0881B4B3E8E6FC1B3BFDA52 /* LiquidGlass.swift */; };
+		98A8384BFE9577B392AE4752 /* AuctionsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8713B7CE9744C78CF1E75719 /* AuctionsListView.swift */; };
+		9A654E0FA4D8074371A913FD /* AdminParcelsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46AA28B700ABE5A3EDC806D6 /* AdminParcelsView.swift */; };
+		AA31DA70CD5A829EBAAA9BBC /* AdminSupportInboxView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FCCDEC96012636B7BC8B57C /* AdminSupportInboxView.swift */; };
 		BD1ADA3243640E97D2D2C736 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E12E63429644627749F31B0 /* HomeView.swift */; };
 		CC5FEDDAD6BABC0B4B46B8FD /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 745860FD14882B89833D61C6 /* APIClient.swift */; };
+		EA4EB9645EB7F63484DFC932 /* AdminContactsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15166D2D95F4C470E8D17F7C /* AdminContactsView.swift */; };
 		F2BAA30EEF294D10AC3670BC /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C6622C7FE6E095DAD222281 /* RootView.swift */; };
+		FFB60C713C442246AEE7FB93 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65C2D1451AB79CB56B4970AF /* ProfileView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		15166D2D95F4C470E8D17F7C /* AdminContactsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminContactsView.swift; sourceTree = "<group>"; };
+		2592CE72B61DE43C05B12ECC /* FavoritesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesView.swift; sourceTree = "<group>"; };
 		279086D7C4305A3A8B853B44 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		2B6018FF7EC63BFD50A62BB8 /* SupportTicketsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupportTicketsView.swift; sourceTree = "<group>"; };
+		2F779BF2BA1C44D7F9E53D3C /* ParcelDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParcelDetailView.swift; sourceTree = "<group>"; };
+		3A2C25FD556253A8BECF6446 /* OffersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OffersView.swift; sourceTree = "<group>"; };
+		3FCCDEC96012636B7BC8B57C /* AdminSupportInboxView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminSupportInboxView.swift; sourceTree = "<group>"; };
+		46AA28B700ABE5A3EDC806D6 /* AdminParcelsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminParcelsView.swift; sourceTree = "<group>"; };
 		4C6622C7FE6E095DAD222281 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		4CBC9A6357B91E75B3EDC615 /* AuthStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthStore.swift; sourceTree = "<group>"; };
 		4E94643A9E0B024ECB1E140C /* NetTapu.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = NetTapu.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		597C140D0208F938FD5295F8 /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
 		5E12E63429644627749F31B0 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		65C2D1451AB79CB56B4970AF /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		745860FD14882B89833D61C6 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
+		7E2B2C9A5EFA350BF66B6EAE /* ParcelsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParcelsListView.swift; sourceTree = "<group>"; };
+		8713B7CE9744C78CF1E75719 /* AuctionsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuctionsListView.swift; sourceTree = "<group>"; };
 		88D37A476B77CBEF3FA4F014 /* NetTapuApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetTapuApp.swift; sourceTree = "<group>"; };
 		99F5687B4A363B6A479BDE2B /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		B2891B5E2D9320DC699C1242 /* AdminDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminDashboardView.swift; sourceTree = "<group>"; };
 		B5DC47743BD98413AE612D1A /* SupportChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupportChatView.swift; sourceTree = "<group>"; };
 		E0881B4B3E8E6FC1B3BFDA52 /* LiquidGlass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidGlass.swift; sourceTree = "<group>"; };
 		ED9CFE0F85BF1DFD3053C2F0 /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
@@ -45,6 +65,17 @@
 				5E12E63429644627749F31B0 /* HomeView.swift */,
 			);
 			path = Home;
+			sourceTree = "<group>";
+		};
+		511B03FC376B77C8CEFE9B19 /* Admin */ = {
+			isa = PBXGroup;
+			children = (
+				15166D2D95F4C470E8D17F7C /* AdminContactsView.swift */,
+				B2891B5E2D9320DC699C1242 /* AdminDashboardView.swift */,
+				46AA28B700ABE5A3EDC806D6 /* AdminParcelsView.swift */,
+				3FCCDEC96012636B7BC8B57C /* AdminSupportInboxView.swift */,
+			);
+			path = Admin;
 			sourceTree = "<group>";
 		};
 		53E2FCAE5ECC9C3363E34701 /* Theme */ = {
@@ -72,12 +103,29 @@
 			path = Config;
 			sourceTree = "<group>";
 		};
+		671CAEE90DC8A69EB630F015 /* Auctions */ = {
+			isa = PBXGroup;
+			children = (
+				8713B7CE9744C78CF1E75719 /* AuctionsListView.swift */,
+			);
+			path = Auctions;
+			sourceTree = "<group>";
+		};
 		6ED64E923070907FC9BBB57D /* Auth */ = {
 			isa = PBXGroup;
 			children = (
 				99F5687B4A363B6A479BDE2B /* LoginView.swift */,
 			);
 			path = Auth;
+			sourceTree = "<group>";
+		};
+		74E05951B2DC6F79A134BCB5 /* Parcels */ = {
+			isa = PBXGroup;
+			children = (
+				2F779BF2BA1C44D7F9E53D3C /* ParcelDetailView.swift */,
+				7E2B2C9A5EFA350BF66B6EAE /* ParcelsListView.swift */,
+			);
+			path = Parcels;
 			sourceTree = "<group>";
 		};
 		7650F62EC225F9053EF88579 /* NetTapu */ = {
@@ -128,12 +176,26 @@
 			path = Support;
 			sourceTree = "<group>";
 		};
+		DAEA4C7CC2A54146297C86D0 /* Profile */ = {
+			isa = PBXGroup;
+			children = (
+				2592CE72B61DE43C05B12ECC /* FavoritesView.swift */,
+				3A2C25FD556253A8BECF6446 /* OffersView.swift */,
+				65C2D1451AB79CB56B4970AF /* ProfileView.swift */,
+			);
+			path = Profile;
+			sourceTree = "<group>";
+		};
 		E66069DE5415C8836022C6AC /* Views */ = {
 			isa = PBXGroup;
 			children = (
 				4C6622C7FE6E095DAD222281 /* RootView.swift */,
+				511B03FC376B77C8CEFE9B19 /* Admin */,
+				671CAEE90DC8A69EB630F015 /* Auctions */,
 				6ED64E923070907FC9BBB57D /* Auth */,
 				1DD9F738C496969A79A45CCF /* Home */,
+				74E05951B2DC6F79A134BCB5 /* Parcels */,
+				DAEA4C7CC2A54146297C86D0 /* Profile */,
 				D313FCE5E6025AA6115EA169 /* Support */,
 			);
 			path = Views;
@@ -207,14 +269,24 @@
 			buildActionMask = 2147483647;
 			files = (
 				CC5FEDDAD6BABC0B4B46B8FD /* APIClient.swift in Sources */,
+				EA4EB9645EB7F63484DFC932 /* AdminContactsView.swift in Sources */,
+				72FA20DD79EB7DF4AADC9660 /* AdminDashboardView.swift in Sources */,
+				9A654E0FA4D8074371A913FD /* AdminParcelsView.swift in Sources */,
+				AA31DA70CD5A829EBAAA9BBC /* AdminSupportInboxView.swift in Sources */,
 				5E06CA1D39B2607997B41D08 /* AppConfig.swift in Sources */,
+				98A8384BFE9577B392AE4752 /* AuctionsListView.swift in Sources */,
 				74D5C5AA3BDA68D3783352C9 /* AuthStore.swift in Sources */,
 				470330B46804BABFF1D81502 /* Colors.swift in Sources */,
+				1C1C64AFD3FB03FCDA7B90FA /* FavoritesView.swift in Sources */,
 				BD1ADA3243640E97D2D2C736 /* HomeView.swift in Sources */,
 				924B440DE04D6BBBC3C266F0 /* LiquidGlass.swift in Sources */,
 				2C4DA3D349470B24F931D443 /* LoginView.swift in Sources */,
 				0D48F8697D21DD03197C3445 /* Models.swift in Sources */,
 				6F3371F972B3515D64B619E7 /* NetTapuApp.swift in Sources */,
+				77173876A89C3B9C78413664 /* OffersView.swift in Sources */,
+				51574DB9530C17BDE41D2D52 /* ParcelDetailView.swift in Sources */,
+				235613B1864DEA76B20764C0 /* ParcelsListView.swift in Sources */,
+				FFB60C713C442246AEE7FB93 /* ProfileView.swift in Sources */,
 				F2BAA30EEF294D10AC3670BC /* RootView.swift in Sources */,
 				224FCB413F42199B28FCADFE /* SupportChatView.swift in Sources */,
 				2098608F1FEB50DF336BBCC6 /* SupportTicketsView.swift in Sources */,
